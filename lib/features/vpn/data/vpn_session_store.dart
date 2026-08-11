@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:v2net/core/models/vpn_server/vpn_server.dart';
+import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 
 @lazySingleton
 class VpnSessionStore {

@@ -1,1 +1,1 @@
-#import <V2netcore-Ios/Ios.objc.h>
+#import <Slipstreamcore-Ios/Ios.objc.h>

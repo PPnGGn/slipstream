@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:v2net/app/theme.dart';
+import 'package:slipstream/app/theme.dart';
 
 class EmptySubscriptions extends StatelessWidget {
   const EmptySubscriptions({super.key});

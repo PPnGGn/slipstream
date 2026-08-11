@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:v2net/app/di/injector.dart';
-import 'package:v2net/features/vpn/data/vpn_api.g.dart';
-import 'package:v2net/features/vpn/data/xray_log_store.dart';
+import 'package:slipstream/app/di/injector.dart';
+import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
+import 'package:slipstream/features/vpn/data/xray_log_store.dart';
 
 class XrayLogsPage extends StatefulWidget {
   const XrayLogsPage({super.key});

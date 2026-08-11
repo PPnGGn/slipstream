@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:v2net/core/formatters.dart';
+import 'package:slipstream/core/formatters.dart';
 
 class ConnectionTimer extends StatefulWidget {
   const ConnectionTimer({super.key, required this.connectedAt, this.style});

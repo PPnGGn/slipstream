@@ -7,7 +7,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SYSTEM_EXEMPTED" />
 
     <application
-        android:label="v2net"
+        android:label="Slipstream"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

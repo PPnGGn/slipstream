@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:v2net/features/vpn/data/vpn_api.g.dart';
+import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
 
 class NativeVpnEventReceiver implements VpnEventReceiver {
   final _status = StreamController<VpnStatusMessage>.broadcast();

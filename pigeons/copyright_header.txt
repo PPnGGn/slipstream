@@ -3,7 +3,7 @@
 // ------------------------------------------------------------------------
 //
 // Any changes made to this file will be destroyed on the next code generation.
-// To modify the API contracts for v2net, edit the source file:
+// To modify the API contracts for slipstream, edit the source file:
 // pigeons/vpn_api.dart
 //
 // After making changes, run the following command:

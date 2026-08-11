@@ -1,4 +1,4 @@
-package com.v2net
+package com.slipstream
 
 import android.Manifest
 import android.app.Activity
@@ -65,7 +65,7 @@ class MainActivity : FlutterActivity(), VpnConnection {
             val serviceIntent =
                     android.content.Intent(
                             applicationContext,
-                            com.v2net.V2RayVpnService::class.java
+                            com.slipstream.V2RayVpnService::class.java
                     )
             serviceIntent.putExtra("XRAY_CONFIG", configJson)
             startService(serviceIntent)
@@ -78,7 +78,7 @@ class MainActivity : FlutterActivity(), VpnConnection {
         Log.d("VPN_BRIDGE", "Stopping VPN...")
 
         val serviceIntent =
-                android.content.Intent(applicationContext, com.v2net.V2RayVpnService::class.java)
+                android.content.Intent(applicationContext, com.slipstream.V2RayVpnService::class.java)
         serviceIntent.action = "ACTION_STOP_VPN"
         startService(serviceIntent)
 
@@ -101,7 +101,7 @@ class MainActivity : FlutterActivity(), VpnConnection {
                     val serviceIntent =
                             android.content.Intent(
                                     applicationContext,
-                                    com.v2net.V2RayVpnService::class.java
+                                    com.slipstream.V2RayVpnService::class.java
                             )
                     serviceIntent.putExtra("XRAY_CONFIG", config)
                     startService(serviceIntent)

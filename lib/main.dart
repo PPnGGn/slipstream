@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:v2net/app/app.dart';
-import 'package:v2net/app/di/injector.dart';
+import 'package:slipstream/app/app.dart';
+import 'package:slipstream/app/di/injector.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

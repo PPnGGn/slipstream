@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:v2net/app/di/injector.dart';
-import 'package:v2net/app/theme.dart';
-import 'package:v2net/features/subscriptions/cubit/subscriptions_cubit.dart';
-import 'package:v2net/features/subscriptions/ui/add_subscription_dialog.dart';
-import 'package:v2net/features/subscriptions/ui/widgets/empty_subscriptions.dart';
-import 'package:v2net/features/subscriptions/ui/widgets/subscription_card.dart';
-import 'package:v2net/features/vpn/cubit/vpn_cubit.dart';
-import 'package:v2net/features/vpn/ui/widgets/connection_status.dart';
+import 'package:slipstream/app/di/injector.dart';
+import 'package:slipstream/app/theme.dart';
+import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
+import 'package:slipstream/features/subscriptions/ui/add_subscription_dialog.dart';
+import 'package:slipstream/features/subscriptions/ui/widgets/empty_subscriptions.dart';
+import 'package:slipstream/features/subscriptions/ui/widgets/subscription_card.dart';
+import 'package:slipstream/features/vpn/cubit/vpn_cubit.dart';
+import 'package:slipstream/features/vpn/ui/widgets/connection_status.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -23,7 +23,7 @@ class HomePage extends StatelessWidget {
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text('V2Net'),
+        title: const Text('Slipstream'),
         actions: [
           IconButton(
             icon: const Icon(Icons.receipt_long_outlined),

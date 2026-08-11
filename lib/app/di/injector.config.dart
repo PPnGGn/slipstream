@@ -59,15 +59,6 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i490.XrayLogStore(),
       dispose: (i) => i.dispose(),
     );
-    gh.lazySingleton<_i1056.VpnRepository>(
-      () => _i1056.VpnRepository(
-        gh<_i207.Talker>(),
-        gh<_i482.VpnConnection>(),
-        gh<_i924.NativeVpnEventReceiver>(),
-        gh<_i490.XrayLogStore>(),
-      ),
-      dispose: (i) => i.dispose(),
-    );
     await gh.singletonAsync<_i505.SubscriptionStorage>(
       () => storageModule.subscriptionStorage(gh<_i207.Talker>()),
       preResolve: true,
@@ -80,6 +71,15 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i871.VpnSessionStore>(
       () => _i871.VpnSessionStore(gh<_i460.SharedPreferences>()),
+    );
+    gh.lazySingleton<_i1056.VpnRepository>(
+      () => _i1056.VpnRepository(
+        gh<_i207.Talker>(),
+        gh<_i482.VpnConnection>(),
+        gh<_i924.NativeVpnEventReceiver>(),
+        gh<_i490.XrayLogStore>(),
+      ),
+      dispose: (i) => i.dispose(),
     );
     gh.lazySingleton<_i364.VpnCubit>(
       () => _i364.VpnCubit(

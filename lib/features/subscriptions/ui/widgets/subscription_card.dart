@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:v2net/app/theme.dart';
-import 'package:v2net/core/formatters.dart';
-import 'package:v2net/core/models/stored_subscription/stored_subscription.dart';
-import 'package:v2net/core/models/vpn_server/vpn_server.dart';
+import 'package:slipstream/app/theme.dart';
+import 'package:slipstream/core/formatters.dart';
+import 'package:slipstream/core/models/stored_subscription/stored_subscription.dart';
+import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 
 class SubscriptionCard extends StatefulWidget {
   const SubscriptionCard({

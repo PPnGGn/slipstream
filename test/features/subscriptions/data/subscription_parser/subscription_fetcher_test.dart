@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:v2net/features/subscriptions/data/subscription_parser/subscription_fetcher.dart';
+import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_fetcher.dart';
 
 void main() {
   final fetcher = SubscriptionFetcher();

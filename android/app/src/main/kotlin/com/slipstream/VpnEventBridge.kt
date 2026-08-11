@@ -1,9 +1,9 @@
-package com.v2net
+package com.slipstream
 
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import com.v2net.android.Handler as CoreLogHandler
+import com.slipstream.android.Handler as CoreLogHandler
 
 object VpnEventBridge : CoreLogHandler {
 

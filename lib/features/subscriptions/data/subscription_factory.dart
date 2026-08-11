@@ -1,9 +1,9 @@
 import 'package:injectable/injectable.dart';
 import 'package:uuid/uuid.dart';
-import 'package:v2net/core/models/stored_subscription/stored_subscription.dart';
-import 'package:v2net/core/models/subscription/subscription.dart';
-import 'package:v2net/core/models/vpn_server/vpn_server.dart';
-import 'package:v2net/features/subscriptions/data/subscription_parser/subscription_parser_service.dart';
+import 'package:slipstream/core/models/stored_subscription/stored_subscription.dart';
+import 'package:slipstream/core/models/subscription/subscription.dart';
+import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
+import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_parser_service.dart';
 
 @lazySingleton
 class SubscriptionFactory {

@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:v2net/core/models/subscription/subscription.dart';
-import 'package:v2net/core/models/vpn_server/vpn_server.dart';
+import 'package:slipstream/core/models/subscription/subscription.dart';
+import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 
 part 'stored_subscription.freezed.dart';
 part 'stored_subscription.g.dart';

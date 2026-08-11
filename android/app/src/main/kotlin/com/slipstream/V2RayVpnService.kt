@@ -1,4 +1,4 @@
-package com.v2net
+package com.slipstream
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -13,7 +13,7 @@ import android.os.Looper
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.v2net.android.Android
+import com.slipstream.android.Android
 
 class V2RayVpnService : VpnService() {
 
@@ -26,7 +26,7 @@ class V2RayVpnService : VpnService() {
     private var trafficPollRunnable: Runnable? = null
 
     companion object {
-        private const val NOTIFICATION_CHANNEL_ID = "v2net_vpn_status"
+        private const val NOTIFICATION_CHANNEL_ID = "slipstream_vpn_status"
         private const val NOTIFICATION_ID = 1
         private const val ACTION_STOP_VPN = "ACTION_STOP_VPN"
         private const val SOCKS_PORT = 10808
@@ -67,7 +67,7 @@ class V2RayVpnService : VpnService() {
                             .addRoute("0.0.0.0", 0)
                             .addRoute("::", 0)
                             .addDisallowedApplication(packageName)
-                            .setSession("v2net")
+                            .setSession("Slipstream")
                             .setMtu(1500)
                             .establish()
                             ?: throw Exception("Failed to establish the VPN interface")
@@ -185,7 +185,7 @@ class V2RayVpnService : VpnService() {
                         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 )
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-                .setContentTitle("V2Net")
+                .setContentTitle("Slipstream")
                 .setContentText(statusText)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setOngoing(true)

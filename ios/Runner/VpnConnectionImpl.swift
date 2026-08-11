@@ -109,9 +109,9 @@ final class VpnConnectionImpl: NSObject, VpnConnection {
                 manager = NETunnelProviderManager()
                 let proto = NETunnelProviderProtocol()
                 proto.providerBundleIdentifier = Self.extensionBundleID
-                proto.serverAddress = "v2net"
+                proto.serverAddress = "slipstream"
                 manager.protocolConfiguration = proto
-                manager.localizedDescription = "v2net"
+                manager.localizedDescription = "Slipstream"
             }
             
           manager.isEnabled = true

@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
-		237DE6D423464649A87A1BBA /* v2netcore.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = C4A6B22C1457464718281586 /* v2netcore.xcframework */; };
+		237DE6D423464649A87A1BBA /* slipstreamcore.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = C4A6B22C1457464718281586 /* slipstreamcore.xcframework */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		394961BB3010EFDD00CC5567 /* VpnConnectionImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 394961BA3010EFDD00CC5567 /* VpnConnectionImpl.swift */; };
 		394961BD3010F06E00CC5567 /* VpnApi.g.swift in Sources */ = {isa = PBXBuildFile; fileRef = 394961BC3010F06E00CC5567 /* VpnApi.g.swift */; };
@@ -96,7 +96,7 @@
 		97C146FD1CF9000F007C117D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		97C147001CF9000F007C117D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		C4A6B22C1457464718281586 /* v2netcore.xcframework */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.xcframework; name = v2netcore.xcframework; path = Frameworks/v2netcore.xcframework; sourceTree = SOURCE_ROOT; };
+		C4A6B22C1457464718281586 /* slipstreamcore.xcframework */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = wrapper.xcframework; name = slipstreamcore.xcframework; path = Frameworks/slipstreamcore.xcframework; sourceTree = SOURCE_ROOT; };
 		FACEE36864440322C4531CF4 /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -120,7 +120,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				39B70EDF3010A21A005BFD4E /* NetworkExtension.framework in Frameworks */,
-				237DE6D423464649A87A1BBA /* v2netcore.xcframework in Frameworks */,
+				237DE6D423464649A87A1BBA /* slipstreamcore.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -225,7 +225,7 @@
 				273ED16DBAA68BDB163BF808 /* Pods_Runner.framework */,
 				7CD34F797088A71CA806C48E /* Pods_RunnerTests.framework */,
 				39B70EDE3010A219005BFD4E /* NetworkExtension.framework */,
-				C4A6B22C1457464718281586 /* v2netcore.xcframework */,
+				C4A6B22C1457464718281586 /* slipstreamcore.xcframework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -579,7 +579,7 @@
 				DEVELOPMENT_TEAM = J7B2DP8DU5;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = v2net;
+				INFOPLIST_KEY_CFBundleDisplayName = Slipstream;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -660,11 +660,11 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				"FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]" = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/Frameworks/v2netcore.xcframework/ios-arm64",
+					"$(PROJECT_DIR)/Frameworks/slipstreamcore.xcframework/ios-arm64",
 				);
 				"FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]" = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/Frameworks/v2netcore.xcframework/ios-arm64_x86_64-simulator",
+					"$(PROJECT_DIR)/Frameworks/slipstreamcore.xcframework/ios-arm64_x86_64-simulator",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -693,8 +693,8 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
-				"SWIFT_INCLUDE_PATHS[sdk=iphoneos*]" = "$(inherited) $(PROJECT_DIR)/Frameworks/v2netcore.xcframework/ios-arm64";
-				"SWIFT_INCLUDE_PATHS[sdk=iphonesimulator*]" = "$(inherited) $(PROJECT_DIR)/Frameworks/v2netcore.xcframework/ios-arm64_x86_64-simulator";
+				"SWIFT_INCLUDE_PATHS[sdk=iphoneos*]" = "$(inherited) $(PROJECT_DIR)/Frameworks/slipstreamcore.xcframework/ios-arm64";
+				"SWIFT_INCLUDE_PATHS[sdk=iphonesimulator*]" = "$(inherited) $(PROJECT_DIR)/Frameworks/slipstreamcore.xcframework/ios-arm64_x86_64-simulator";
 				SWIFT_OBJC_BRIDGING_HEADER = "PacketTunnel/PacketTunnel-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
@@ -719,11 +719,11 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				"FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]" = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/Frameworks/v2netcore.xcframework/ios-arm64",
+					"$(PROJECT_DIR)/Frameworks/slipstreamcore.xcframework/ios-arm64",
 				);
 				"FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]" = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/Frameworks/v2netcore.xcframework/ios-arm64_x86_64-simulator",
+					"$(PROJECT_DIR)/Frameworks/slipstreamcore.xcframework/ios-arm64_x86_64-simulator",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -750,8 +750,8 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
-				"SWIFT_INCLUDE_PATHS[sdk=iphoneos*]" = "$(inherited) $(PROJECT_DIR)/Frameworks/v2netcore.xcframework/ios-arm64";
-				"SWIFT_INCLUDE_PATHS[sdk=iphonesimulator*]" = "$(inherited) $(PROJECT_DIR)/Frameworks/v2netcore.xcframework/ios-arm64_x86_64-simulator";
+				"SWIFT_INCLUDE_PATHS[sdk=iphoneos*]" = "$(inherited) $(PROJECT_DIR)/Frameworks/slipstreamcore.xcframework/ios-arm64";
+				"SWIFT_INCLUDE_PATHS[sdk=iphonesimulator*]" = "$(inherited) $(PROJECT_DIR)/Frameworks/slipstreamcore.xcframework/ios-arm64_x86_64-simulator";
 				SWIFT_OBJC_BRIDGING_HEADER = "PacketTunnel/PacketTunnel-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
@@ -775,11 +775,11 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				"FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]" = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/Frameworks/v2netcore.xcframework/ios-arm64",
+					"$(PROJECT_DIR)/Frameworks/slipstreamcore.xcframework/ios-arm64",
 				);
 				"FRAMEWORK_SEARCH_PATHS[sdk=iphonesimulator*]" = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/Frameworks/v2netcore.xcframework/ios-arm64_x86_64-simulator",
+					"$(PROJECT_DIR)/Frameworks/slipstreamcore.xcframework/ios-arm64_x86_64-simulator",
 				);
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -806,8 +806,8 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
-				"SWIFT_INCLUDE_PATHS[sdk=iphoneos*]" = "$(inherited) $(PROJECT_DIR)/Frameworks/v2netcore.xcframework/ios-arm64";
-				"SWIFT_INCLUDE_PATHS[sdk=iphonesimulator*]" = "$(inherited) $(PROJECT_DIR)/Frameworks/v2netcore.xcframework/ios-arm64_x86_64-simulator";
+				"SWIFT_INCLUDE_PATHS[sdk=iphoneos*]" = "$(inherited) $(PROJECT_DIR)/Frameworks/slipstreamcore.xcframework/ios-arm64";
+				"SWIFT_INCLUDE_PATHS[sdk=iphonesimulator*]" = "$(inherited) $(PROJECT_DIR)/Frameworks/slipstreamcore.xcframework/ios-arm64_x86_64-simulator";
 				SWIFT_OBJC_BRIDGING_HEADER = "PacketTunnel/PacketTunnel-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
@@ -941,7 +941,7 @@
 				DEVELOPMENT_TEAM = J7B2DP8DU5;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = v2net;
+				INFOPLIST_KEY_CFBundleDisplayName = Slipstream;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -968,7 +968,7 @@
 				DEVELOPMENT_TEAM = J7B2DP8DU5;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = v2net;
+				INFOPLIST_KEY_CFBundleDisplayName = Slipstream;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

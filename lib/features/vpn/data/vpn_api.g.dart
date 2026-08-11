@@ -3,7 +3,7 @@
 // // ------------------------------------------------------------------------
 // //
 // // Any changes made to this file will be destroyed on the next code generation.
-// // To modify the API contracts for v2net, edit the source file:
+// // To modify the API contracts for slipstream, edit the source file:
 // // pigeons/vpn_api.dart
 // //
 // // After making changes, run the following command:
@@ -439,7 +439,7 @@ class VpnConnection {
   final String pigeonVar_messageChannelSuffix;
 
   Future<VpnResult> start(VpnConfigMessage config) async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.v2net.VpnConnection.start$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.slipstream.VpnConnection.start$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -458,7 +458,7 @@ class VpnConnection {
   }
 
   Future<VpnResult> stop() async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.v2net.VpnConnection.stop$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.slipstream.VpnConnection.stop$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -477,7 +477,7 @@ class VpnConnection {
   }
 
   Future<VpnStatusMessage> getStatus() async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.v2net.VpnConnection.getStatus$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.slipstream.VpnConnection.getStatus$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -510,7 +510,7 @@ abstract class VpnEventReceiver {
     messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-          'dev.flutter.pigeon.v2net.VpnEventReceiver.onStatusChanged$messageChannelSuffix', pigeonChannelCodec,
+          'dev.flutter.pigeon.slipstream.VpnEventReceiver.onStatusChanged$messageChannelSuffix', pigeonChannelCodec,
           binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
@@ -531,7 +531,7 @@ abstract class VpnEventReceiver {
     }
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-          'dev.flutter.pigeon.v2net.VpnEventReceiver.onLog$messageChannelSuffix', pigeonChannelCodec,
+          'dev.flutter.pigeon.slipstream.VpnEventReceiver.onLog$messageChannelSuffix', pigeonChannelCodec,
           binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
@@ -552,7 +552,7 @@ abstract class VpnEventReceiver {
     }
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-          'dev.flutter.pigeon.v2net.VpnEventReceiver.onTraffic$messageChannelSuffix', pigeonChannelCodec,
+          'dev.flutter.pigeon.slipstream.VpnEventReceiver.onTraffic$messageChannelSuffix', pigeonChannelCodec,
           binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);

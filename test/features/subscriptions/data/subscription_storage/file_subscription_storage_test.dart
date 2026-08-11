@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talker_flutter/talker_flutter.dart';
-import 'package:v2net/core/models/stored_subscription/stored_subscription.dart';
-import 'package:v2net/core/models/subscription/subscription.dart';
-import 'package:v2net/core/models/vpn_server/vpn_server.dart';
-import 'package:v2net/features/subscriptions/data/subscription_storage/file_subscription_storage.dart';
+import 'package:slipstream/core/models/stored_subscription/stored_subscription.dart';
+import 'package:slipstream/core/models/subscription/subscription.dart';
+import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
+import 'package:slipstream/features/subscriptions/data/subscription_storage/file_subscription_storage.dart';
 
 void main() {
   late Directory tempDir;

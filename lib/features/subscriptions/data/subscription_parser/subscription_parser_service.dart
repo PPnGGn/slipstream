@@ -1,7 +1,7 @@
 import 'package:injectable/injectable.dart';
 import 'package:talker_flutter/talker_flutter.dart';
-import 'package:v2net/core/models/vpn_server/vpn_server.dart';
-import 'package:v2net/core/result.dart';
+import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
+import 'package:slipstream/core/result.dart';
 import 'country_code_extractor.dart';
 import 'custom_json_parser.dart';
 import 'shadowsocks_uri_parser.dart';

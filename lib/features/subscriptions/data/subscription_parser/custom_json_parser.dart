@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:collection/collection.dart';
 import 'package:talker_flutter/talker_flutter.dart';
-import 'package:v2net/core/models/vpn_server/vpn_server.dart';
+import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'country_code_extractor.dart';
 
 class CustomJsonParser {

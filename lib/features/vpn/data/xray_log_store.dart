@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 import 'package:injectable/injectable.dart';
-import 'package:v2net/features/vpn/data/vpn_api.g.dart';
+import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
 
 @lazySingleton
 class XrayLogStore {

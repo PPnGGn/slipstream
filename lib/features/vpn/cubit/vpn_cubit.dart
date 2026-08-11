@@ -4,11 +4,11 @@ import 'package:flutter/widgets.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:talker_flutter/talker_flutter.dart';
-import 'package:v2net/core/models/vpn_server/vpn_server.dart';
-import 'package:v2net/core/result.dart';
-import 'package:v2net/features/vpn/data/vpn_api.g.dart';
-import 'package:v2net/features/vpn/data/vpn_repository.dart';
-import 'package:v2net/features/vpn/data/vpn_session_store.dart';
+import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
+import 'package:slipstream/core/result.dart';
+import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
+import 'package:slipstream/features/vpn/data/vpn_repository.dart';
+import 'package:slipstream/features/vpn/data/vpn_session_store.dart';
 
 part 'vpn_state.dart';
 part 'vpn_cubit.freezed.dart';

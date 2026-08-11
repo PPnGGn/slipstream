@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:v2net/app/di/injector.dart';
-import 'package:v2net/app/theme.dart';
-import 'package:v2net/features/subscriptions/cubit/subscriptions_cubit.dart';
+import 'package:slipstream/app/di/injector.dart';
+import 'package:slipstream/app/theme.dart';
+import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
 
 Future<void> showAddSubscriptionDialog(BuildContext context) {
   return showDialog<void>(

@@ -4,30 +4,30 @@ generate-vpn-api:
 	--input pigeons/vpn_api.dart \
 	--copyright_header pigeons/copyright_header.txt \
 	--dart_out lib/features/vpn/data/vpn_api.g.dart \
-	--kotlin_out android/app/src/main/kotlin/com/v2net/VpnApi.g.kt \
-	--kotlin_package "com.v2net" \
+	--kotlin_out android/app/src/main/kotlin/com/slipstream/VpnApi.g.kt \
+	--kotlin_package "com.slipstream" \
 	--swift_out ios/Runner/VpnApi.g.swift
 
 # Remove generated Pigeon outputs
 clean-vpn-api:
 	rm -f lib/features/vpn/data/vpn_api.g.dart
-	rm -f android/app/src/main/kotlin/com/v2net/VpnApi.g.kt
+	rm -f android/app/src/main/kotlin/com/slipstream/VpnApi.g.kt
 	rm -f ios/Runner/VpnApi.g.swift
 
 
 build-core-android:
-	$(MAKE) -C ../v2net-core bind-android
+	$(MAKE) -C ../slipstream-core bind-android
 
 
 build-core-ios:
-	$(MAKE) -C ../v2net-core bind-ios
-	rm -rf ios/Frameworks/v2netcore.xcframework
+	$(MAKE) -C ../slipstream-core bind-ios
+	rm -rf ios/Frameworks/slipstreamcore.xcframework
 	mkdir -p ios/Frameworks
-	cp -R ../v2net-core/v2netcore-ios.xcframework ios/Frameworks/v2netcore.xcframework
+	cp -R ../slipstream-core/slipstreamcore-ios.xcframework ios/Frameworks/slipstreamcore.xcframework
 
 
 build-core-mac:
-	$(MAKE) -C ../v2net-core bind-mac
-	rm -rf macos/Frameworks/v2netcore-mac.xcframework
+	$(MAKE) -C ../slipstream-core bind-mac
+	rm -rf macos/Frameworks/slipstreamcore-mac.xcframework
 	mkdir -p macos/Frameworks
-	cp -R ../v2net-core/v2netcore-mac.xcframework macos/Frameworks/
+	cp -R ../slipstream-core/slipstreamcore-mac.xcframework macos/Frameworks/

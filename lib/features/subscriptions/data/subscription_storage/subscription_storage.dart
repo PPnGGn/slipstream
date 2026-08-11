@@ -1,4 +1,4 @@
-import 'package:v2net/core/models/stored_subscription/stored_subscription.dart';
+import 'package:slipstream/core/models/stored_subscription/stored_subscription.dart';
 
 abstract interface class SubscriptionStorage {
   Future<List<StoredSubscription>> loadAll();

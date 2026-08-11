@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:talker_flutter/talker_flutter.dart';
-import 'package:v2net/core/models/stored_subscription/stored_subscription.dart';
+import 'package:slipstream/core/models/stored_subscription/stored_subscription.dart';
 import 'subscription_storage.dart';
 
 class FileSubscriptionStorage implements SubscriptionStorage {

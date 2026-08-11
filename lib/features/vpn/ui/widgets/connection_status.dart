@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:v2net/app/theme.dart';
-import 'package:v2net/core/formatters.dart';
-import 'package:v2net/core/models/vpn_server/vpn_server.dart';
-import 'package:v2net/features/vpn/cubit/vpn_cubit.dart';
-import 'package:v2net/features/vpn/ui/widgets/connect_button.dart';
-import 'package:v2net/features/vpn/ui/widgets/connection_timer.dart';
+import 'package:slipstream/app/theme.dart';
+import 'package:slipstream/core/formatters.dart';
+import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
+import 'package:slipstream/features/vpn/cubit/vpn_cubit.dart';
+import 'package:slipstream/features/vpn/ui/widgets/connect_button.dart';
+import 'package:slipstream/features/vpn/ui/widgets/connection_timer.dart';
 
 /// The connect button plus the status/timer/traffic readout beneath it.
 class ConnectionArea extends StatelessWidget {

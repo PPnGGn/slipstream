@@ -1,82 +1,58 @@
-# v2net
+# Slipstream
 
-Руководства по закуску
+Cross-platform VPN client built with Flutter. VPN traffic is handled by [Xray-core](https://github.com/XTLS/Xray-core) through a separate Go wrapper — **slipstream-core** (`../slipstream-core`): it wraps Xray lifecycle (start/stop, config, logging, tun2socks) and is compiled into native libraries via [gomobile](https://pkg.go.dev/golang.org/x/mobile/cmd/gomobile) (`.aar` on Android, `.xcframework` on iOS).
 
-## Общие требования
+## Status
 
-Репозитории:
+Early MVP — Android and iOS only. Core connect/disconnect flow works; UI and protocol coverage are minimal.
 
-- Xray wrapper (core): [https://github.com/PPnGGn/v2net-core.git](https://github.com/PPnGGn/v2net-core.git)
-- Flutter client: [https://github.com/PPnGGn/v2net.git](https://github.com/PPnGGn/v2net.git)
+## Supported protocols
 
+| Protocol | Transport / security |
+|----------|----------------------|
+| VLESS    | Reality (TCP)        |
+| Shadowsocks | TCP              |
 
-### Предварительная настройка
+## Subscription input
 
-Установить `gomobile`
+- `https://` / `http://` subscription links (base64-encoded server lists)
+- Direct `vless://` and `ss://` URIs
+- Raw Xray JSON configs
 
-```
-go install golang.org/x/mobile/cmd/gomobile@latest
-```
+## Features
 
-Убедиться, что `$(go env GOPATH)/bin` есть в `PATH`:
+- Add, refresh, and remove subscriptions
+- Server list with country detection from server names
+- Connect / disconnect, switch server while connected
+- Connection status, uptime, and traffic stats
+- Xray log viewer
 
-```
-export PATH="$PATH:$(go env GOPATH)/bin"
-```
-
-```
-gomobile init
-```
-
-Клонирование репозиториев (выполнить в корневой папке `vpn/`):
-
-```
-git clone https://github.com/PPnGGn/v2net.git
-git clone https://github.com/PPnGGn/v2net-core.git
-```
-
-Структура папок:
+## Architecture
 
 ```
-vpn/
-  v2net/
-  v2net-core/
+Flutter (Dart)  →  Pigeon  →  Kotlin / Swift  →  slipstream-core (Go)  →  Xray-core
 ```
 
-## Инструкция для Android
+- **Flutter app** — UI, subscription parsing, state (BLoC)
+- **slipstream-core** — Go wrapper around Xray-core; platform-specific tunnel glue (TUN fd on Android, `NEPacketTunnelFlow` on iOS)
+- **Pigeon** — Dart ↔ native VPN bridge
+- **Android** — `VpnService` + slipstream-core AAR
+- **iOS** — Network Extension (Packet Tunnel) + slipstream-core xcframework
 
-Сборка ядра:
+## Setup
 
-```
-cd v2net
-make build-core-android
-```
+Build the native core (from the `slipstream` directory):
 
-Проверка: `android/app/libs/v2netcore.aar`
-
----
-
-
-
-## Инструкция для iOS
-
-Сборка ядра:
-
-```
-cd v2net
-make build-core-ios
+```bash
+make build-core-android   # Android
+make build-core-ios       # iOS
 ```
 
-Проверка: `ios/Frameworks/v2netcore.xcframework` 
+Generate code:
 
-## Запуск Flutter:
-
-```
-flutter pub get
+```bash
 dart run build_runner build --delete-conflicting-outputs
 make generate-vpn-api
-flutter run
 ```
 
-
-
+Then run with Flutter as usual (`flutter run`).

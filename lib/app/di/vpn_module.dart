@@ -1,6 +1,6 @@
 import 'package:injectable/injectable.dart';
-import 'package:v2net/features/vpn/data/vpn_api.g.dart';
-import 'package:v2net/features/vpn/data/vpn_event_receiver.dart';
+import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
+import 'package:slipstream/features/vpn/data/vpn_event_receiver.dart';
 
 @module
 abstract class VpnModule {

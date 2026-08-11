@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talker_flutter/talker_flutter.dart';
-import 'package:v2net/features/subscriptions/data/subscription_parser/country_code_extractor.dart';
-import 'package:v2net/features/subscriptions/data/subscription_parser/custom_json_parser.dart';
+import 'package:slipstream/features/subscriptions/data/subscription_parser/country_code_extractor.dart';
+import 'package:slipstream/features/subscriptions/data/subscription_parser/custom_json_parser.dart';
 
 void main() {
   final parser = CustomJsonParser(Talker(), CountryCodeExtractor());
