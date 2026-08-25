@@ -56,6 +56,10 @@ app.*.map.json
 /android/app/release
 /android/.kotlin/
 
+# Release signing
+slipstream-release.jks
+key.properties
+
 # Native tunnel core (gomobile); build via `make build-core-android` / `make build-core-ios` / `make build-core-mac`
 android/app/libs/slipstreamcore.aar
 ios/Frameworks/
