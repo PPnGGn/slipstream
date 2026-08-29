@@ -14,6 +14,8 @@ import 'package:injectable/injectable.dart' as _i526;
 import 'package:shared_preferences/shared_preferences.dart' as _i460;
 import 'package:talker_flutter/talker_flutter.dart' as _i207;
 
+import '../../core/theme/app_colors.dart' as _i962;
+import '../../core/theme/cubit/theme_cubit.dart' as _i11;
 import '../../features/subscriptions/cubit/subscriptions_cubit.dart' as _i83;
 import '../../features/subscriptions/data/selected_server_store.dart' as _i830;
 import '../../features/subscriptions/data/subscription_factory.dart' as _i179;
@@ -52,6 +54,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i924.NativeVpnEventReceiver>(
       () => vpnModule.vpnEventReceiver,
     );
+    gh.lazySingleton<_i11.AppThemeCubit>(() => _i11.AppThemeCubit());
     gh.lazySingleton<_i179.SubscriptionFactory>(
       () => _i179.SubscriptionFactory(),
     );
@@ -71,6 +74,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i871.VpnSessionStore>(
       () => _i871.VpnSessionStore(gh<_i460.SharedPreferences>()),
+    );
+    gh.lazySingleton<_i962.AppColors>(
+      () => _i962.AppColors(themeCubit: gh<_i11.AppThemeCubit>()),
     );
     gh.lazySingleton<_i1056.VpnRepository>(
       () => _i1056.VpnRepository(
