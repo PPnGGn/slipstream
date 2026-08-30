@@ -18,6 +18,13 @@ String formatDuration(Duration d) {
   return '${two(d.inHours)}:${two(d.inMinutes % 60)}:${two(d.inSeconds % 60)}';
 }
 
+/// Date only, e.g. "17.09.2026".
+String formatDate(DateTime dateTime) {
+  final local = dateTime.toLocal();
+  String two(int n) => n.toString().padLeft(2, '0');
+  return '${two(local.day)}.${two(local.month)}.${local.year}';
+}
+
 /// Update timestamp for display, e.g. "21.07.2026 14:03".
 String formatUpdatedAt(DateTime dateTime) {
   final local = dateTime.toLocal();

@@ -5,6 +5,7 @@ class AppAssets {
   static const String wave = 'assets/svg/wave.svg';
   static const String power = 'assets/svg/power.svg';
   static const String search = 'assets/svg/search.svg';
+  static const String scanQr = 'assets/svg/scan_qr.svg';
   static const String plus = 'assets/svg/plus.svg';
   static const String info = 'assets/svg/info.svg';
   static const String chevronRight = 'assets/svg/chevron_right.svg';

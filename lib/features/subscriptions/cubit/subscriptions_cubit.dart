@@ -91,6 +91,16 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
     }
   }
 
+  Future<bool> addAndActivate(String input, {String? name}) async {
+    final added = await addFromInput(input, name: name);
+    if (!added) return false;
+    final stored = state.subscriptions.last;
+    if (stored.servers.isNotEmpty) {
+      await selectServer(stored.subscription.id, stored.servers.first.id);
+    }
+    return true;
+  }
+
   Future<void> removeSubscription(String subscriptionId) async {
     await _storage.delete(subscriptionId);
     final remaining = state.subscriptions

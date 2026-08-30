@@ -12,6 +12,13 @@ _Subscription _$SubscriptionFromJson(Map<String, dynamic> json) =>
       url: json['url'] as String?,
       name: json['name'] as String,
       lastUpdatedAt: DateTime.parse(json['lastUpdatedAt'] as String),
+      announce: json['announce'] as String?,
+      expiresAt: json['expiresAt'] == null
+          ? null
+          : DateTime.parse(json['expiresAt'] as String),
+      updateIntervalHours: (json['updateIntervalHours'] as num?)?.toInt(),
+      usedBytes: (json['usedBytes'] as num?)?.toInt(),
+      dataLimitBytes: (json['dataLimitBytes'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$SubscriptionToJson(_Subscription instance) =>
@@ -20,4 +27,9 @@ Map<String, dynamic> _$SubscriptionToJson(_Subscription instance) =>
       'url': instance.url,
       'name': instance.name,
       'lastUpdatedAt': instance.lastUpdatedAt.toIso8601String(),
+      'announce': instance.announce,
+      'expiresAt': instance.expiresAt?.toIso8601String(),
+      'updateIntervalHours': instance.updateIntervalHours,
+      'usedBytes': instance.usedBytes,
+      'dataLimitBytes': instance.dataLimitBytes,
     };

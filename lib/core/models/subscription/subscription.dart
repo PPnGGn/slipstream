@@ -10,6 +10,11 @@ abstract class Subscription with _$Subscription {
     required String? url,
     required String name,
     required DateTime lastUpdatedAt,
+    String? announce,
+    DateTime? expiresAt,
+    int? updateIntervalHours,
+    int? usedBytes,
+    int? dataLimitBytes,
   }) = _Subscription;
 
   factory Subscription.fromJson(Map<String, dynamic> json) =>

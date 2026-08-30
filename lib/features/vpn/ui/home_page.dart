@@ -6,7 +6,9 @@ import 'package:slipstream/app/di/injector.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/theme/app_theme.dart';
 import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
-import 'package:slipstream/core/ui/widgets/app_icon_button.dart';
+import 'package:slipstream/core/ui/widgets/custom_icon_button.dart';
+import 'package:slipstream/features/subscriptions/ui/widgets/add_subscription_sheet.dart';
+import 'package:slipstream/features/subscriptions/ui/widgets/server_list.dart';
 import 'package:slipstream/features/vpn/ui/widgets/connection_card.dart';
 
 class HomePage extends StatelessWidget {
@@ -52,9 +54,20 @@ class HomePage extends StatelessWidget {
           extendBodyBehindAppBar: true,
           body: SafeArea(
             bottom: false,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(children: [ConnectionCard()]),
+            child: Padding(
+              padding: const .symmetric(horizontal: 16, vertical: 4),
+              child: Column(
+                spacing: 16,
+                children: [
+                  const ConnectionCard(),
+                  Expanded(
+                    child: ServerList(
+                      onAddSubscription: () =>
+                          showAddSubscriptionSheet(context),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );

@@ -14,9 +14,10 @@ import 'package:injectable/injectable.dart' as _i526;
 import 'package:shared_preferences/shared_preferences.dart' as _i460;
 import 'package:talker_flutter/talker_flutter.dart' as _i207;
 
-import '../../core/service/vpn_service/vpn_service_cubit.dart' as _i13;
+import '../../core/service/vpn_service/vpn_service_cubit.dart' as _i202;
 import '../../core/theme/app_colors.dart' as _i962;
 import '../../core/theme/cubit/theme_cubit.dart' as _i11;
+import '../../core/theme/data/theme_store.dart' as _i802;
 import '../../features/subscriptions/cubit/subscriptions_cubit.dart' as _i83;
 import '../../features/subscriptions/data/selected_server_store.dart' as _i830;
 import '../../features/subscriptions/data/subscription_factory.dart' as _i179;
@@ -54,7 +55,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i924.NativeVpnEventReceiver>(
       () => vpnModule.vpnEventReceiver,
     );
-    gh.lazySingleton<_i11.AppThemeCubit>(() => _i11.AppThemeCubit());
     gh.lazySingleton<_i179.SubscriptionFactory>(
       () => _i179.SubscriptionFactory(),
     );
@@ -69,14 +69,14 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i302.SubscriptionParserService>(
       () => _i302.SubscriptionParserService(gh<_i207.Talker>()),
     );
+    gh.lazySingleton<_i802.ThemeStore>(
+      () => _i802.ThemeStore(gh<_i460.SharedPreferences>()),
+    );
     gh.lazySingleton<_i830.SelectedServerStore>(
       () => _i830.SelectedServerStore(gh<_i460.SharedPreferences>()),
     );
     gh.lazySingleton<_i871.VpnSessionStore>(
       () => _i871.VpnSessionStore(gh<_i460.SharedPreferences>()),
-    );
-    gh.lazySingleton<_i962.AppColors>(
-      () => _i962.AppColors(themeCubit: gh<_i11.AppThemeCubit>()),
     );
     gh.lazySingleton<_i1056.VpnRepository>(
       () => _i1056.VpnRepository(
@@ -87,8 +87,11 @@ extension GetItInjectableX on _i174.GetIt {
       ),
       dispose: (i) => i.dispose(),
     );
-    gh.lazySingleton<_i13.VpnServiceCubit>(
-      () => _i13.VpnServiceCubit(
+    gh.lazySingleton<_i11.AppThemeCubit>(
+      () => _i11.AppThemeCubit(themeStore: gh<_i802.ThemeStore>()),
+    );
+    gh.lazySingleton<_i202.VpnServiceCubit>(
+      () => _i202.VpnServiceCubit(
         repository: gh<_i1056.VpnRepository>(),
         sessionStore: gh<_i871.VpnSessionStore>(),
         talker: gh<_i207.Talker>(),
@@ -102,6 +105,9 @@ extension GetItInjectableX on _i174.GetIt {
         factory: gh<_i179.SubscriptionFactory>(),
         talker: gh<_i207.Talker>(),
       ),
+    );
+    gh.lazySingleton<_i962.AppColors>(
+      () => _i962.AppColors(themeCubit: gh<_i11.AppThemeCubit>()),
     );
     return this;
   }
