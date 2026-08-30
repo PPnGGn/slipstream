@@ -10,12 +10,12 @@ import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
 import 'package:slipstream/features/vpn/data/vpn_repository.dart';
 import 'package:slipstream/features/vpn/data/vpn_session_store.dart';
 
-part 'vpn_state.dart';
-part 'vpn_cubit.freezed.dart';
+part 'vpn_service_state.dart';
+part 'vpn_service_cubit.freezed.dart';
 
 @lazySingleton
-class VpnCubit extends Cubit<VpnState> {
-  VpnCubit({
+class VpnServiceCubit extends Cubit<VpnState> {
+  VpnServiceCubit({
     required VpnRepository repository,
     required VpnSessionStore sessionStore,
     required Talker talker,
@@ -42,6 +42,17 @@ class VpnCubit extends Cubit<VpnState> {
   DateTime? _connectedAt;
   Timer? _connectTimer;
   VpnServer? _pendingServer;
+
+  Future<void> toggle(VpnServer? server) async {
+    switch (state) {
+      case _Connected() || _Connecting():
+        await disconnect();
+      case _Disconnecting():
+        break;
+      default:
+        if (server != null) await connect(server);
+    }
+  }
 
   Future<void> connect(VpnServer server) async {
     switch (state) {

@@ -14,6 +14,7 @@ import 'package:injectable/injectable.dart' as _i526;
 import 'package:shared_preferences/shared_preferences.dart' as _i460;
 import 'package:talker_flutter/talker_flutter.dart' as _i207;
 
+import '../../core/service/vpn_service/vpn_service_cubit.dart' as _i13;
 import '../../core/theme/app_colors.dart' as _i962;
 import '../../core/theme/cubit/theme_cubit.dart' as _i11;
 import '../../features/subscriptions/cubit/subscriptions_cubit.dart' as _i83;
@@ -23,7 +24,6 @@ import '../../features/subscriptions/data/subscription_parser/subscription_parse
     as _i302;
 import '../../features/subscriptions/data/subscription_storage/subscription_storage.dart'
     as _i505;
-import '../../features/vpn/cubit/vpn_cubit.dart' as _i364;
 import '../../features/vpn/data/vpn_api.g.dart' as _i482;
 import '../../features/vpn/data/vpn_event_receiver.dart' as _i924;
 import '../../features/vpn/data/vpn_repository.dart' as _i1056;
@@ -87,8 +87,8 @@ extension GetItInjectableX on _i174.GetIt {
       ),
       dispose: (i) => i.dispose(),
     );
-    gh.lazySingleton<_i364.VpnCubit>(
-      () => _i364.VpnCubit(
+    gh.lazySingleton<_i13.VpnServiceCubit>(
+      () => _i13.VpnServiceCubit(
         repository: gh<_i1056.VpnRepository>(),
         sessionStore: gh<_i871.VpnSessionStore>(),
         talker: gh<_i207.Talker>(),

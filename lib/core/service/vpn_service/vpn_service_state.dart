@@ -1,4 +1,4 @@
-part of 'vpn_cubit.dart';
+part of 'vpn_service_cubit.dart';
 
 @freezed
 abstract class VpnState with _$VpnState {

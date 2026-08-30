@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:slipstream/app/app_assets.dart';
 import 'package:slipstream/app/di/injector.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/theme/app_theme.dart';
 import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
 import 'package:slipstream/core/ui/widgets/app_icon_button.dart';
-import 'package:slipstream/core/ui/widgets/vpn_connection_card.dart';
+import 'package:slipstream/features/vpn/ui/widgets/connection_card.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -22,22 +23,29 @@ class HomePage extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(
-            leadingWidth: 44,
-            titleSpacing: 4,
-            actionsPadding: EdgeInsets.symmetric(
+            titleSpacing: 12,
+            leadingWidth: AppDims.horizontalPadding + 40,
+            actionsPadding: const .symmetric(
               horizontal: AppDims.horizontalPadding,
             ),
-            backgroundColor: Colors.transparent,
-            title: const Text('SlipSstream'),
-            leading: CustomIconButton(
-              onTap: () {},
-              iconPath: AppAssets.appIcon,
+            title: const Text('SlipStream'),
+            leading: Padding(
+              padding: const .only(left: AppDims.horizontalPadding),
+              child: Center(
+                child: CustomIconButton(
+                  onTap: () => context.push('/settings'),
+                  iconPath: AppAssets.wave,
+                  gradientColors: getIt<AppColors>().brandGradient,
+                ),
+              ),
             ),
             actions: [
-              CustomIconButton(
-                onTap: themeCubit.toggleTheme,
-                borderColor: getIt<AppColors>().border,
-                iconPath: isDark ? AppAssets.moonShine : AppAssets.sunFilled,
+              Center(
+                child: CustomIconButton(
+                  onTap: themeCubit.toggleTheme,
+                  borderColor: getIt<AppColors>().border,
+                  iconPath: isDark ? AppAssets.moonShine : AppAssets.sunFilled,
+                ),
               ),
             ],
           ),
@@ -45,8 +53,8 @@ class HomePage extends StatelessWidget {
           body: SafeArea(
             bottom: false,
             child: SingleChildScrollView(
-              padding: .all(16),
-              child: Column(children: [VPNConectionCard()]),
+              padding: const EdgeInsets.all(16),
+              child: Column(children: [ConnectionCard()]),
             ),
           ),
         );
@@ -54,4 +62,3 @@ class HomePage extends StatelessWidget {
     );
   }
 }
-
