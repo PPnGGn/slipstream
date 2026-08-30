@@ -1,8 +1,7 @@
 import 'package:injectable/injectable.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
-import 'package:slipstream/core/result.dart';
-import 'country_code_extractor.dart';
+import 'package:slipstream/core/models/result.dart';
 import 'custom_json_parser.dart';
 import 'shadowsocks_uri_parser.dart';
 import 'subscription_fetcher.dart';
@@ -40,17 +39,9 @@ class SubscriptionParserService {
   SubscriptionParserService(Talker talker)
     : _talker = talker,
       _fetcher = SubscriptionFetcher(),
-      _vlessUriParser = VlessUriParser(
-        talker,
-        XrayConfigBuilder(),
-        CountryCodeExtractor(),
-      ),
-      _shadowsocksUriParser = ShadowsocksUriParser(
-        talker,
-        XrayConfigBuilder(),
-        CountryCodeExtractor(),
-      ),
-      _customJsonParser = CustomJsonParser(talker, CountryCodeExtractor());
+      _vlessUriParser = VlessUriParser(talker, XrayConfigBuilder()),
+      _shadowsocksUriParser = ShadowsocksUriParser(talker, XrayConfigBuilder()),
+      _customJsonParser = CustomJsonParser(talker);
 
   Future<Result<ParsedSubscription>> parseFromInput(String input) async {
     try {

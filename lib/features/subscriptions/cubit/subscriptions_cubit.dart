@@ -5,7 +5,7 @@ import 'package:injectable/injectable.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:slipstream/core/models/stored_subscription/stored_subscription.dart';
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
-import 'package:slipstream/core/result.dart';
+import 'package:slipstream/core/models/result.dart';
 import 'package:slipstream/features/subscriptions/data/selected_server_store.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_factory.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_parser_service.dart';
@@ -57,7 +57,9 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
     final isUrl = trimmed.toLowerCase().startsWith('http');
     if (isUrl && _findByUrl(trimmed) != null) {
       emit(
-        state.copyWith(errorMessage: 'This subscription has already been added'),
+        state.copyWith(
+          errorMessage: 'This subscription has already been added',
+        ),
       );
       return false;
     }

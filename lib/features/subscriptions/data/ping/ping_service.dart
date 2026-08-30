@@ -1,7 +1,10 @@
 import 'dart:io';
 
+import 'package:injectable/injectable.dart';
+
 /// Lightweight TCP-connect latency probe with a short-lived cache, so that
 /// re-expanding a subscription doesn't re-measure every server each time.
+@lazySingleton
 class PingService {
   static final Map<String, _Entry> _cache = {};
   static const _ttl = Duration(seconds: 45);

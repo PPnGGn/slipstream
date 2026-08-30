@@ -1,3 +1,15 @@
+import 'dart:convert';
+
+/// Re-indents a JSON string with two spaces; returns it unchanged if it doesn't
+/// parse as JSON.
+String prettyJson(String source) {
+  try {
+    return const JsonEncoder.withIndent('  ').convert(jsonDecode(source));
+  } catch (_) {
+    return source;
+  }
+}
+
 /// Human-readable byte count, e.g. 1536 -> "1.5 KB".
 String formatBytes(int bytes) {
   if (bytes < 1024) return '$bytes B';
@@ -33,12 +45,22 @@ String formatUpdatedAt(DateTime dateTime) {
       '${two(local.hour)}:${two(local.minute)}';
 }
 
+const unknownCountryCode = 'XX';
+
+/// Offset between an ASCII letter and its regional indicator symbol.
+const _flagOffset = 0x1F1A5;
+const _firstRegionalIndicator = 0x1F1E6;
+const _lastRegionalIndicator = 0x1F1FF;
+
+bool _isRegionalIndicator(int rune) =>
+    rune >= _firstRegionalIndicator && rune <= _lastRegionalIndicator;
+
 /// Turns a 2-letter country code into its flag emoji, e.g. "NL" -> "🇳🇱".
 String countryFlag(String code) {
   if (code.length != 2) return '🏳️';
   final upper = code.toUpperCase();
-  final first = upper.codeUnitAt(0) + 0x1F1A5;
-  final second = upper.codeUnitAt(1) + 0x1F1A5;
+  final first = upper.codeUnitAt(0) + _flagOffset;
+  final second = upper.codeUnitAt(1) + _flagOffset;
   return String.fromCharCode(first) + String.fromCharCode(second);
 }
 
@@ -47,6 +69,14 @@ String countryFlag(String code) {
 bool startsWithFlagEmoji(String text) {
   final runes = text.runes.toList();
   if (runes.length < 2) return false;
-  bool isRegionalIndicator(int r) => r >= 0x1F1E6 && r <= 0x1F1FF;
-  return isRegionalIndicator(runes[0]) && isRegionalIndicator(runes[1]);
+  return _isRegionalIndicator(runes[0]) && _isRegionalIndicator(runes[1]);
+}
+
+/// Reverse of [countryFlag]: reads the 2-letter code out of a leading flag
+/// emoji, e.g. "🇳🇱 Amsterdam" -> "NL". Null if [text] doesn't open with one.
+String? countryCodeFromFlag(String text) {
+  if (!startsWithFlagEmoji(text)) return null;
+  final runes = text.runes.toList();
+  return String.fromCharCode(runes[0] - _flagOffset) +
+      String.fromCharCode(runes[1] - _flagOffset);
 }

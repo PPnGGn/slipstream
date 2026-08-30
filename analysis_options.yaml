@@ -5,4 +5,7 @@ analyzer:
     # Pigeon contract source: non-nullable message fields have no initializer
     # by design; Pigeon validates it during generation.
     - pigeons/**
+    - build/**
+    - android/**
+    - ios/**
 include: package:flutter_lints/flutter.yaml

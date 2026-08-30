@@ -19,6 +19,7 @@ import '../../core/theme/app_colors.dart' as _i962;
 import '../../core/theme/cubit/theme_cubit.dart' as _i11;
 import '../../core/theme/data/theme_store.dart' as _i802;
 import '../../features/subscriptions/cubit/subscriptions_cubit.dart' as _i83;
+import '../../features/subscriptions/data/ping/ping_service.dart' as _i189;
 import '../../features/subscriptions/data/selected_server_store.dart' as _i830;
 import '../../features/subscriptions/data/subscription_factory.dart' as _i179;
 import '../../features/subscriptions/data/subscription_parser/subscription_parser_service.dart'
@@ -55,6 +56,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i924.NativeVpnEventReceiver>(
       () => vpnModule.vpnEventReceiver,
     );
+    gh.lazySingleton<_i189.PingService>(() => _i189.PingService());
     gh.lazySingleton<_i179.SubscriptionFactory>(
       () => _i179.SubscriptionFactory(),
     );
