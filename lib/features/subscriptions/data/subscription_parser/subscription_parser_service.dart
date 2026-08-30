@@ -1,8 +1,7 @@
 import 'package:injectable/injectable.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
-import 'package:slipstream/core/result.dart';
-import 'country_code_extractor.dart';
+import 'package:slipstream/core/models/result.dart';
 import 'custom_json_parser.dart';
 import 'shadowsocks_uri_parser.dart';
 import 'subscription_fetcher.dart';
@@ -10,10 +9,23 @@ import 'vless_uri_parser.dart';
 import 'xray_config_builder.dart';
 
 class ParsedSubscription {
-  ParsedSubscription({required this.servers, this.suggestedName});
+  ParsedSubscription({
+    required this.servers,
+    this.suggestedName,
+    this.announce,
+    this.expiresAt,
+    this.updateIntervalHours,
+    this.usedBytes,
+    this.dataLimitBytes,
+  });
 
   final List<VpnServer> servers;
   final String? suggestedName;
+  final String? announce;
+  final DateTime? expiresAt;
+  final int? updateIntervalHours;
+  final int? usedBytes;
+  final int? dataLimitBytes;
 }
 
 @lazySingleton
@@ -27,32 +39,23 @@ class SubscriptionParserService {
   SubscriptionParserService(Talker talker)
     : _talker = talker,
       _fetcher = SubscriptionFetcher(),
-      _vlessUriParser = VlessUriParser(
-        talker,
-        XrayConfigBuilder(),
-        CountryCodeExtractor(),
-      ),
-      _shadowsocksUriParser = ShadowsocksUriParser(
-        talker,
-        XrayConfigBuilder(),
-        CountryCodeExtractor(),
-      ),
-      _customJsonParser = CustomJsonParser(talker, CountryCodeExtractor());
+      _vlessUriParser = VlessUriParser(talker, XrayConfigBuilder()),
+      _shadowsocksUriParser = ShadowsocksUriParser(talker, XrayConfigBuilder()),
+      _customJsonParser = CustomJsonParser(talker);
 
   Future<Result<ParsedSubscription>> parseFromInput(String input) async {
     try {
       final cleanInput = input.trim();
       final List<VpnServer> servers = [];
       String textToParse = cleanInput;
-      String? suggestedName;
+      SubscriptionResponse? response;
 
       final lowerInput = cleanInput.toLowerCase();
       if (lowerInput.startsWith('http://') ||
           lowerInput.startsWith('https://')) {
         _talker.debug('Parser: found a URL, fetching...');
-        final response = await _fetcher.fetch(cleanInput);
+        response = await _fetcher.fetch(cleanInput);
         textToParse = response.body;
-        suggestedName = response.profileTitle;
       } else if (!_isDirectLink(cleanInput) &&
           !cleanInput.startsWith('[') &&
           !cleanInput.startsWith('{')) {
@@ -83,7 +86,15 @@ class SubscriptionParserService {
 
       _talker.info('Parser: successfully parsed ${servers.length} server(s)');
       return Success(
-        ParsedSubscription(servers: servers, suggestedName: suggestedName),
+        ParsedSubscription(
+          servers: servers,
+          suggestedName: response?.profileTitle,
+          announce: response?.announce,
+          expiresAt: response?.expiresAt,
+          updateIntervalHours: response?.updateIntervalHours,
+          usedBytes: response?.usedBytes,
+          dataLimitBytes: response?.dataLimitBytes,
+        ),
       );
     } catch (e, st) {
       _talker.handle(e, st, 'Parser: unhandled error while processing');

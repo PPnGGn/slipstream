@@ -1,125 +1,77 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:slipstream/app/app_assets.dart';
 import 'package:slipstream/app/di/injector.dart';
-import 'package:slipstream/app/theme.dart';
-import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
-import 'package:slipstream/features/subscriptions/ui/add_subscription_dialog.dart';
-import 'package:slipstream/features/subscriptions/ui/widgets/empty_subscriptions.dart';
-import 'package:slipstream/features/subscriptions/ui/widgets/subscription_card.dart';
-import 'package:slipstream/features/vpn/cubit/vpn_cubit.dart';
-import 'package:slipstream/features/vpn/ui/widgets/connection_status.dart';
+import 'package:slipstream/core/theme/app_colors.dart';
+import 'package:slipstream/core/theme/app_theme.dart';
+import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
+import 'package:slipstream/core/ui/widgets/custom_icon_button.dart';
+import 'package:slipstream/features/subscriptions/ui/widgets/add_subscription_sheet.dart';
+import 'package:slipstream/features/subscriptions/ui/widgets/server_list.dart';
+import 'package:slipstream/features/vpn/ui/widgets/connection_card.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final vpnCubit = getIt<VpnCubit>();
-    final subsCubit = getIt<SubscriptionsCubit>();
+    final themeCubit = getIt<AppThemeCubit>();
 
-    return Scaffold(
-      backgroundColor: AppColors.gray10,
-      resizeToAvoidBottomInset: false,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: const Text('Slipstream'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.receipt_long_outlined),
-            tooltip: 'Логи',
-            onPressed: () => context.push('/logs'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline),
-            tooltip: 'Добавить подписку',
-            onPressed: () => showAddSubscriptionDialog(context),
-          ),
-          const SizedBox(width: 4),
-        ],
-      ),
-      extendBodyBehindAppBar: true,
-      body: DecoratedBox(
-        decoration: const BoxDecoration(
-          color: AppColors.gray10,
-          image: DecorationImage(
-            image: AssetImage('assets/png/background_map.png'),
-            fit: BoxFit.fitWidth,
-            alignment: Alignment.topCenter,
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              BlocBuilder<SubscriptionsCubit, SubscriptionsState>(
-                bloc: subsCubit,
-                builder: (context, subsState) {
-                  return BlocBuilder<VpnCubit, VpnState>(
-                    bloc: vpnCubit,
-                    builder: (context, vpnState) {
-                      return ConnectionArea(
-                        vpnState: vpnState,
-                        selectedServer: subsState.selectedServer,
-                        hasSubscriptions: subsState.subscriptions.isNotEmpty,
-                        onConnect: () {
-                          final server = subsState.selectedServer;
-                          if (server != null) vpnCubit.connect(server);
-                        },
-                        onDisconnect: vpnCubit.disconnect,
-                      );
-                    },
-                  );
-                },
+    return BlocBuilder<AppThemeCubit, AppThemeMode>(
+      bloc: themeCubit,
+      builder: (context, state) {
+        final isDark = state == AppThemeMode.dark;
+
+        return Scaffold(
+          appBar: AppBar(
+            titleSpacing: 12,
+            leadingWidth: AppDims.horizontalPadding + 40,
+            actionsPadding: const .symmetric(
+              horizontal: AppDims.horizontalPadding,
+            ),
+            title: const Text('SlipStream'),
+            leading: Padding(
+              padding: const .only(left: AppDims.horizontalPadding),
+              child: Center(
+                child: CustomIconButton(
+                  onTap: () => context.push('/settings'),
+                  iconPath: AppAssets.wave,
+                  gradientColors: getIt<AppColors>().brandGradient,
+                ),
               ),
-              Expanded(
-                child: BlocBuilder<SubscriptionsCubit, SubscriptionsState>(
-                  bloc: subsCubit,
-                  builder: (context, subsState) {
-                    if (subsState.subscriptions.isEmpty) {
-                      return const EmptySubscriptions();
-                    }
-                    return ListView(
-                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                      children: [
-                        for (final stored in subsState.subscriptions)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: SubscriptionCard(
-                              stored: stored,
-                              selectedServerId:
-                                  subsState.selectedSubscriptionId ==
-                                      stored.subscription.id
-                                  ? subsState.selectedServerId
-                                  : null,
-                              isRefreshing: subsState.refreshingIds.contains(
-                                stored.subscription.id,
-                              ),
-                              onSelect: (server) {
-                                subsCubit.selectServer(
-                                  stored.subscription.id,
-                                  server.id,
-                                );
-                                vpnCubit.switchServerIfActive(server);
-                              },
-                              onDelete: () => subsCubit.removeSubscription(
-                                stored.subscription.id,
-                              ),
-                              onRefresh: stored.subscription.url == null
-                                  ? null
-                                  : () => subsCubit.refreshSubscription(
-                                      stored.subscription.id,
-                                    ),
-                            ),
-                          ),
-                      ],
-                    );
-                  },
+            ),
+            actions: [
+              Center(
+                child: CustomIconButton(
+                  onTap: themeCubit.toggleTheme,
+                  borderColor: getIt<AppColors>().border,
+                  iconPath: isDark ? AppAssets.moonShine : AppAssets.sunFilled,
                 ),
               ),
             ],
           ),
-        ),
-      ),
+          extendBodyBehindAppBar: true,
+          body: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const .symmetric(horizontal: 16, vertical: 4),
+              child: Column(
+                spacing: 16,
+                children: [
+                  const ConnectionCard(),
+                  Expanded(
+                    child: ServerList(
+                      onAddSubscription: () =>
+                          showAddSubscriptionSheet(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

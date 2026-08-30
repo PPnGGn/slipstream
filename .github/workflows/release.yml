@@ -11,11 +11,16 @@ concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
+env:
+  FLUTTER_VERSION: "3.44.8"
+
 jobs:
   version-check:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.parse.outputs.version }}
+      mode: ${{ steps.compare.outputs.mode }}
+      release_version: ${{ steps.compare.outputs.release_version }}
     steps:
       - uses: actions/checkout@v4
 
@@ -39,7 +44,8 @@ jobs:
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "Latest release tag: ${TAG:-<none>}"
 
-      - name: Compare versions (pubspec must be greater than last release)
+      - name: Compare versions and pick release/patch mode
+        id: compare
         env:
           PUBSPEC_VERSION: ${{ steps.parse.outputs.version }}
           LATEST_TAG: ${{ steps.latest.outputs.tag }}
@@ -56,14 +62,20 @@ jobs:
               if not v:
                   return None
               base, _, build = v.partition("+")
-              parts = [int(x) for x in base.split(".") if x != ""]
-              while len(parts) < 3:
-                  parts.append(0)
+              core = tuple(int(x) for x in base.split("."))
+              while len(core) < 3:
+                  core = core + (0,)
               build_n = int(build) if build else 0
-              return tuple(parts) + (build_n,)
+              return core, build_n
+
+          def gh_out(key: str, value: str) -> None:
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write(f"{key}={value}\n")
 
           if not latest:
               print(f"No previous release found; publishing first release {pubspec}.")
+              gh_out("mode", "release")
+              gh_out("release_version", "")
               sys.exit(0)
 
           p = parse(pubspec)
@@ -72,14 +84,31 @@ jobs:
               print(f"::error::Could not parse versions: pubspec={pubspec!r} latest={latest!r}")
               sys.exit(1)
 
-          if p <= l:
+          p_core, p_build = p
+          l_core, l_build = l
+          latest_stripped = latest.lstrip("v")
+
+          if p_core == l_core:
+              if p_build > l_build:
+                  print(f"OK: {pubspec} bumps only the build number over {latest}; patching that release.")
+                  gh_out("mode", "patch")
+                  gh_out("release_version", latest_stripped)
+              else:
+                  print(
+                      f"::error::pubspec version {pubspec} does not bump the build number over last release {latest}. "
+                      f"Bump the `+N` build number in pubspec.yaml to ship a patch."
+                  )
+                  sys.exit(1)
+          elif p_core > l_core:
+              print(f"OK: {pubspec} bumps the version over {latest}; publishing a new release.")
+              gh_out("mode", "release")
+              gh_out("release_version", "")
+          else:
               print(
                   f"::error::pubspec version {pubspec} is not greater than last release {latest}. "
-                  f"Bump `version:` in pubspec.yaml (e.g. increase the build number)."
+                  f"Bump `version:` in pubspec.yaml."
               )
               sys.exit(1)
-
-          print(f"OK: pubspec {pubspec} > last release {latest}; proceeding.")
           PYEOF
 
   build-core-android:
@@ -148,7 +177,11 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - uses: shorebirdtech/setup-shorebird@v1
+        with:
           cache: true
 
       - name: Decode release keystore
@@ -172,20 +205,43 @@ jobs:
           EOF
 
       - run: flutter pub get
+      - name: Generate Pigeon Updater API
+        run: make generate-updater-api
       - run: dart run build_runner build --delete-conflicting-outputs
       - name: Generate Pigeon VPN API
         run: make generate-vpn-api
-      - run: flutter build apk --release
+
+      - name: Shorebird release (android)
+        if: needs.version-check.outputs.mode == 'release'
+        uses: shorebirdtech/shorebird-release@v1
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+        with:
+          platform: android
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          args: --artifact apk
+
+      - name: Shorebird patch (android)
+        if: needs.version-check.outputs.mode == 'patch'
+        uses: shorebirdtech/shorebird-patch@v1
+        env:
+          SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
+        with:
+          platform: android
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          args: --release-version ${{ needs.version-check.outputs.release_version }}
 
       - uses: actions/upload-artifact@v4
+        if: needs.version-check.outputs.mode == 'release'
         with:
           name: android-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: build/app/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 14
 
   build-linux:
     needs: version-check
+    if: needs.version-check.outputs.mode == 'release'
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
@@ -199,7 +255,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - run: flutter pub get
@@ -219,6 +275,7 @@ jobs:
 
   build-windows:
     needs: version-check
+    if: needs.version-check.outputs.mode == 'release'
     runs-on: windows-latest
     continue-on-error: true
     steps:
@@ -226,7 +283,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
 
       - run: flutter pub get
@@ -247,7 +304,11 @@ jobs:
 
   release:
     needs: [version-check, build-android, build-linux, build-windows]
-    if: always() && needs.version-check.result == 'success' && needs.build-android.result == 'success'
+    if: |
+      always() &&
+      needs.version-check.outputs.mode == 'release' &&
+      needs.version-check.result == 'success' &&
+      needs.build-android.result == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write

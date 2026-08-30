@@ -14,14 +14,21 @@ import 'package:injectable/injectable.dart' as _i526;
 import 'package:shared_preferences/shared_preferences.dart' as _i460;
 import 'package:talker_flutter/talker_flutter.dart' as _i207;
 
+import '../../core/service/update_service/update_service_cubit.dart' as _i1021;
+import '../../core/service/vpn_service/vpn_service_cubit.dart' as _i202;
+import '../../core/theme/app_colors.dart' as _i962;
+import '../../core/theme/cubit/theme_cubit.dart' as _i11;
+import '../../core/theme/data/theme_store.dart' as _i802;
 import '../../features/subscriptions/cubit/subscriptions_cubit.dart' as _i83;
+import '../../features/subscriptions/data/ping/ping_service.dart' as _i189;
 import '../../features/subscriptions/data/selected_server_store.dart' as _i830;
 import '../../features/subscriptions/data/subscription_factory.dart' as _i179;
 import '../../features/subscriptions/data/subscription_parser/subscription_parser_service.dart'
     as _i302;
 import '../../features/subscriptions/data/subscription_storage/subscription_storage.dart'
     as _i505;
-import '../../features/vpn/cubit/vpn_cubit.dart' as _i364;
+import '../../features/update/data/update_repository.dart' as _i11;
+import '../../features/update/data/updater_api.g.dart' as _i942;
 import '../../features/vpn/data/vpn_api.g.dart' as _i482;
 import '../../features/vpn/data/vpn_event_receiver.dart' as _i924;
 import '../../features/vpn/data/vpn_repository.dart' as _i1056;
@@ -30,6 +37,7 @@ import '../../features/vpn/data/xray_log_store.dart' as _i490;
 import 'logger_module.dart' as _i987;
 import 'prefs_module.dart' as _i891;
 import 'storage_module.dart' as _i371;
+import 'updater_module.dart' as _i884;
 import 'vpn_module.dart' as _i731;
 
 extension GetItInjectableX on _i174.GetIt {
@@ -41,6 +49,7 @@ extension GetItInjectableX on _i174.GetIt {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     final prefsModule = _$PrefsModule();
     final loggerModule = _$LoggerModule();
+    final updaterModule = _$UpdaterModule();
     final vpnModule = _$VpnModule();
     final storageModule = _$StorageModule();
     await gh.singletonAsync<_i460.SharedPreferences>(
@@ -48,10 +57,14 @@ extension GetItInjectableX on _i174.GetIt {
       preResolve: true,
     );
     gh.lazySingleton<_i207.Talker>(() => loggerModule.talker);
+    gh.lazySingleton<_i942.UpdateInstaller>(
+      () => updaterModule.updateInstaller,
+    );
     gh.lazySingleton<_i482.VpnConnection>(() => vpnModule.vpnConnection);
     gh.lazySingleton<_i924.NativeVpnEventReceiver>(
       () => vpnModule.vpnEventReceiver,
     );
+    gh.lazySingleton<_i189.PingService>(() => _i189.PingService());
     gh.lazySingleton<_i179.SubscriptionFactory>(
       () => _i179.SubscriptionFactory(),
     );
@@ -66,11 +79,21 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i302.SubscriptionParserService>(
       () => _i302.SubscriptionParserService(gh<_i207.Talker>()),
     );
+    gh.lazySingleton<_i802.ThemeStore>(
+      () => _i802.ThemeStore(gh<_i460.SharedPreferences>()),
+    );
     gh.lazySingleton<_i830.SelectedServerStore>(
       () => _i830.SelectedServerStore(gh<_i460.SharedPreferences>()),
     );
     gh.lazySingleton<_i871.VpnSessionStore>(
       () => _i871.VpnSessionStore(gh<_i460.SharedPreferences>()),
+    );
+    gh.lazySingleton<_i11.UpdateRepository>(
+      () => _i11.UpdateRepository(
+        gh<_i207.Talker>(),
+        gh<_i942.UpdateInstaller>(),
+      ),
+      dispose: (i) => i.dispose(),
     );
     gh.lazySingleton<_i1056.VpnRepository>(
       () => _i1056.VpnRepository(
@@ -81,8 +104,17 @@ extension GetItInjectableX on _i174.GetIt {
       ),
       dispose: (i) => i.dispose(),
     );
-    gh.lazySingleton<_i364.VpnCubit>(
-      () => _i364.VpnCubit(
+    gh.lazySingleton<_i11.AppThemeCubit>(
+      () => _i11.AppThemeCubit(themeStore: gh<_i802.ThemeStore>()),
+    );
+    gh.lazySingleton<_i1021.UpdateServiceCubit>(
+      () => _i1021.UpdateServiceCubit(
+        repository: gh<_i11.UpdateRepository>(),
+        talker: gh<_i207.Talker>(),
+      ),
+    );
+    gh.lazySingleton<_i202.VpnServiceCubit>(
+      () => _i202.VpnServiceCubit(
         repository: gh<_i1056.VpnRepository>(),
         sessionStore: gh<_i871.VpnSessionStore>(),
         talker: gh<_i207.Talker>(),
@@ -97,6 +129,9 @@ extension GetItInjectableX on _i174.GetIt {
         talker: gh<_i207.Talker>(),
       ),
     );
+    gh.lazySingleton<_i962.AppColors>(
+      () => _i962.AppColors(themeCubit: gh<_i11.AppThemeCubit>()),
+    );
     return this;
   }
 }
@@ -104,6 +139,8 @@ extension GetItInjectableX on _i174.GetIt {
 class _$PrefsModule extends _i891.PrefsModule {}
 
 class _$LoggerModule extends _i987.LoggerModule {}
+
+class _$UpdaterModule extends _i884.UpdaterModule {}
 
 class _$VpnModule extends _i731.VpnModule {}
 

@@ -15,6 +15,23 @@ clean-vpn-api:
 	rm -f ios/Runner/VpnApi.g.swift
 
 
+# Pigeon updater bridge (Android-only). Own Kotlin package: Pigeon emits a
+# top-level FlutterError class per file, which clashes with VpnApi.g.kt if
+# both sit in the same package.
+generate-updater-api:
+	dart run pigeon \
+	--input pigeons/updater_api.dart \
+	--copyright_header pigeons/copyright_header.txt \
+	--dart_out lib/features/update/data/updater_api.g.dart \
+	--kotlin_out android/app/src/main/kotlin/com/slipstream/updater/UpdaterApi.g.kt \
+	--kotlin_package "com.slipstream.updater"
+
+# Remove generated Pigeon outputs
+clean-updater-api:
+	rm -f lib/features/update/data/updater_api.g.dart
+	rm -f android/app/src/main/kotlin/com/slipstream/updater/UpdaterApi.g.kt
+
+
 build-core-android:
 	$(MAKE) -C ../slipstream-core bind-android
 

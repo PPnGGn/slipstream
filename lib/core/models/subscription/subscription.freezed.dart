@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Subscription {
 
- String get id; String? get url; String get name; DateTime get lastUpdatedAt;
+ String get id; String? get url; String get name; DateTime get lastUpdatedAt; String? get announce; DateTime? get expiresAt; int? get updateIntervalHours; int? get usedBytes; int? get dataLimitBytes;
 /// Create a copy of Subscription
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $SubscriptionCopyWith<Subscription> get copyWith => _$SubscriptionCopyWithImpl<S
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Subscription&&(identical(other.id, id) || other.id == id)&&(identical(other.url, url) || other.url == url)&&(identical(other.name, name) || other.name == name)&&(identical(other.lastUpdatedAt, lastUpdatedAt) || other.lastUpdatedAt == lastUpdatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Subscription&&(identical(other.id, id) || other.id == id)&&(identical(other.url, url) || other.url == url)&&(identical(other.name, name) || other.name == name)&&(identical(other.lastUpdatedAt, lastUpdatedAt) || other.lastUpdatedAt == lastUpdatedAt)&&(identical(other.announce, announce) || other.announce == announce)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.updateIntervalHours, updateIntervalHours) || other.updateIntervalHours == updateIntervalHours)&&(identical(other.usedBytes, usedBytes) || other.usedBytes == usedBytes)&&(identical(other.dataLimitBytes, dataLimitBytes) || other.dataLimitBytes == dataLimitBytes));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,url,name,lastUpdatedAt);
+int get hashCode => Object.hash(runtimeType,id,url,name,lastUpdatedAt,announce,expiresAt,updateIntervalHours,usedBytes,dataLimitBytes);
 
 @override
 String toString() {
-  return 'Subscription(id: $id, url: $url, name: $name, lastUpdatedAt: $lastUpdatedAt)';
+  return 'Subscription(id: $id, url: $url, name: $name, lastUpdatedAt: $lastUpdatedAt, announce: $announce, expiresAt: $expiresAt, updateIntervalHours: $updateIntervalHours, usedBytes: $usedBytes, dataLimitBytes: $dataLimitBytes)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $SubscriptionCopyWith<$Res>  {
   factory $SubscriptionCopyWith(Subscription value, $Res Function(Subscription) _then) = _$SubscriptionCopyWithImpl;
 @useResult
 $Res call({
- String id, String? url, String name, DateTime lastUpdatedAt
+ String id, String? url, String name, DateTime lastUpdatedAt, String? announce, DateTime? expiresAt, int? updateIntervalHours, int? usedBytes, int? dataLimitBytes
 });
 
 
@@ -65,13 +65,18 @@ class _$SubscriptionCopyWithImpl<$Res>
 
 /// Create a copy of Subscription
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? url = freezed,Object? name = null,Object? lastUpdatedAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? url = freezed,Object? name = null,Object? lastUpdatedAt = null,Object? announce = freezed,Object? expiresAt = freezed,Object? updateIntervalHours = freezed,Object? usedBytes = freezed,Object? dataLimitBytes = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,url: freezed == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
 as String?,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,lastUpdatedAt: null == lastUpdatedAt ? _self.lastUpdatedAt : lastUpdatedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,announce: freezed == announce ? _self.announce : announce // ignore: cast_nullable_to_non_nullable
+as String?,expiresAt: freezed == expiresAt ? _self.expiresAt : expiresAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,updateIntervalHours: freezed == updateIntervalHours ? _self.updateIntervalHours : updateIntervalHours // ignore: cast_nullable_to_non_nullable
+as int?,usedBytes: freezed == usedBytes ? _self.usedBytes : usedBytes // ignore: cast_nullable_to_non_nullable
+as int?,dataLimitBytes: freezed == dataLimitBytes ? _self.dataLimitBytes : dataLimitBytes // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 
@@ -156,10 +161,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? url,  String name,  DateTime lastUpdatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? url,  String name,  DateTime lastUpdatedAt,  String? announce,  DateTime? expiresAt,  int? updateIntervalHours,  int? usedBytes,  int? dataLimitBytes)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Subscription() when $default != null:
-return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt);case _:
+return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt,_that.announce,_that.expiresAt,_that.updateIntervalHours,_that.usedBytes,_that.dataLimitBytes);case _:
   return orElse();
 
 }
@@ -177,10 +182,10 @@ return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? url,  String name,  DateTime lastUpdatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? url,  String name,  DateTime lastUpdatedAt,  String? announce,  DateTime? expiresAt,  int? updateIntervalHours,  int? usedBytes,  int? dataLimitBytes)  $default,) {final _that = this;
 switch (_that) {
 case _Subscription():
-return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt);case _:
+return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt,_that.announce,_that.expiresAt,_that.updateIntervalHours,_that.usedBytes,_that.dataLimitBytes);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -197,10 +202,10 @@ return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? url,  String name,  DateTime lastUpdatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? url,  String name,  DateTime lastUpdatedAt,  String? announce,  DateTime? expiresAt,  int? updateIntervalHours,  int? usedBytes,  int? dataLimitBytes)?  $default,) {final _that = this;
 switch (_that) {
 case _Subscription() when $default != null:
-return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt);case _:
+return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt,_that.announce,_that.expiresAt,_that.updateIntervalHours,_that.usedBytes,_that.dataLimitBytes);case _:
   return null;
 
 }
@@ -212,13 +217,18 @@ return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt);case _:
 @JsonSerializable()
 
 class _Subscription implements Subscription {
-  const _Subscription({required this.id, required this.url, required this.name, required this.lastUpdatedAt});
+  const _Subscription({required this.id, required this.url, required this.name, required this.lastUpdatedAt, this.announce, this.expiresAt, this.updateIntervalHours, this.usedBytes, this.dataLimitBytes});
   factory _Subscription.fromJson(Map<String, dynamic> json) => _$SubscriptionFromJson(json);
 
 @override final  String id;
 @override final  String? url;
 @override final  String name;
 @override final  DateTime lastUpdatedAt;
+@override final  String? announce;
+@override final  DateTime? expiresAt;
+@override final  int? updateIntervalHours;
+@override final  int? usedBytes;
+@override final  int? dataLimitBytes;
 
 /// Create a copy of Subscription
 /// with the given fields replaced by the non-null parameter values.
@@ -233,16 +243,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Subscription&&(identical(other.id, id) || other.id == id)&&(identical(other.url, url) || other.url == url)&&(identical(other.name, name) || other.name == name)&&(identical(other.lastUpdatedAt, lastUpdatedAt) || other.lastUpdatedAt == lastUpdatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Subscription&&(identical(other.id, id) || other.id == id)&&(identical(other.url, url) || other.url == url)&&(identical(other.name, name) || other.name == name)&&(identical(other.lastUpdatedAt, lastUpdatedAt) || other.lastUpdatedAt == lastUpdatedAt)&&(identical(other.announce, announce) || other.announce == announce)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.updateIntervalHours, updateIntervalHours) || other.updateIntervalHours == updateIntervalHours)&&(identical(other.usedBytes, usedBytes) || other.usedBytes == usedBytes)&&(identical(other.dataLimitBytes, dataLimitBytes) || other.dataLimitBytes == dataLimitBytes));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,url,name,lastUpdatedAt);
+int get hashCode => Object.hash(runtimeType,id,url,name,lastUpdatedAt,announce,expiresAt,updateIntervalHours,usedBytes,dataLimitBytes);
 
 @override
 String toString() {
-  return 'Subscription(id: $id, url: $url, name: $name, lastUpdatedAt: $lastUpdatedAt)';
+  return 'Subscription(id: $id, url: $url, name: $name, lastUpdatedAt: $lastUpdatedAt, announce: $announce, expiresAt: $expiresAt, updateIntervalHours: $updateIntervalHours, usedBytes: $usedBytes, dataLimitBytes: $dataLimitBytes)';
 }
 
 
@@ -253,7 +263,7 @@ abstract mixin class _$SubscriptionCopyWith<$Res> implements $SubscriptionCopyWi
   factory _$SubscriptionCopyWith(_Subscription value, $Res Function(_Subscription) _then) = __$SubscriptionCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String? url, String name, DateTime lastUpdatedAt
+ String id, String? url, String name, DateTime lastUpdatedAt, String? announce, DateTime? expiresAt, int? updateIntervalHours, int? usedBytes, int? dataLimitBytes
 });
 
 
@@ -270,13 +280,18 @@ class __$SubscriptionCopyWithImpl<$Res>
 
 /// Create a copy of Subscription
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? url = freezed,Object? name = null,Object? lastUpdatedAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? url = freezed,Object? name = null,Object? lastUpdatedAt = null,Object? announce = freezed,Object? expiresAt = freezed,Object? updateIntervalHours = freezed,Object? usedBytes = freezed,Object? dataLimitBytes = freezed,}) {
   return _then(_Subscription(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,url: freezed == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
 as String?,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
 as String,lastUpdatedAt: null == lastUpdatedAt ? _self.lastUpdatedAt : lastUpdatedAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,announce: freezed == announce ? _self.announce : announce // ignore: cast_nullable_to_non_nullable
+as String?,expiresAt: freezed == expiresAt ? _self.expiresAt : expiresAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,updateIntervalHours: freezed == updateIntervalHours ? _self.updateIntervalHours : updateIntervalHours // ignore: cast_nullable_to_non_nullable
+as int?,usedBytes: freezed == usedBytes ? _self.usedBytes : usedBytes // ignore: cast_nullable_to_non_nullable
+as int?,dataLimitBytes: freezed == dataLimitBytes ? _self.dataLimitBytes : dataLimitBytes // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 

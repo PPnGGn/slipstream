@@ -2,12 +2,11 @@ import 'dart:convert';
 import 'package:collection/collection.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
-import 'country_code_extractor.dart';
+import 'package:slipstream/core/utils/formatters.dart';
 
 class CustomJsonParser {
   final Talker _talker;
-  final CountryCodeExtractor _countryCodeExtractor;
-  CustomJsonParser(this._talker, this._countryCodeExtractor);
+  CustomJsonParser(this._talker);
 
   List<VpnServer> parse(String rawJson, String sourceId) {
     final decoded = jsonDecode(rawJson);
@@ -47,7 +46,7 @@ class CustomJsonParser {
             id: '$baseId:#$index',
             subscriptionId: sourceId,
             title: title,
-            countryCode: _countryCodeExtractor.extract(title),
+            countryCode: countryCodeFromFlag(title) ?? unknownCountryCode,
             configJson: jsonEncode(
               _buildServerConfig(config, proxyOutbound, normalizedProxy),
             ),

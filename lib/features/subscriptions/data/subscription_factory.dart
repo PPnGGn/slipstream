@@ -29,6 +29,11 @@ class SubscriptionFactory {
           suggestedName: parsed.suggestedName,
         ),
         lastUpdatedAt: DateTime.now(),
+        announce: parsed.announce,
+        expiresAt: parsed.expiresAt,
+        updateIntervalHours: parsed.updateIntervalHours,
+        usedBytes: parsed.usedBytes,
+        dataLimitBytes: parsed.dataLimitBytes,
       ),
       servers: servers,
     );
@@ -42,6 +47,11 @@ class SubscriptionFactory {
     return StoredSubscription(
       subscription: existing.subscription.copyWith(
         lastUpdatedAt: DateTime.now(),
+        announce: parsed.announce,
+        expiresAt: parsed.expiresAt,
+        updateIntervalHours: parsed.updateIntervalHours,
+        usedBytes: parsed.usedBytes,
+        dataLimitBytes: parsed.dataLimitBytes,
       ),
       servers: _reassign(parsed.servers, id),
     );

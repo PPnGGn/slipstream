@@ -1,14 +1,13 @@
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
-import 'country_code_extractor.dart';
+import 'package:slipstream/core/utils/formatters.dart';
 import 'xray_config_builder.dart';
 
 class VlessUriParser {
   final Talker _talker;
   final XrayConfigBuilder _configBuilder;
-  final CountryCodeExtractor _countryCodeExtractor;
 
-  VlessUriParser(this._talker, this._configBuilder, this._countryCodeExtractor);
+  VlessUriParser(this._talker, this._configBuilder);
 
   bool isVless(String s) => s.trim().toLowerCase().startsWith('vless://');
 
@@ -60,7 +59,7 @@ class VlessUriParser {
             id: '$address:$port:$uuid:#$index',
             subscriptionId: sourceId,
             title: title,
-            countryCode: _countryCodeExtractor.extract(title),
+            countryCode: countryCodeFromFlag(title) ?? unknownCountryCode,
             configJson: configJson,
           ),
         );

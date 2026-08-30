@@ -1,19 +1,14 @@
 import 'dart:convert';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
-import 'country_code_extractor.dart';
+import 'package:slipstream/core/utils/formatters.dart';
 import 'xray_config_builder.dart';
 
 class ShadowsocksUriParser {
   final Talker _talker;
   final XrayConfigBuilder _configBuilder;
-  final CountryCodeExtractor _countryCodeExtractor;
 
-  ShadowsocksUriParser(
-    this._talker,
-    this._configBuilder,
-    this._countryCodeExtractor,
-  );
+  ShadowsocksUriParser(this._talker, this._configBuilder);
 
   bool isShadowsocks(String s) => s.trim().toLowerCase().startsWith('ss://');
 
@@ -96,7 +91,7 @@ class ShadowsocksUriParser {
       id: '$host:$port:$method:#$index',
       subscriptionId: sourceId,
       title: title,
-      countryCode: _countryCodeExtractor.extract(title),
+      countryCode: countryCodeFromFlag(title) ?? unknownCountryCode,
       configJson: configJson,
     );
   }
