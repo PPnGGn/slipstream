@@ -9,7 +9,7 @@ import 'package:slipstream/core/theme/app_theme.dart';
 import 'package:slipstream/core/ui/clipboard.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
 import 'package:slipstream/features/subscriptions/data/ping/ping_quality.dart';
-import 'package:slipstream/features/subscriptions/data/server_search.dart';
+import 'package:slipstream/features/subscriptions/data/search.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/server_tile.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/subscription_info.dart';
 

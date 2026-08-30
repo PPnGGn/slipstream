@@ -6,6 +6,7 @@ import 'package:talker_flutter/talker_flutter.dart';
 import 'package:slipstream/core/models/stored_subscription/stored_subscription.dart';
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/core/models/result.dart';
+import 'package:slipstream/core/service/vpn_service/vpn_service_cubit.dart';
 import 'package:slipstream/features/subscriptions/data/selected_server_store.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_factory.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_parser_service.dart';
@@ -21,11 +22,13 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
     required SubscriptionStorage storage,
     required SelectedServerStore selectedServerStore,
     required SubscriptionFactory factory,
+    required VpnServiceCubit vpnServiceCubit,
     required Talker talker,
   }) : _parser = parser,
        _storage = storage,
        _selectedServerStore = selectedServerStore,
        _factory = factory,
+       _vpnServiceCubit = vpnServiceCubit,
        _talker = talker,
        super(const SubscriptionsState()) {
     _init();
@@ -35,6 +38,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
   final SubscriptionStorage _storage;
   final SelectedServerStore _selectedServerStore;
   final SubscriptionFactory _factory;
+  final VpnServiceCubit _vpnServiceCubit;
   final Talker _talker;
 
   Future<void> _init() async {
@@ -134,6 +138,19 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
         selectedServerId: serverId,
       ),
     );
+
+    final server = _findServer(subscriptionId, serverId);
+    if (server != null) _vpnServiceCubit.switchServerIfActive(server);
+  }
+
+  VpnServer? _findServer(String subscriptionId, String serverId) {
+    for (final stored in state.subscriptions) {
+      if (stored.subscription.id != subscriptionId) continue;
+      for (final server in stored.servers) {
+        if (server.id == serverId) return server;
+      }
+    }
+    return null;
   }
 
   /// Re-fetches a URL-based subscription and replaces its server list.

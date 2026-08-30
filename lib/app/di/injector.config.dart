@@ -120,17 +120,18 @@ extension GetItInjectableX on _i174.GetIt {
         talker: gh<_i207.Talker>(),
       ),
     );
+    gh.lazySingleton<_i962.AppColors>(
+      () => _i962.AppColors(themeCubit: gh<_i11.AppThemeCubit>()),
+    );
     gh.lazySingleton<_i83.SubscriptionsCubit>(
       () => _i83.SubscriptionsCubit(
         parser: gh<_i302.SubscriptionParserService>(),
         storage: gh<_i505.SubscriptionStorage>(),
         selectedServerStore: gh<_i830.SelectedServerStore>(),
         factory: gh<_i179.SubscriptionFactory>(),
+        vpnServiceCubit: gh<_i202.VpnServiceCubit>(),
         talker: gh<_i207.Talker>(),
       ),
-    );
-    gh.lazySingleton<_i962.AppColors>(
-      () => _i962.AppColors(themeCubit: gh<_i11.AppThemeCubit>()),
     );
     return this;
   }
