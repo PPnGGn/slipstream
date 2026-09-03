@@ -20,16 +20,33 @@ class _SettingsPageState extends State<SettingsPage> {
   final _updateCubit = getIt<UpdateServiceCubit>();
 
   Future<void> _checkForUpdates() async {
-    await _updateCubit.check();
+    final alreadyReady = _updateCubit.state.maybeWhen(
+      readyToInstall: (_, _) => true,
+      orElse: () => false,
+    );
+    if (alreadyReady) {
+      await showUpdateDialog(context);
+      return;
+    }
+
+    final alreadyDownloading = _updateCubit.state.maybeWhen(
+      downloading: (_, _) => true,
+      orElse: () => false,
+    );
+    if (alreadyDownloading) {
+      _showSnack('Downloading update…');
+      return;
+    }
+
+    await _updateCubit.check(userInitiated: true);
     if (!mounted) return;
 
     await _updateCubit.state.when(
       idle: () async {},
       checking: () async {},
-      available: (_) => showUpdateDialog(context),
       upToDate: () async => _showSnack("You're up to date"),
-      downloading: (_, _) async {},
-      readyToInstall: (_, _) async {},
+      downloading: (_, _) async => _showSnack('Downloading update…'),
+      readyToInstall: (_, _) => showUpdateDialog(context),
       error: (message) async => _showSnack(message),
     );
   }

@@ -228,8 +228,7 @@ jobs:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
         with:
           platform: android
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          args: --release-version ${{ needs.version-check.outputs.release_version }}
+          release-version: ${{ needs.version-check.outputs.release_version }}
 
       - uses: actions/upload-artifact@v4
         if: needs.version-check.outputs.mode == 'release'

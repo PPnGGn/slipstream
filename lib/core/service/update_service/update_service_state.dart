@@ -5,7 +5,6 @@ abstract class UpdateState with _$UpdateState {
   const factory UpdateState.idle() = _Idle;
   const factory UpdateState.checking() = _Checking;
   const factory UpdateState.upToDate() = _UpToDate;
-  const factory UpdateState.available(AppRelease release) = _Available;
   const factory UpdateState.downloading(
     AppRelease release, {
     required int receivedBytes,

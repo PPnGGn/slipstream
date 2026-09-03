@@ -36,7 +36,7 @@ class _UpdateDialog extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: .circular(AppDims.radiusCard),
               ),
-              title: const Text('Update available'),
+              title: Text(_title(state)),
               content: SingleChildScrollView(
                 child: _Body(
                   colors: colors,
@@ -52,6 +52,13 @@ class _UpdateDialog extends StatelessWidget {
     );
   }
 
+  String _title(UpdateState state) {
+    return state.maybeWhen(
+      error: (_) => 'Update failed',
+      orElse: () => 'Update ready',
+    );
+  }
+
   List<Widget> _actions(
     BuildContext context,
     UpdateServiceCubit cubit,
@@ -61,16 +68,6 @@ class _UpdateDialog extends StatelessWidget {
       idle: () => [_closeButton(context, cubit)],
       checking: () => [_closeButton(context, cubit)],
       upToDate: () => [_closeButton(context, cubit)],
-      available: (_) => [
-        TextButton(
-          onPressed: () {
-            cubit.dismiss();
-            Navigator.of(context).pop();
-          },
-          child: const Text('Later'),
-        ),
-        FilledButton(onPressed: cubit.download, child: const Text('Download')),
-      ],
       downloading: (_, _) => [
         TextButton(
           onPressed: cubit.cancelDownload,
@@ -78,15 +75,24 @@ class _UpdateDialog extends StatelessWidget {
         ),
       ],
       readyToInstall: (_, _) => [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Later'),
+        ),
         FilledButton(
-          onPressed: () {
-            cubit.install();
-            Navigator.of(context).pop();
+          onPressed: () async {
+            await cubit.install();
+            if (!context.mounted) return;
+            final failed = cubit.state.maybeWhen(
+              error: (_) => true,
+              orElse: () => false,
+            );
+            if (!failed) Navigator.of(context).pop();
           },
           child: const Text('Install'),
         ),
       ],
-      error: (message) => [_closeButton(context, cubit)],
+      error: (_) => [_closeButton(context, cubit)],
     );
   }
 
@@ -118,34 +124,22 @@ class _Body extends StatelessWidget {
       idle: () => const SizedBox.shrink(),
       checking: () => const Center(child: CircularProgressIndicator()),
       upToDate: () => const Text("You're up to date"),
-      available: (release) => _AvailableBody(
-        colors: colors,
-        textTheme: textTheme,
-        release: release,
-      ),
       downloading: (release, receivedBytes) => _DownloadingBody(
         colors: colors,
         textTheme: textTheme,
         release: release,
         receivedBytes: receivedBytes,
       ),
-      readyToInstall: (release, _) => Text(
-        'v${release.version} is ready to install.',
-        style: textTheme.bodyMedium,
-      ),
+      readyToInstall: (release, _) =>
+          _ReleaseBody(textTheme: textTheme, release: release),
       error: (message) => _ErrorBox(colors: colors, message: message),
     );
   }
 }
 
-class _AvailableBody extends StatelessWidget {
-  const _AvailableBody({
-    required this.colors,
-    required this.textTheme,
-    required this.release,
-  });
+class _ReleaseBody extends StatelessWidget {
+  const _ReleaseBody({required this.textTheme, required this.release});
 
-  final AppColors colors;
   final TextTheme textTheme;
   final AppRelease release;
 
@@ -157,7 +151,10 @@ class _AvailableBody extends StatelessWidget {
       crossAxisAlignment: .start,
       spacing: 8,
       children: [
-        Text('Version ${release.version}', style: textTheme.titleSmall),
+        Text(
+          'v${release.version} is ready to install.',
+          style: textTheme.bodyMedium,
+        ),
         Text(
           'Size: ${formatBytes(release.sizeBytes)}',
           style: textTheme.labelMedium,

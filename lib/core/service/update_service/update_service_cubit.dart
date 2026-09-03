@@ -1,11 +1,12 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:slipstream/core/models/app_release/app_release.dart';
 import 'package:slipstream/core/models/result.dart';
+import 'package:slipstream/features/update/data/update_check.dart';
 import 'package:slipstream/features/update/data/update_repository.dart';
 
 part 'update_service_state.dart';
@@ -20,50 +21,87 @@ class UpdateServiceCubit extends Cubit<UpdateState> {
        _talker = talker,
        super(const UpdateState.idle());
 
+  static const _progressThrottle = Duration(milliseconds: 200);
+
   final UpdateRepository _repository;
   final Talker _talker;
   StreamSubscription<int>? _downloadSubscription;
+  DateTime? _lastProgressEmit;
 
-  Future<void> check() async {
+  Future<void> check({bool userInitiated = false}) async {
+    if (state case _Checking() || _Downloading()) return;
+
     emit(const UpdateState.checking());
 
-    final result = await _repository.checkForUpdate();
+    final result = await _repository.checkAndResolveCache();
+    if (isClosed) return;
+
     switch (result) {
-      case Success(data: final release?):
-        emit(UpdateState.available(release));
-      case Success():
+      case Success(data: UpdateCheckUpToDate()):
         emit(const UpdateState.upToDate());
+      case Success(data: UpdateCheckReady(:final release, :final filePath)):
+        emit(UpdateState.readyToInstall(release, filePath));
+      case Success(
+        data: UpdateCheckNeedsDownload(
+          :final release,
+          :final filePath,
+          :final existingBytes,
+        ),
+      ):
+        await _startDownload(release, filePath, existingBytes);
       case Failure(:final message):
-        emit(UpdateState.error(message));
+        emit(
+          userInitiated ? UpdateState.error(message) : const UpdateState.idle(),
+        );
     }
   }
 
-  Future<void> download() async {
-    final release = state.whenOrNull(available: (release) => release);
-    if (release == null) return;
+  Future<void> _startDownload(
+    AppRelease release,
+    String filePath,
+    int existingBytes,
+  ) async {
+    await _downloadSubscription?.cancel();
+    _lastProgressEmit = null;
+    emit(UpdateState.downloading(release, receivedBytes: existingBytes));
 
-    final dir = await getTemporaryDirectory();
-    final filePath = '${dir.path}/slipstream-update.apk';
-
-    emit(UpdateState.downloading(release, receivedBytes: 0));
     _downloadSubscription = _repository
-        .downloadApk(release, toPath: filePath)
+        .downloadApk(release, toPath: filePath, existingBytes: existingBytes)
         .listen(
-          (received) =>
-              emit(UpdateState.downloading(release, receivedBytes: received)),
-          onDone: () => emit(UpdateState.readyToInstall(release, filePath)),
+          (received) => _emitProgress(release, received),
+          onDone: () {
+            if (isClosed) return;
+            final file = File(filePath);
+            if (file.existsSync() && file.lengthSync() == release.sizeBytes) {
+              emit(UpdateState.readyToInstall(release, filePath));
+            } else {
+              _talker.error('Updater: download size mismatch for $filePath');
+              emit(const UpdateState.idle());
+            }
+          },
           onError: (Object e, StackTrace st) {
             _talker.handle(e, st, 'Updater: download failed');
-            emit(UpdateState.error('Download failed: $e'));
+            if (!isClosed) emit(const UpdateState.idle());
           },
+          cancelOnError: true,
         );
+  }
+
+  void _emitProgress(AppRelease release, int received) {
+    if (isClosed) return;
+    final now = DateTime.now();
+    if (_lastProgressEmit != null &&
+        now.difference(_lastProgressEmit!) < _progressThrottle) {
+      return;
+    }
+    _lastProgressEmit = now;
+    emit(UpdateState.downloading(release, receivedBytes: received));
   }
 
   Future<void> cancelDownload() async {
     await _downloadSubscription?.cancel();
     _downloadSubscription = null;
-    final release = state.whenOrNull(downloading: (release, _) => release);
-    if (release != null) emit(UpdateState.available(release));
+    if (!isClosed) emit(const UpdateState.idle());
   }
 
   Future<void> install() async {
@@ -73,6 +111,7 @@ class UpdateServiceCubit extends Cubit<UpdateState> {
     if (filePath == null) return;
 
     final result = await _repository.install(filePath);
+    if (isClosed) return;
     if (result case Failure(:final message)) {
       emit(UpdateState.error(message));
     }
