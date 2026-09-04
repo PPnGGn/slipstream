@@ -18,6 +18,7 @@ class StreamOptions {
     this.headerType = '',
     this.seed = '',
     this.mode = '',
+    this.extra,
   });
 
   final String network; // tcp | ws | grpc | httpupgrade | xhttp | kcp
@@ -35,6 +36,9 @@ class StreamOptions {
   final String headerType;
   final String seed;
   final String mode;
+  // Decoded `extra=` blob some panels (3x-ui) attach to xhttp links — xmux,
+  // padding and sc* tuning that goes verbatim into xhttpSettings.extra.
+  final Map<String, dynamic>? extra;
 }
 
 class XrayConfigBuilder {
@@ -253,6 +257,7 @@ class XrayConfigBuilder {
           if (o.host.isNotEmpty) "host": o.host,
           if (o.mode.isNotEmpty) "mode": o.mode,
           "path": o.path.isNotEmpty ? o.path : "/",
+          if (o.extra != null) "extra": o.extra,
         };
       case 'kcp':
         stream["kcpSettings"] = {

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 
@@ -81,6 +82,21 @@ void warnIfInsecureRequested(Talker talker, Map<String, String> query) {
 }
 
 Map<String, String> rawQueryParameters(Uri uri) => parseQuery(uri.query);
+
+// Decodes the `extra=<json>` blob some panels (3x-ui) attach to xhttp
+// links — xmux/padding/sc* tuning that xray-core expects verbatim under
+// xhttpSettings.extra. Null (with a warning) if the value isn't a JSON object.
+Map<String, dynamic>? decodeExtra(Talker talker, String? raw) {
+  if (raw == null || raw.isEmpty) return null;
+  try {
+    final decoded = jsonDecode(raw);
+    if (decoded is Map<String, dynamic>) return decoded;
+  } catch (_) {
+    // falls through to the warning below
+  }
+  talker.warning('Parser: ignored a malformed extra= param: $raw');
+  return null;
+}
 
 Map<String, String> parseQuery(String query) {
   final result = <String, String>{};

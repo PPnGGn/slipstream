@@ -63,6 +63,7 @@ class TrojanUriParser extends UriSchemeParser {
         headerType: query['headerType'] ?? '',
         seed: query['seed'] ?? '',
         mode: query['mode'] ?? '',
+        extra: decodeExtra(talker, query['extra']),
       ),
     );
 
