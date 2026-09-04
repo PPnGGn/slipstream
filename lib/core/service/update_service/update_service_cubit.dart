@@ -105,17 +105,33 @@ class UpdateServiceCubit extends Cubit<UpdateState> {
   }
 
   Future<void> install() async {
-    final filePath = state.whenOrNull(
-      readyToInstall: (_, filePath) => filePath,
+    final ready = state.whenOrNull(
+      readyToInstall: (release, filePath) => (release, filePath),
     );
-    if (filePath == null) return;
+    if (ready == null) return;
+    final (release, filePath) = ready;
 
     final result = await _repository.install(filePath);
     if (isClosed) return;
-    if (result case Failure(:final message)) {
-      emit(UpdateState.error(message));
+    switch (result) {
+      case Success(data: InstallOutcome.launched):
+        break;
+      case Success(data: InstallOutcome.signatureConflict):
+        emit(UpdateState.signatureConflict(release, filePath));
+      case Failure(:final message):
+        emit(UpdateState.error(message));
     }
   }
+
+  Future<String?> exportApk() {
+    final conflict = state.whenOrNull(
+      signatureConflict: (release, filePath) => (release, filePath),
+    );
+    if (conflict == null) return Future.value(null);
+    return _repository.exportApk(conflict.$1, conflict.$2);
+  }
+
+  Future<void> uninstallForReinstall() => _repository.uninstallForReinstall();
 
   void dismiss() => emit(const UpdateState.idle());
 

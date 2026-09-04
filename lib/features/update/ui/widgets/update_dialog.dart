@@ -8,12 +8,20 @@ import 'package:slipstream/core/theme/app_theme.dart';
 import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
 import 'package:slipstream/core/utils/formatters.dart';
 
-Future<void> showUpdateDialog(BuildContext context) {
-  return showDialog<void>(
-    context: context,
-    barrierDismissible: false,
-    builder: (context) => const _UpdateDialog(),
-  );
+bool _updateDialogVisible = false;
+
+Future<void> showUpdateDialog(BuildContext context) async {
+  if (_updateDialogVisible) return;
+  _updateDialogVisible = true;
+  try {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const _UpdateDialog(),
+    );
+  } finally {
+    _updateDialogVisible = false;
+  }
 }
 
 class _UpdateDialog extends StatelessWidget {
@@ -55,6 +63,7 @@ class _UpdateDialog extends StatelessWidget {
   String _title(UpdateState state) {
     return state.maybeWhen(
       error: (_) => 'Update failed',
+      signatureConflict: (_, _) => 'Reinstall required',
       orElse: () => 'Update ready',
     );
   }
@@ -68,6 +77,7 @@ class _UpdateDialog extends StatelessWidget {
       idle: () => [_closeButton(context, cubit)],
       checking: () => [_closeButton(context, cubit)],
       upToDate: () => [_closeButton(context, cubit)],
+      signatureConflict: (_, _) => [_closeButton(context, cubit)],
       downloading: (_, _) => [
         TextButton(
           onPressed: cubit.cancelDownload,
@@ -83,11 +93,12 @@ class _UpdateDialog extends StatelessWidget {
           onPressed: () async {
             await cubit.install();
             if (!context.mounted) return;
-            final failed = cubit.state.maybeWhen(
+            final stayOpen = cubit.state.maybeWhen(
               error: (_) => true,
+              signatureConflict: (_, _) => true,
               orElse: () => false,
             );
-            if (!failed) Navigator.of(context).pop();
+            if (!stayOpen) Navigator.of(context).pop();
           },
           child: const Text('Install'),
         ),
@@ -132,7 +143,97 @@ class _Body extends StatelessWidget {
       ),
       readyToInstall: (release, _) =>
           _ReleaseBody(textTheme: textTheme, release: release),
+      signatureConflict: (release, _) => _SignatureConflictBody(
+        colors: colors,
+        textTheme: textTheme,
+        release: release,
+      ),
       error: (message) => _ErrorBox(colors: colors, message: message),
+    );
+  }
+}
+
+class _SignatureConflictBody extends StatefulWidget {
+  const _SignatureConflictBody({
+    required this.colors,
+    required this.textTheme,
+    required this.release,
+  });
+
+  final AppColors colors;
+  final TextTheme textTheme;
+  final AppRelease release;
+
+  @override
+  State<_SignatureConflictBody> createState() => _SignatureConflictBodyState();
+}
+
+class _SignatureConflictBodyState extends State<_SignatureConflictBody> {
+  final _cubit = getIt<UpdateServiceCubit>();
+  var _saving = false;
+  var _saveTried = false;
+  String? _savedTo;
+
+  Future<void> _save() async {
+    setState(() => _saving = true);
+    final location = await _cubit.exportApk();
+    if (!mounted) return;
+    setState(() {
+      _saving = false;
+      _saveTried = true;
+      _savedTo = location;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final version = widget.release.version;
+    return Column(
+      mainAxisSize: .min,
+      crossAxisAlignment: .start,
+      spacing: 12,
+      children: [
+        Text(
+          'The installed app is signed with a different key than v$version, '
+          "so Android can't update it in place.",
+          style: widget.textTheme.bodyMedium,
+        ),
+        Text(
+          '1. Save the APK\n'
+          '2. Uninstall Slipstream\n'
+          '3. Open the saved APK to install v$version',
+          style: widget.textTheme.bodySmall,
+        ),
+        if (_savedTo != null)
+          Text(
+            'Saved to $_savedTo',
+            style: widget.textTheme.labelMedium?.copyWith(
+              color: widget.colors.primary,
+            ),
+          )
+        else if (_saveTried)
+          Text(
+            "Couldn't save the APK. Download the latest release from GitHub, "
+            'then uninstall and install it manually.',
+            style: widget.textTheme.labelMedium?.copyWith(
+              color: widget.colors.danger,
+            ),
+          ),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            OutlinedButton(
+              onPressed: _saving ? null : _save,
+              child: Text(_saving ? 'Saving…' : 'Save APK'),
+            ),
+            FilledButton(
+              onPressed: _cubit.uninstallForReinstall,
+              child: const Text('Uninstall'),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

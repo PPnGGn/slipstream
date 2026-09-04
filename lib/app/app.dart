@@ -137,7 +137,10 @@ class _UpdaterHostState extends State<_UpdaterHost> {
             );
             return nowReady && !wasReady;
           },
-          listener: (context, _) => showUpdateDialog(context),
+          listener: (_, _) {
+            final dialogContext = rootNavigatorKey.currentContext;
+            if (dialogContext != null) showUpdateDialog(dialogContext);
+          },
           child: widget.child,
         ),
       ),

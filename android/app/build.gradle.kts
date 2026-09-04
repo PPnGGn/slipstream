@@ -14,6 +14,10 @@ val keystoreProperties = Properties().apply {
     }
 }
 
+val hasReleaseKeystore = listOf("keyAlias", "keyPassword", "storeFile", "storePassword")
+    .all { (keystoreProperties[it] as String?).isNullOrBlank().not() }
+val allowDebugSigningForRelease = project.hasProperty("slipstream.devSigning")
+
 android {
     namespace = "com.slipstream"
     compileSdk = flutter.compileSdkVersion
@@ -36,7 +40,7 @@ android {
     }
 
     signingConfigs {
-        if (keystoreProperties.isNotEmpty()) {
+        if (hasReleaseKeystore) {
             create("release") {
                 keyAlias = keystoreProperties["keyAlias"] as String
                 keyPassword = keystoreProperties["keyPassword"] as String
@@ -48,11 +52,27 @@ android {
 
     buildTypes {
         release {
-            signingConfig = if (keystoreProperties.isNotEmpty()) {
+            signingConfig = if (hasReleaseKeystore) {
                 signingConfigs.getByName("release")
             } else {
                 signingConfigs.getByName("debug")
             }
+        }
+    }
+}
+
+if (!hasReleaseKeystore && !allowDebugSigningForRelease) {
+    gradle.taskGraph.whenReady {
+        val buildsRelease = allTasks.any { task ->
+            task.project == project &&
+                (task.name == "assembleRelease" || task.name == "bundleRelease")
+        }
+        if (buildsRelease) {
+            throw GradleException(
+                "Release build has no signing keystore. Add android/key.properties " +
+                    "pointing at the real release keystore, or pass " +
+                    "-Pslipstream.devSigning to sign with the debug key (local testing only).",
+            )
         }
     }
 }

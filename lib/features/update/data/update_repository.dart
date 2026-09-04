@@ -11,6 +11,8 @@ import 'package:slipstream/features/update/data/update_cache.dart';
 import 'package:slipstream/features/update/data/update_check.dart';
 import 'package:slipstream/features/update/data/updater_api.g.dart';
 
+enum InstallOutcome { launched, signatureConflict }
+
 @lazySingleton
 class UpdateRepository {
   final Talker _talker;
@@ -140,7 +142,7 @@ class UpdateRepository {
     return controller.stream;
   }
 
-  Future<Result<void>> install(String filePath) async {
+  Future<Result<InstallOutcome>> install(String filePath) async {
     try {
       final allowed = await _installer.canInstallPackages();
       if (!allowed) {
@@ -150,10 +152,18 @@ class UpdateRepository {
         );
       }
 
+      final signatureMatches = await _installer.apkSignatureMatchesInstalled(
+        filePath,
+      );
+      if (!signatureMatches) {
+        _talker.error('Updater: APK signer differs from the installed package');
+        return const Success(InstallOutcome.signatureConflict);
+      }
+
       final result = await _installer.installApk(filePath);
       if (result.successful) {
         _talker.info('Updater: installer launched for $filePath');
-        return const Success(null);
+        return const Success(InstallOutcome.launched);
       }
       final errorMsg = result.error ?? 'Unknown install error';
       _talker.error('Updater: install error: $errorMsg');
@@ -163,6 +173,15 @@ class UpdateRepository {
       return Failure('System failure: $e', e);
     }
   }
+
+  Future<String?> exportApk(AppRelease release, String filePath) {
+    return _installer.exportApkToDownloads(
+      filePath,
+      apkFileName(release.version, release.buildNumber),
+    );
+  }
+
+  Future<void> uninstallForReinstall() => _installer.uninstallSelf();
 
   @disposeMethod
   void dispose() => _client.close();

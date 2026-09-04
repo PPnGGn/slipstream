@@ -47,6 +47,7 @@ class _SettingsPageState extends State<SettingsPage> {
       upToDate: () async => _showSnack("You're up to date"),
       downloading: (_, _) async => _showSnack('Downloading update…'),
       readyToInstall: (_, _) => showUpdateDialog(context),
+      signatureConflict: (_, _) => showUpdateDialog(context),
       error: (message) async => _showSnack(message),
     );
   }

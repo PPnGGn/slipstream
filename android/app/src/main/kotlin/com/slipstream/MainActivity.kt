@@ -2,12 +2,17 @@ package com.slipstream
 
 import android.Manifest
 import android.app.Activity
+import android.content.ContentValues
 import android.content.Intent
+import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.content.pm.Signature
 import android.net.Uri
 import android.net.VpnService
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.MediaStore
 import android.provider.Settings
 import android.util.Log
 import androidx.core.app.ActivityCompat
@@ -19,6 +24,7 @@ import com.slipstream.updater.UpdateInstaller
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import java.io.File
+import java.security.MessageDigest
 
 class MainActivity : FlutterActivity(), VpnConnection, UpdateInstaller {
 
@@ -146,6 +152,109 @@ class MainActivity : FlutterActivity(), VpnConnection, UpdateInstaller {
         } else {
             true
         }
+    }
+
+    override fun apkSignatureMatchesInstalled(filePath: String): Boolean {
+        return try {
+            val installed = signerDigests(packageManager.getPackageInfo(packageName, signingInfoFlag()))
+            val incoming = signerDigests(packageManager.getPackageArchiveInfo(filePath, signingInfoFlag()))
+            if (installed.isEmpty() || incoming.isEmpty()) {
+                true
+            } else {
+                installed.intersect(incoming).isNotEmpty()
+            }
+        } catch (e: Exception) {
+            Log.e("UPDATER_BRIDGE", "Failed to compare signatures", e)
+            true
+        }
+    }
+
+    override fun exportApkToDownloads(
+            filePath: String,
+            fileName: String,
+            callback: (Result<String?>) -> Unit,
+    ) {
+        Thread {
+                    val location =
+                            try {
+                                copyApkToDownloads(filePath, fileName)
+                            } catch (e: Exception) {
+                                Log.e("UPDATER_BRIDGE", "Failed to export APK", e)
+                                null
+                            }
+                    runOnUiThread { callback(Result.success(location)) }
+                }
+                .start()
+    }
+
+    override fun uninstallSelf() {
+        startActivity(
+                Intent(Intent.ACTION_DELETE, Uri.parse("package:$packageName")).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+        )
+    }
+
+    @Suppress("DEPRECATION")
+    private fun signingInfoFlag(): Int {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            PackageManager.GET_SIGNING_CERTIFICATES
+        } else {
+            PackageManager.GET_SIGNATURES
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun signerDigests(info: PackageInfo?): Set<String> {
+        if (info == null) return emptySet()
+        val signatures: Array<Signature>? =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    val signingInfo = info.signingInfo
+                    when {
+                        signingInfo == null -> null
+                        signingInfo.hasMultipleSigners() -> signingInfo.apkContentsSigners
+                        else -> signingInfo.signingCertificateHistory
+                    }
+                } else {
+                    info.signatures
+                }
+        if (signatures.isNullOrEmpty()) return emptySet()
+        val digest = MessageDigest.getInstance("SHA-256")
+        return signatures
+                .map { signature ->
+                    digest.digest(signature.toByteArray()).joinToString("") { "%02x".format(it) }
+                }
+                .toSet()
+    }
+
+    private fun copyApkToDownloads(filePath: String, fileName: String): String? {
+        val source = File(filePath)
+        if (!source.exists()) return null
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val values =
+                    ContentValues().apply {
+                        put(MediaStore.Downloads.DISPLAY_NAME, fileName)
+                        put(MediaStore.Downloads.MIME_TYPE, "application/vnd.android.package-archive")
+                        put(MediaStore.Downloads.IS_PENDING, 1)
+                    }
+            val resolver = contentResolver
+            val uri =
+                    resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: return null
+            resolver.openOutputStream(uri).use { output ->
+                source.inputStream().use { it.copyTo(output!!) }
+            }
+            values.clear()
+            values.put(MediaStore.Downloads.IS_PENDING, 0)
+            resolver.update(uri, values, null, null)
+            return "Download/$fileName"
+        }
+
+        val downloads =
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        if (!downloads.exists() && !downloads.mkdirs()) return null
+        source.copyTo(File(downloads, fileName), overwrite = true)
+        return "Download/$fileName"
     }
 
     override fun openInstallSettings() {

@@ -13,5 +13,9 @@ abstract class UpdateState with _$UpdateState {
     AppRelease release,
     String filePath,
   ) = _ReadyToInstall;
+  const factory UpdateState.signatureConflict(
+    AppRelease release,
+    String filePath,
+  ) = _SignatureConflict;
   const factory UpdateState.error(String message) = _Error;
 }

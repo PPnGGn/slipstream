@@ -197,7 +197,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          cat > key.properties <<EOF
+          cat > android/key.properties <<EOF
           storeFile=$RUNNER_TEMP/release.jks
           storePassword=$KEYSTORE_PASSWORD
           keyAlias=$KEY_ALIAS
