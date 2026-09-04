@@ -1,5 +1,5 @@
-import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'base64_codec.dart';
 
 class SubscriptionResponse {
   final String body;
@@ -22,11 +22,16 @@ class SubscriptionResponse {
 }
 
 class SubscriptionFetcher {
-  Future<String> fetchText(String url) async => (await fetch(url)).body;
+  final http.Client _client;
+
+  SubscriptionFetcher({http.Client? client})
+    : _client = client ?? http.Client();
+
+  static const _userAgent = 'slipstream';
 
   Future<SubscriptionResponse> fetch(String url) async {
-    final response = await http
-        .get(Uri.parse(url))
+    final response = await _client
+        .get(Uri.parse(url), headers: const {'User-Agent': _userAgent})
         .timeout(
           const Duration(seconds: 10),
           onTimeout: () =>
@@ -53,15 +58,13 @@ class SubscriptionFetcher {
   /// Decodes a header that may be plain text or `base64:<payload>`.
   String? _decodeTextHeader(String? header) {
     if (header == null || header.isEmpty) return null;
-    final raw = header.startsWith('base64:')
-        ? header.substring('base64:'.length)
-        : header;
-    try {
-      final decoded = decodeBase64(raw).trim();
-      return decoded.isNotEmpty ? decoded : null;
-    } catch (_) {
-      return header.trim().isNotEmpty ? header.trim() : null;
+    final plain = header.trim();
+    if (!header.startsWith('base64:')) {
+      return plain.isNotEmpty ? plain : null;
     }
+    final decoded = tryDecodeBase64(header.substring('base64:'.length))?.trim();
+    if (decoded != null && decoded.isNotEmpty) return decoded;
+    return plain.isNotEmpty ? plain : null;
   }
 
   ({DateTime? expiresAt, int? usedBytes, int? dataLimitBytes}) _parseUserInfo(
@@ -92,18 +95,5 @@ class SubscriptionFetcher {
           : null,
       dataLimitBytes: (total != null && total > 0) ? total : null,
     );
-  }
-
-  String decodeBase64(String str) {
-    String normalized = str.replaceAll(RegExp(r'\s+'), '');
-    final padding = normalized.length % 4;
-    if (padding != 0) {
-      normalized += '=' * (4 - padding);
-    }
-    try {
-      return utf8.decode(base64Decode(normalized));
-    } catch (_) {
-      return utf8.decode(base64Url.decode(normalized));
-    }
   }
 }

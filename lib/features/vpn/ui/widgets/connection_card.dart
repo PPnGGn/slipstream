@@ -356,9 +356,11 @@ class _Chips extends StatelessWidget {
 
   static String _protocolOf(String configJson) {
     final match = RegExp(
-      r'"protocol"\s*:\s*"(vless|vmess|shadowsocks|trojan)"',
+      r'"protocol"\s*:\s*"(vless|vmess|shadowsocks|trojan|hysteria)"',
     ).firstMatch(configJson);
-    return match?.group(1)?.toUpperCase() ?? 'PROXY';
+    final protocol = match?.group(1);
+    if (protocol == 'hysteria') return 'HYSTERIA2';
+    return protocol?.toUpperCase() ?? 'PROXY';
   }
 }
 

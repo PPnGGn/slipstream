@@ -1,53 +1,99 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_fetcher.dart';
 
 void main() {
-  final fetcher = SubscriptionFetcher();
+  Future<SubscriptionResponse> fetchWith(Map<String, String> headers) {
+    final client = MockClient(
+      (_) async => http.Response(
+        'vless://uuid@host.example.com:443',
+        200,
+        headers: headers,
+      ),
+    );
+    return SubscriptionFetcher(client: client).fetch('https://sub.example.com');
+  }
 
-  group('SubscriptionFetcher.decodeBase64', () {
-    test('decodes standard base64 with padding', () {
-      // "hello" -> 5 bytes, not divisible by 3, so it needs padding
-      final decoded = fetcher.decodeBase64('aGVsbG8=');
+  group('SubscriptionFetcher headers', () {
+    test('keeps a plain text profile-title as is', () async {
+      final response = await fetchWith({'profile-title': 'My VPN'});
 
-      expect(decoded, equals('hello'));
+      expect(response.profileTitle, equals('My VPN'));
     });
 
-    test('decodes base64 with padding stripped by adding it back', () {
-      final decoded = fetcher.decodeBase64('aGVsbG8');
+    test('keeps a plain title that happens to be valid base64', () async {
+      // "Fast" decodes as base64 but is meant to be read literally
+      final response = await fetchWith({'profile-title': 'Fast'});
 
-      expect(decoded, equals('hello'));
+      expect(response.profileTitle, equals('Fast'));
     });
 
-    test('decodes url-safe base64 containing - and _ characters', () {
-      // "a??b" encoded as YT8/Yg==, with '/' swapped for '_'
-      final decoded = fetcher.decodeBase64('YT8_Yg==');
+    test('decodes a title marked with the base64: prefix', () async {
+      final encoded = base64.encode(utf8.encode('Моя подписка'));
+      final response = await fetchWith({'profile-title': 'base64:$encoded'});
 
-      expect(decoded, equals('a??b'));
+      expect(response.profileTitle, equals('Моя подписка'));
     });
 
-    test('strips whitespace and newlines before decoding', () {
-      final decoded = fetcher.decodeBase64('aGVs\nbG8=');
+    test(
+      'falls back to the raw header when base64: payload is broken',
+      () async {
+        final response = await fetchWith({'profile-title': 'base64:!!!!'});
 
-      expect(decoded, equals('hello'));
-    });
+        expect(response.profileTitle, equals('base64:!!!!'));
+      },
+    );
 
-    test('decodes non-ascii text correctly as utf8', () {
-      // "Café 🇳🇱" encoded as base64
-      final decoded = fetcher.decodeBase64('Q2Fmw6kg8J+Hs/Cfh7E=');
+    test('parses traffic and expiry from subscription-userinfo', () async {
+      final response = await fetchWith({
+        'subscription-userinfo':
+            'upload=100; download=900; total=5000; expire=1800000000',
+      });
 
-      expect(decoded, equals('Café 🇳🇱'));
-    });
-
-    test('returns an empty string for empty input', () {
-      final decoded = fetcher.decodeBase64('');
-
-      expect(decoded, equals(''));
-    });
-
-    test('throws FormatException for garbage input', () {
+      expect(response.usedBytes, equals(1000));
+      expect(response.dataLimitBytes, equals(5000));
       expect(
-        () => fetcher.decodeBase64('!!!!'),
-        throwsFormatException,
+        response.expiresAt,
+        equals(DateTime.fromMillisecondsSinceEpoch(1800000000 * 1000)),
+      );
+    });
+
+    test('leaves usage fields null when the header is absent', () async {
+      final response = await fetchWith({});
+
+      expect(response.usedBytes, isNull);
+      expect(response.dataLimitBytes, isNull);
+      expect(response.expiresAt, isNull);
+      expect(response.profileTitle, isNull);
+    });
+
+    test(
+      'sends a User-Agent so panels do not serve a fallback format',
+      () async {
+        String? sentUserAgent;
+        final client = MockClient((request) async {
+          sentUserAgent = request.headers['User-Agent'];
+          return http.Response('vless://uuid@host.example.com:443', 200);
+        });
+
+        await SubscriptionFetcher(
+          client: client,
+        ).fetch('https://sub.example.com');
+
+        expect(sentUserAgent, equals('slipstream'));
+      },
+    );
+
+    test('throws on a non-200 response', () async {
+      final client = MockClient((_) async => http.Response('nope', 403));
+
+      expect(
+        () =>
+            SubscriptionFetcher(client: client).fetch('https://x.example.com'),
+        throwsException,
       );
     });
   });

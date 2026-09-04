@@ -1,36 +1,19 @@
-import 'dart:convert';
-import 'package:talker_flutter/talker_flutter.dart';
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/core/utils/formatters.dart';
+import 'base64_codec.dart';
+import 'uri_scheme_parser.dart';
 import 'xray_config_builder.dart';
 
-class ShadowsocksUriParser {
-  final Talker _talker;
+class ShadowsocksUriParser extends UriSchemeParser {
   final XrayConfigBuilder _configBuilder;
 
-  ShadowsocksUriParser(this._talker, this._configBuilder);
+  ShadowsocksUriParser(super.talker, this._configBuilder);
 
-  bool isShadowsocks(String s) => s.trim().toLowerCase().startsWith('ss://');
+  @override
+  List<String> get schemes => const ['ss'];
 
-  List<VpnServer> parseLines(String text, String sourceId) {
-    final lines = text
-        .split(RegExp(r'\r?\n'))
-        .where((l) => l.trim().isNotEmpty);
-    final result = <VpnServer>[];
-
-    for (final (index, line) in lines.indexed) {
-      if (!isShadowsocks(line)) continue;
-      try {
-        final server = _parseOne(line.trim(), sourceId, index);
-        if (server != null) result.add(server);
-      } catch (e) {
-        _talker.warning('Parser: skipped a broken ss:// link -> $e');
-      }
-    }
-    return result;
-  }
-
-  VpnServer? _parseOne(String line, String sourceId, int index) {
+  @override
+  VpnServer? parseOne(String line, String sourceId, int index) {
     var body = line.substring('ss://'.length);
 
     String title = '';
@@ -45,25 +28,32 @@ class ShadowsocksUriParser {
     String password;
     String host;
     int port;
+    var query = const <String, String>{};
 
     final atIndex = body.lastIndexOf('@');
     if (atIndex >= 0) {
-      // SIP002: base64url(method:password)@host:port[/?plugin=...]
+      // SIP002: base64url(method:password)@host:port[/?type=ws&plugin=...]
       final creds = _decodeUserInfo(body.substring(0, atIndex));
       if (creds == null) return null;
       (method, password) = creds;
 
       var hostPart = body.substring(atIndex + 1);
-      // no plugin support, cut off the path/query if there is one
       final cut = hostPart.indexOf(RegExp(r'[/?]'));
-      if (cut >= 0) hostPart = hostPart.substring(0, cut);
+      if (cut >= 0) {
+        final tail = hostPart.substring(cut);
+        final questionMark = tail.indexOf('?');
+        if (questionMark >= 0) {
+          query = parseQuery(tail.substring(questionMark + 1));
+        }
+        hostPart = hostPart.substring(0, cut);
+      }
 
       final hp = _splitHostPort(hostPart);
       if (hp == null) return null;
       (host, port) = hp;
     } else {
       // Legacy: base64(method:password@host:port)
-      final decoded = _tryBase64(body);
+      final decoded = tryDecodeBase64(body);
       if (decoded == null) return null;
       final at = decoded.lastIndexOf('@');
       if (at < 0) return null;
@@ -79,12 +69,49 @@ class ShadowsocksUriParser {
     if (method.isEmpty || host.isEmpty) return null;
     if (title.isEmpty) title = '$host:$port';
 
+    final StreamOptions stream;
+    final plugin = (query['plugin'] ?? '').trim();
+    if (plugin.isNotEmpty) {
+      final fromPlugin = _streamFromPlugin(plugin);
+      if (fromPlugin == null) {
+        talker.warning(
+          'Parser: skipped an ss link with an unsupported plugin=$plugin',
+        );
+        return null;
+      }
+      stream = fromPlugin;
+    } else {
+      final network = normalizeNetwork(query['type']);
+      if (network == null) {
+        talker.warning(
+          'Parser: skipped an ss link with unknown type=${query['type']}',
+        );
+        return null;
+      }
+      warnIfInsecureRequested(talker, query);
+      stream = StreamOptions(
+        network: network,
+        security: _security(query),
+        sni: query['sni'] ?? '',
+        fp: query['fp'] ?? '',
+        alpn: query['alpn'] ?? '',
+        path: query['path'] ?? '',
+        host: query['host'] ?? '',
+        serviceName: query['serviceName'] ?? '',
+        authority: query['authority'] ?? '',
+        headerType: query['headerType'] ?? '',
+        seed: query['seed'] ?? '',
+        mode: query['mode'] ?? '',
+      );
+    }
+
     final configJson = _configBuilder.buildShadowsocks(
       method: method,
       password: password,
       address: host,
       port: port,
       title: title,
+      stream: stream,
     );
 
     return VpnServer(
@@ -96,8 +123,56 @@ class ShadowsocksUriParser {
     );
   }
 
+  // SIP003 plugins are separate processes xray cannot run, but the two common
+  // ones only wrap the traffic in a transport xray has natively.
+  StreamOptions? _streamFromPlugin(String plugin) {
+    final parts = plugin.split(';');
+    final options = <String, String>{};
+    for (final part in parts.skip(1)) {
+      final eq = part.indexOf('=');
+      if (eq < 0) {
+        options[part.trim()] = '';
+      } else {
+        options[part.substring(0, eq).trim()] = part.substring(eq + 1).trim();
+      }
+    }
+
+    switch (parts.first.trim()) {
+      case 'v2ray-plugin':
+      case 'xray-plugin':
+        final mode = options['mode'] ?? 'websocket';
+        if (mode != 'websocket') return null;
+        final host = options['host'] ?? '';
+        return StreamOptions(
+          network: 'ws',
+          security: options.containsKey('tls') ? 'tls' : 'none',
+          sni: host,
+          path: options['path'] ?? '',
+          host: host,
+        );
+      case 'obfs-local':
+      case 'simple-obfs':
+        if (options['obfs'] != 'http') return null;
+        return StreamOptions(
+          network: 'tcp',
+          headerType: 'http',
+          host: options['obfs-host'] ?? '',
+          path: options['obfs-uri'] ?? '',
+        );
+      default:
+        return null;
+    }
+  }
+
+  String _security(Map<String, String> query) {
+    return switch ((query['security'] ?? '').trim().toLowerCase()) {
+      'tls' => 'tls',
+      _ => 'none',
+    };
+  }
+
   (String, String)? _decodeUserInfo(String userInfo) {
-    final decoded = _tryBase64(userInfo) ?? Uri.decodeComponent(userInfo);
+    final decoded = tryDecodeBase64(userInfo) ?? Uri.decodeComponent(userInfo);
     return _splitOnFirstColon(decoded);
   }
 
@@ -128,21 +203,5 @@ class ShadowsocksUriParser {
     final port = int.tryParse(portStr);
     if (host.isEmpty || port == null || port <= 0 || port > 65535) return null;
     return (host, port);
-  }
-
-  // Decodes a (possibly unpadded, standard or URL-safe) Base64 string, or null.
-  String? _tryBase64(String s) {
-    var normalized = s.replaceAll(RegExp(r'\s+'), '');
-    final padding = normalized.length % 4;
-    if (padding != 0) normalized += '=' * (4 - padding);
-    try {
-      return utf8.decode(base64.decode(normalized));
-    } catch (_) {
-      try {
-        return utf8.decode(base64Url.decode(normalized));
-      } catch (_) {
-        return null;
-      }
-    }
   }
 }

@@ -19,25 +19,25 @@ void main() {
     return tag == null ? base : '$base#${Uri.encodeComponent(tag)}';
   }
 
-  group('ShadowsocksUriParser.isShadowsocks', () {
+  group('ShadowsocksUriParser.matches', () {
     test('returns true for a plain ss:// link', () {
-      expect(parser.isShadowsocks('ss://abc@host:8388'), isTrue);
+      expect(parser.matches('ss://abc@host:8388'), isTrue);
     });
 
     test('returns true regardless of scheme casing', () {
-      expect(parser.isShadowsocks('SS://abc@host:8388'), isTrue);
+      expect(parser.matches('SS://abc@host:8388'), isTrue);
     });
 
     test('returns true when the link has surrounding whitespace', () {
-      expect(parser.isShadowsocks('   ss://abc@host:8388   '), isTrue);
+      expect(parser.matches('   ss://abc@host:8388   '), isTrue);
     });
 
     test('returns false for a vless scheme', () {
-      expect(parser.isShadowsocks('vless://uuid@host:443'), isFalse);
+      expect(parser.matches('vless://uuid@host:443'), isFalse);
     });
 
     test('returns false for an empty string', () {
-      expect(parser.isShadowsocks(''), isFalse);
+      expect(parser.matches(''), isFalse);
     });
   });
 
@@ -87,7 +87,7 @@ void main() {
       expect(servers.single.configJson, contains('"password":"p@ss"'));
     });
 
-    test('ignores a plugin path/query on the host part', () {
+    test('skips a link whose plugin xray cannot replace with a transport', () {
       final link = sip002(
         'aes-256-gcm',
         'pw',
@@ -96,7 +96,60 @@ void main() {
 
       final servers = parser.parseLines(link, 'sub');
 
-      expect(servers.single.id, equals('example.com:8388:aes-256-gcm:#0'));
+      expect(servers, isEmpty);
+    });
+
+    test('translates v2ray-plugin websocket into ws streamSettings', () {
+      final plugin = Uri.encodeComponent(
+        'v2ray-plugin;tls;mode=websocket;host=cdn.example.com;path=/vpn',
+      );
+      final link = sip002(
+        'aes-256-gcm',
+        'pw',
+        'example.com:8388',
+      ).replaceFirst('example.com:8388', 'example.com:8388/?plugin=$plugin');
+
+      final servers = parser.parseLines(link, 'sub');
+
+      final stream = _streamSettingsOf(servers.single.configJson);
+      expect(stream['network'], equals('ws'));
+      expect(stream['security'], equals('tls'));
+      expect(stream['wsSettings']['path'], equals('/vpn'));
+      expect(
+        stream['wsSettings']['headers']['Host'],
+        equals('cdn.example.com'),
+      );
+      expect(stream['tlsSettings']['serverName'], equals('cdn.example.com'));
+    });
+
+    test('translates obfs-local http into the tcp http header', () {
+      final plugin = Uri.encodeComponent(
+        'obfs-local;obfs=http;obfs-host=www.bing.com',
+      );
+      final link = sip002(
+        'aes-256-gcm',
+        'pw',
+        'example.com:8388',
+      ).replaceFirst('example.com:8388', 'example.com:8388/?plugin=$plugin');
+
+      final servers = parser.parseLines(link, 'sub');
+
+      final stream = _streamSettingsOf(servers.single.configJson);
+      expect(stream['network'], equals('tcp'));
+      final header = stream['tcpSettings']['header'];
+      expect(header['type'], equals('http'));
+      expect(header['request']['headers']['Host'], equals(['www.bing.com']));
+      expect(header['request']['path'], equals(['/']));
+    });
+
+    test('builds a plain tcp config when there is no plugin', () {
+      final link = sip002('aes-256-gcm', 'pw', 'example.com:8388');
+
+      final servers = parser.parseLines(link, 'sub');
+
+      final stream = _streamSettingsOf(servers.single.configJson);
+      expect(stream['network'], equals('tcp'));
+      expect(stream['security'], equals('none'));
     });
 
     test('falls back to "host:port" as title when there is no fragment', () {
@@ -117,4 +170,12 @@ void main() {
       expect(servers.single.title, equals('ok'));
     });
   });
+}
+
+Map<String, dynamic> _streamSettingsOf(String configJson) {
+  final json = jsonDecode(configJson) as Map<String, dynamic>;
+  final proxy = (json['outbounds'] as List)
+      .cast<Map<String, dynamic>>()
+      .firstWhere((o) => o['tag'] == 'proxy');
+  return (proxy['streamSettings'] as Map).cast<String, dynamic>();
 }

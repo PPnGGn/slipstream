@@ -53,6 +53,9 @@ XrayServerMeta readXrayServerMeta(String configJson) {
     node = vnext.first as Map<String, dynamic>;
   } else if (servers is List && servers.isNotEmpty) {
     node = servers.first as Map<String, dynamic>;
+  } else if (settings['address'] is String) {
+    // hysteria keeps address/port flat in settings
+    node = settings;
   } else {
     node = null;
   }

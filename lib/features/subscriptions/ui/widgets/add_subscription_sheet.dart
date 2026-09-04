@@ -154,7 +154,8 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
                       height: 1.5,
                     ),
                     decoration: const InputDecoration(
-                      hintText: 'https://…, vless://…, ss://…, trojan://… or JSON',
+                      hintText:
+                          'https://…, vless://…, vmess://…, trojan://…, hy2://…, ss://… or JSON',
                     ),
                   ),
                   if (_error != null) ...[

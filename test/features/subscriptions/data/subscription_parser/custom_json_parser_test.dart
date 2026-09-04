@@ -68,6 +68,63 @@ void main() {
       expect(servers.single.id, equals('flat.example.com:8443:uuid-flat:#0'));
     });
 
+    test('normalizes a flat vmess outbound into vnext', () {
+      final json = jsonEncode([
+        {
+          'remarks': 'Flat VMess',
+          'outbounds': [
+            {
+              'tag': 'proxy',
+              'protocol': 'vmess',
+              'settings': {
+                'address': 'flat.example.com',
+                'port': 443,
+                'id': 'uuid-vmess',
+                'alterId': 0,
+              },
+            },
+          ],
+        },
+      ]);
+
+      final servers = parser.parse(json, 'my-subscription');
+
+      expect(servers.single.id, equals('flat.example.com:443:uuid-vmess:#0'));
+      final settings = _proxySettingsOf(servers.single.configJson);
+      final user = (settings['vnext'] as List).single['users'].single;
+      expect(user['id'], equals('uuid-vmess'));
+      expect(user['security'], equals('auto'));
+      expect(settings.containsKey('address'), isFalse);
+    });
+
+    test('normalizes a flat trojan outbound into servers', () {
+      final json = jsonEncode([
+        {
+          'remarks': 'Flat Trojan',
+          'outbounds': [
+            {
+              'tag': 'proxy',
+              'protocol': 'trojan',
+              'settings': {
+                'address': 'flat.example.com',
+                'port': 443,
+                'password': 'secret',
+              },
+            },
+          ],
+        },
+      ]);
+
+      final servers = parser.parse(json, 'my-subscription');
+
+      expect(servers.single.id, equals('flat.example.com:443:#0'));
+      final settings = _proxySettingsOf(servers.single.configJson);
+      final node = (settings['servers'] as List).single;
+      expect(node['address'], equals('flat.example.com'));
+      expect(node['password'], equals('secret'));
+      expect(settings.containsKey('address'), isFalse);
+    });
+
     test('matches outbound tags starting with "proxy-"', () {
       final json = jsonEncode([
         {
@@ -449,6 +506,14 @@ void main() {
       expect(rules.single['outboundTag'], equals('proxy'));
     });
   });
+}
+
+Map<String, dynamic> _proxySettingsOf(String configJson) {
+  final json = jsonDecode(configJson) as Map<String, dynamic>;
+  final proxy = (json['outbounds'] as List)
+      .cast<Map<String, dynamic>>()
+      .firstWhere((o) => o['tag'] == 'proxy');
+  return (proxy['settings'] as Map).cast<String, dynamic>();
 }
 
 Map<String, dynamic> _serverWithPort(int port) => {

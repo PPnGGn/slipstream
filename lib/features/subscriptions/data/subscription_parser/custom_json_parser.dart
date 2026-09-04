@@ -70,22 +70,29 @@ class CustomJsonParser {
     switch (protocol) {
       case 'vless':
         if (settings.containsKey('vnext')) return outbound;
-        final users = settings['users'];
+        normalized = _vnextSettings(settings, {
+          'id': settings['id'],
+          'encryption': settings['encryption'] ?? 'none',
+          'flow': settings['flow'] ?? '',
+          'level': settings['level'] ?? 8,
+        });
+      case 'vmess':
+        if (settings.containsKey('vnext')) return outbound;
+        normalized = _vnextSettings(settings, {
+          'id': settings['id'],
+          'alterId': settings['alterId'] ?? 0,
+          'security': settings['security'] ?? 'auto',
+          'level': settings['level'] ?? 8,
+        });
+      case 'trojan':
+        if (settings.containsKey('servers')) return outbound;
         normalized = {
-          'vnext': [
+          'servers': [
             {
               'address': settings['address'],
               'port': settings['port'],
-              'users': users is List && users.isNotEmpty
-                  ? users
-                  : [
-                      {
-                        'id': settings['id'],
-                        'encryption': settings['encryption'] ?? 'none',
-                        'flow': settings['flow'] ?? '',
-                        'level': settings['level'] ?? 8,
-                      },
-                    ],
+              'password': settings['password'],
+              'level': settings['level'] ?? 8,
             },
           ],
         };
@@ -106,6 +113,22 @@ class CustomJsonParser {
         return outbound;
     }
     return {...outbound, 'settings': normalized};
+  }
+
+  Map<String, dynamic> _vnextSettings(
+    Map<String, dynamic> settings,
+    Map<String, dynamic> fallbackUser,
+  ) {
+    final users = settings['users'];
+    return {
+      'vnext': [
+        {
+          'address': settings['address'],
+          'port': settings['port'],
+          'users': users is List && users.isNotEmpty ? users : [fallbackUser],
+        },
+      ],
+    };
   }
 
   (String, int, String)? _extractAddressPort(Map<String, dynamic> settings) {
