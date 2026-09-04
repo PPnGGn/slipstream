@@ -105,7 +105,7 @@ class _AppVersionText extends StatelessWidget {
       builder: (context, snapshot) {
         final info = snapshot.data;
         return Text(
-          info != null ? '${info.version} (${info.buildNumber})' : '…',
+          info != null ? info.version : '…',
           style: textTheme.labelMedium?.copyWith(color: colors.textSecondary),
         );
       },
