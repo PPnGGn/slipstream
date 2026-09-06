@@ -71,7 +71,8 @@ void main() {
     });
 
     test(
-      'sends a User-Agent so panels do not serve a fallback format',
+      'masks the User-Agent as a whitelisted client so panels do not serve '
+      'a decoy/fallback format',
       () async {
         String? sentUserAgent;
         final client = MockClient((request) async {
@@ -83,7 +84,8 @@ void main() {
           client: client,
         ).fetch('https://sub.example.com');
 
-        expect(sentUserAgent, equals('slipstream'));
+        // The panel matcher is prefix-anchored on 'Happ/'; the version is free.
+        expect(sentUserAgent, startsWith('Happ/'));
       },
     );
 

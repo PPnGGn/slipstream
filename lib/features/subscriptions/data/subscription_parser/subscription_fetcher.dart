@@ -27,7 +27,7 @@ class SubscriptionFetcher {
   SubscriptionFetcher({http.Client? client})
     : _client = client ?? http.Client();
 
-  static const _userAgent = 'slipstream';
+  static const _userAgent = 'Happ/4.3.0';
 
   Future<SubscriptionResponse> fetch(String url) async {
     final response = await _client
