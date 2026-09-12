@@ -160,6 +160,8 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
         let socksPort = (options?["socksPort"] as? NSNumber)
             ?? (providerConfig?["socksPort"] as? NSNumber)
             ?? (providerConfig?["socksPort"] as? Int).map(NSNumber.init(value:))
+      
+        let geoAssetDir = (options?["geoAssetDir"] as? String) ?? (providerConfig?["geoAssetDir"] as? String) ?? ""
 
         guard let configJson, let socksPort else {
             TunnelLog.lifecycle.error("startTunnel: missing configJson/socksPort in both options and providerConfiguration; aborting")
@@ -193,8 +195,8 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
             self.flowBridge = bridge
 
             var startError: NSError?
-            let ok = IosStart(configJson, bridge, socksPort.intValue, &startError)
-            TunnelLog.lifecycle.notice("IosStart(socksPort=\(socksPort.intValue, privacy: .public), configLen=\(configJson.count, privacy: .public)) -> ok=\(ok, privacy: .public)")
+            let ok = IosStart(configJson, bridge, socksPort.intValue, geoAssetDir, &startError)
+            TunnelLog.lifecycle.notice("IosStart(socksPort=\(socksPort.intValue, privacy: .public), configLen=\(configJson.count, privacy: .public), geoAssetDir=\(geoAssetDir.isEmpty ? "<default>" : geoAssetDir, privacy: .public)) -> ok=\(ok, privacy: .public)")
             if !ok {
                 TunnelLog.lifecycle.error("IosStart FAILED: \(startError?.localizedDescription ?? "unknown", privacy: .public)")
                 completionHandler(startError ?? NSError(

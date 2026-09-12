@@ -149,7 +149,7 @@ jobs:
           ANDROID_NDK_HOME: ${{ steps.setup_ndk.outputs.ndk-path }}
           ANDROID_HOME: /usr/local/lib/android/sdk
         run: |
-          gomobile bind -target=android -androidapi 21 -javapkg com.slipstream -o slipstreamcore.aar ./android
+          gomobile bind -target=android -androidapi 21 -javapkg com.slipstream -ldflags="-checklinkname=0" -o slipstreamcore.aar ./android
 
       - uses: actions/upload-artifact@v4
         with:

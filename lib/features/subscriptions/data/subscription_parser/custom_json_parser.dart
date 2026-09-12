@@ -227,6 +227,10 @@ class CustomJsonParser {
     result.remove('observatory');
     result.remove('burstObservatory');
 
+    // `dns` is passed through untouched: geosite:/geoip: references in it (and
+    // in routing) are resolved at connect time by GeoConfigGate, which knows
+    // what geo data is installed. See lib/features/geo/data/geo_config_gate.dart.
+
     final routing = _sanitizeRouting(
       config['routing'],
       validTags,
@@ -241,7 +245,6 @@ class CustomJsonParser {
     return result;
   }
 
-  static const _geoPrefixByField = {'domain': 'geosite:', 'ip': 'geoip:'};
   static const _ruleMetaKeys = {'type', 'outboundTag', 'balancerTag'};
 
   Map<String, dynamic>? _sanitizeRouting(
@@ -264,18 +267,6 @@ class CustomJsonParser {
               sanitized['outboundTag'] == originalProxyTag) {
             sanitized['outboundTag'] = 'proxy';
           }
-          _geoPrefixByField.forEach((field, prefix) {
-            final values = sanitized[field];
-            if (values is! List) return;
-            final kept = values
-                .where((v) => !(v is String && v.startsWith(prefix)))
-                .toList();
-            if (kept.isEmpty) {
-              sanitized.remove(field);
-            } else {
-              sanitized[field] = kept;
-            }
-          });
           return sanitized;
         })
         .where((rule) {
@@ -296,10 +287,7 @@ class CustomJsonParser {
           }
           final hasMatcher = rule.keys.any((k) => !_ruleMetaKeys.contains(k));
           if (!hasMatcher) {
-            _talker.debug(
-              'Parser: dropped a routing rule left with nothing to match after '
-              'stripping geosite/geoip',
-            );
+            _talker.debug('Parser: dropped a routing rule with no matcher');
             return false;
           }
           return true;

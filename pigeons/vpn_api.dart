@@ -6,6 +6,7 @@ class VpnConfigMessage {
   String configJson;
   String? serverId;
   String? title;
+  String? geoAssetDir;
 }
 
 class VpnStatusMessage {
@@ -41,6 +42,7 @@ abstract class VpnConnection {
   VpnResult stop();
   @async
   VpnStatusMessage getStatus();
+  String? geoAssetDir();
 }
 
 /// native -> Flutter

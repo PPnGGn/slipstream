@@ -21,6 +21,17 @@ import '../../core/service/vpn_service/vpn_service_cubit.dart' as _i202;
 import '../../core/theme/app_colors.dart' as _i962;
 import '../../core/theme/cubit/theme_cubit.dart' as _i11;
 import '../../core/theme/data/theme_store.dart' as _i802;
+import '../../features/geo/cubit/geo_cubit.dart' as _i818;
+import '../../features/geo/data/geo_config_gate.dart' as _i951;
+import '../../features/geo/data/geo_paths.dart' as _i262;
+import '../../features/geo/data/geo_repository.dart' as _i236;
+import '../../features/geo/data/geo_update_service.dart' as _i196;
+import '../../features/routing/cubit/ad_block_cubit.dart' as _i863;
+import '../../features/routing/cubit/ru_bypass_cubit.dart' as _i1048;
+import '../../features/routing/data/ad_block_store.dart' as _i117;
+import '../../features/routing/data/local_proxy_gate.dart' as _i744;
+import '../../features/routing/data/routing_policy_gate.dart' as _i194;
+import '../../features/routing/data/ru_bypass_store.dart' as _i310;
 import '../../features/subscriptions/cubit/subscriptions_cubit.dart' as _i83;
 import '../../features/subscriptions/data/ping/ping_service.dart' as _i189;
 import '../../features/subscriptions/data/selected_server_store.dart' as _i830;
@@ -66,6 +77,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i924.NativeVpnEventReceiver>(
       () => vpnModule.vpnEventReceiver,
     );
+    gh.lazySingleton<_i744.LocalProxyPort>(() => _i744.LocalProxyPort());
     gh.lazySingleton<_i189.PingService>(() => _i189.PingService());
     gh.lazySingleton<_i179.SubscriptionFactory>(
       () => _i179.SubscriptionFactory(),
@@ -73,6 +85,15 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i490.XrayLogStore>(
       () => _i490.XrayLogStore(),
       dispose: (i) => i.dispose(),
+    );
+    gh.lazySingleton<_i951.GeoConfigGate>(
+      () => _i951.GeoConfigGate(gh<_i207.Talker>()),
+    );
+    gh.lazySingleton<_i744.LocalProxyGate>(
+      () => _i744.LocalProxyGate(gh<_i207.Talker>()),
+    );
+    gh.lazySingleton<_i194.RoutingPolicyGate>(
+      () => _i194.RoutingPolicyGate(gh<_i207.Talker>()),
     );
     await gh.singletonAsync<_i505.SubscriptionStorage>(
       () => storageModule.subscriptionStorage(gh<_i207.Talker>()),
@@ -89,26 +110,37 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i802.ThemeStore>(
       () => _i802.ThemeStore(gh<_i460.SharedPreferences>()),
     );
+    gh.lazySingleton<_i117.AdBlockStore>(
+      () => _i117.AdBlockStore(gh<_i460.SharedPreferences>()),
+    );
+    gh.lazySingleton<_i310.RuBypassStore>(
+      () => _i310.RuBypassStore(gh<_i460.SharedPreferences>()),
+    );
     gh.lazySingleton<_i830.SelectedServerStore>(
       () => _i830.SelectedServerStore(gh<_i460.SharedPreferences>()),
     );
     gh.lazySingleton<_i871.VpnSessionStore>(
       () => _i871.VpnSessionStore(gh<_i460.SharedPreferences>()),
     );
+    gh.lazySingleton<_i863.AdBlockCubit>(
+      () => _i863.AdBlockCubit(store: gh<_i117.AdBlockStore>()),
+    );
+    gh.lazySingleton<_i262.GeoPaths>(
+      () => _i262.GeoPaths(gh<_i482.VpnConnection>(), gh<_i207.Talker>()),
+    );
+    gh.lazySingleton<_i236.GeoRepository>(
+      () => _i236.GeoRepository(
+        gh<_i262.GeoPaths>(),
+        gh<_i207.Talker>(),
+        gh<_i744.LocalProxyPort>(),
+      ),
+      dispose: (i) => i.dispose(),
+    );
     gh.lazySingleton<_i11.UpdateRepository>(
       () => _i11.UpdateRepository(
         gh<_i207.Talker>(),
         gh<_i942.UpdateInstaller>(),
         gh<_i497.Directory>(instanceName: 'updatesDir'),
-      ),
-      dispose: (i) => i.dispose(),
-    );
-    gh.lazySingleton<_i1056.VpnRepository>(
-      () => _i1056.VpnRepository(
-        gh<_i207.Talker>(),
-        gh<_i482.VpnConnection>(),
-        gh<_i924.NativeVpnEventReceiver>(),
-        gh<_i490.XrayLogStore>(),
       ),
       dispose: (i) => i.dispose(),
     );
@@ -121,6 +153,35 @@ extension GetItInjectableX on _i174.GetIt {
         talker: gh<_i207.Talker>(),
       ),
     );
+    gh.lazySingleton<_i818.GeoCubit>(
+      () => _i818.GeoCubit(
+        repository: gh<_i236.GeoRepository>(),
+        talker: gh<_i207.Talker>(),
+      ),
+    );
+    gh.lazySingleton<_i1048.RuBypassCubit>(
+      () => _i1048.RuBypassCubit(store: gh<_i310.RuBypassStore>()),
+    );
+    gh.lazySingleton<_i962.AppColors>(
+      () => _i962.AppColors(themeCubit: gh<_i11.AppThemeCubit>()),
+    );
+    gh.lazySingleton<_i1056.VpnRepository>(
+      () => _i1056.VpnRepository(
+        gh<_i207.Talker>(),
+        gh<_i482.VpnConnection>(),
+        gh<_i924.NativeVpnEventReceiver>(),
+        gh<_i490.XrayLogStore>(),
+        gh<_i951.GeoConfigGate>(),
+        gh<_i818.GeoCubit>(),
+        gh<_i262.GeoPaths>(),
+        gh<_i744.LocalProxyGate>(),
+        gh<_i744.LocalProxyPort>(),
+        gh<_i194.RoutingPolicyGate>(),
+        gh<_i1048.RuBypassCubit>(),
+        gh<_i863.AdBlockCubit>(),
+      ),
+      dispose: (i) => i.dispose(),
+    );
     gh.lazySingleton<_i202.VpnServiceCubit>(
       () => _i202.VpnServiceCubit(
         repository: gh<_i1056.VpnRepository>(),
@@ -128,8 +189,13 @@ extension GetItInjectableX on _i174.GetIt {
         talker: gh<_i207.Talker>(),
       ),
     );
-    gh.lazySingleton<_i962.AppColors>(
-      () => _i962.AppColors(themeCubit: gh<_i11.AppThemeCubit>()),
+    gh.lazySingleton<_i196.GeoUpdateService>(
+      () => _i196.GeoUpdateService(
+        gh<_i818.GeoCubit>(),
+        gh<_i202.VpnServiceCubit>(),
+        gh<_i207.Talker>(),
+      ),
+      dispose: (i) => i.dispose(),
     );
     gh.lazySingleton<_i83.SubscriptionsCubit>(
       () => _i83.SubscriptionsCubit(

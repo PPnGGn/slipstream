@@ -130,6 +130,7 @@ class VpnConfigMessage {
     required this.configJson,
     this.serverId,
     this.title,
+    this.geoAssetDir,
   });
 
   String configJson;
@@ -138,11 +139,17 @@ class VpnConfigMessage {
 
   String? title;
 
+  /// Directory holding geosite.dat / geoip.dat for xray to resolve
+  /// `geosite:` / `geoip:` routing rules. Null => xray uses its default
+  /// (next to the binary), which on mobile means no geo data.
+  String? geoAssetDir;
+
   List<Object?> _toList() {
     return <Object?>[
       configJson,
       serverId,
       title,
+      geoAssetDir,
     ];
   }
 
@@ -155,6 +162,7 @@ class VpnConfigMessage {
       configJson: result[0]! as String,
       serverId: result[1] as String?,
       title: result[2] as String?,
+      geoAssetDir: result[3] as String?,
     );
   }
 
@@ -167,7 +175,7 @@ class VpnConfigMessage {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(configJson, other.configJson) && _deepEquals(serverId, other.serverId) && _deepEquals(title, other.title);
+    return _deepEquals(configJson, other.configJson) && _deepEquals(serverId, other.serverId) && _deepEquals(title, other.title) && _deepEquals(geoAssetDir, other.geoAssetDir);
   }
 
   @override
@@ -493,6 +501,30 @@ class VpnConnection {
     )
     ;
     return pigeonVar_replyValue! as VpnStatusMessage;
+  }
+
+  /// OS-appropriate directory where the app should keep geosite.dat /
+  /// geoip.dat: on Android the app's internal files dir, on Apple the shared
+  /// App Group container (the tunnel runs in a separate process and only
+  /// sees that). Null => the platform has no opinion and Dart falls back to
+  /// path_provider (desktop).
+  Future<String?> geoAssetDir() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.slipstream.VpnConnection.geoAssetDir$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+    return pigeonVar_replyValue as String?;
   }
 }
 

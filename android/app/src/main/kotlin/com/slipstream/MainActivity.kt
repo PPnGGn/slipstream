@@ -67,6 +67,11 @@ class MainActivity : FlutterActivity(), VpnConnection, UpdateInstaller {
         callback(Result.success(VpnEventBridge.currentStatus()))
     }
 
+    private fun geoDir(): String =
+            File(filesDir, "geo").apply { mkdirs() }.absolutePath
+
+    override fun geoAssetDir(): String = geoDir()
+
     override fun start(config: VpnConfigMessage, callback: (Result<VpnResult>) -> Unit) {
         Log.d("VPN_BRIDGE", "Requesting VPN start with dynamic config...")
 
@@ -84,6 +89,7 @@ class MainActivity : FlutterActivity(), VpnConnection, UpdateInstaller {
                             com.slipstream.V2RayVpnService::class.java
                     )
             serviceIntent.putExtra("XRAY_CONFIG", configJson)
+            serviceIntent.putExtra("GEO_DIR", config.geoAssetDir ?: geoDir())
             startService(serviceIntent)
 
             callback(Result.success(VpnResult(successful = true)))
@@ -120,6 +126,7 @@ class MainActivity : FlutterActivity(), VpnConnection, UpdateInstaller {
                                     com.slipstream.V2RayVpnService::class.java
                             )
                     serviceIntent.putExtra("XRAY_CONFIG", config)
+                    serviceIntent.putExtra("GEO_DIR", geoDir())
                     startService(serviceIntent)
 
                     pendingVpnCallback?.invoke(Result.success(VpnResult(successful = true)))

@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
+import 'package:slipstream/features/settings/ui/routing_settings_page.dart';
 import 'package:slipstream/features/settings/ui/settings_page.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:slipstream/app/di/injector.dart';
@@ -20,6 +21,12 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/settings',
       builder: (context, state) => const SettingsPage(),
+      routes: [
+        GoRoute(
+          path: 'routing',
+          builder: (context, state) => const RoutingSettingsPage(),
+        ),
+      ],
     ),
   ],
 );

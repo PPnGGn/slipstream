@@ -1,0 +1,674 @@
+[
+ {
+  "dns": {
+   "tag": "dns-inbound",
+   "hosts": {
+    "ntc.party": [
+     "130.255.77.28"
+    ],
+    "dns.google": [
+     "0.0.0.0"
+    ],
+    "dns.apple.com": [
+     "0.0.0.0"
+    ],
+    "dns.quad9.net": [
+     "0.0.0.0"
+    ],
+    "mask.icloud.com": [
+     "0.0.0.0"
+    ],
+    "nl7.jailever.org": [
+     "167.104.217.35"
+    ],
+    "nl8.jailever.org": [
+     "167.104.217.51"
+    ],
+    "nl9.jailever.org": [
+     "167.104.217.37"
+    ],
+    "doh.dns.apple.com": [
+     "0.0.0.0"
+    ],
+    "cloudflare-dns.com": [
+     "0.0.0.0"
+    ],
+    "mask-h2.icloud.com": [
+     "0.0.0.0"
+    ],
+    "pt.denverpresents.top": [
+     "50.7.42.130"
+    ],
+    "at2.denverpresents.top": [
+     "50.7.37.66"
+    ],
+    "uk1.denverpresents.top": [
+     "45.86.159.117"
+    ],
+    "uk2.denverpresents.top": [
+     "143.246.182.16"
+    ],
+    "uk4.denverpresents.top": [
+     "143.246.182.20"
+    ],
+    "common.dot.dns.yandex.net": [
+     "0.0.0.0"
+    ],
+    "nlnew1.denverpresents.top": [
+     "167.104.217.15"
+    ],
+    "nlnew2.denverpresents.top": [
+     "167.104.217.17"
+    ],
+    "nlnew4.denverpresents.top": [
+     "167.104.217.28"
+    ],
+    "nlnew5.denverpresents.top": [
+     "167.104.217.29"
+    ],
+    "nlnew6.denverpresents.top": [
+     "167.104.217.30"
+    ]
+   },
+   "servers": [
+    {
+     "tag": "ParallelQuery",
+     "address": "1.1.1.1"
+    },
+    {
+     "tag": "ParallelQuery",
+     "address": "8.8.8.8"
+    },
+    {
+     "tag": "ParallelQuery",
+     "address": "9.9.9.9"
+    },
+    {
+     "tag": "YandexDNS_fallback",
+     "address": "77.88.8.8"
+    },
+    {
+     "tag": "YandexDNS",
+     "address": "77.88.8.8",
+     "domains": [
+      "domain:imposeresult.online",
+      "regexp:.*\\.by$",
+      "regexp:.*\\.ru$",
+      "regexp:.*\\.su$",
+      "regexp:.*\\.xn--p1ai$",
+      "geosite:category-ru",
+      "geosite:category-gov-ru",
+      "full:instant.arubanetworks.com",
+      "full:setmeup.arubanetworks.com",
+      "full:asusrouter.com",
+      "full:router.asus.com",
+      "full:www.asusrouter.com",
+      "full:oasisauth.h3c.com",
+      "full:routerlogin.com",
+      "full:www.routerlogin.com",
+      "full:tplogin.cn",
+      "full:miwifi.com",
+      "full:www.miwifi.com",
+      "regexp:.*\\.2gis\\.",
+      "in-addr.arpa",
+      "ip6.arpa",
+      "home.arpa",
+      "receive-sentry.lmru.tech",
+      "zte.home",
+      "my.router",
+      "ts.net",
+      "hiwifi.com",
+      "tplinkwifi.net",
+      "tendawifi.com",
+      "leike.cc",
+      "plex.direct",
+      "router.ctc",
+      "phicomm.me",
+      "peiluyou.com",
+      "test.steampowered.com",
+      "localhost.ptlogin2.qq.com",
+      "localhost.sec.qq.com"
+     ],
+     "skipFallback": true
+    }
+   ],
+   "queryStrategy": "UseIPv4",
+   "enableParallelQuery": true
+  },
+  "log": {
+   "loglevel": "info"
+  },
+  "fakedns": [
+   {
+    "ipPool": "198.18.0.0/15",
+    "poolSize": 65535
+   }
+  ],
+  "routing": {
+   "rules": [
+    {
+     "inboundTag": [
+      "lb-optimum_main"
+     ],
+     "balancerTag": "optimum_main"
+    },
+    {
+     "inboundTag": [
+      "dns-in"
+     ],
+     "outboundTag": "dns"
+    },
+    {
+     "inboundTag": [
+      "YandexDNS",
+      "YandexDNS_fallback"
+     ],
+     "outboundTag": "direct"
+    },
+    {
+     "inboundTag": [
+      "ParallelQuery"
+     ],
+     "balancerTag": "Balancer_DNS"
+    },
+    {
+     "port": "53",
+     "network": "tcp,udp",
+     "outboundTag": "dns"
+    },
+    {
+     "port": "443",
+     "network": "udp",
+     "outboundTag": "block"
+    },
+    {
+     "protocol": [
+      "bittorrent"
+     ],
+     "outboundTag": "direct"
+    },
+    {
+     "ip": [
+      "1.1.1.1",
+      "1.0.0.1",
+      "9.9.9.9",
+      "149.112.112.112",
+      "104.16.248.249",
+      "104.16.249.249",
+      "8.8.8.8",
+      "8.8.4.4",
+      "208.67.222.222",
+      "208.67.220.220",
+      "77.88.8.8",
+      "77.88.8.1",
+      "185.228.168.9",
+      "185.228.169.9"
+     ],
+     "port": "53,443,853,5353",
+     "network": "udp",
+     "outboundTag": "block"
+    },
+    {
+     "ip": [
+      "1.1.1.1",
+      "1.0.0.1",
+      "9.9.9.9",
+      "149.112.112.112",
+      "104.16.248.249",
+      "104.16.249.249",
+      "8.8.8.8",
+      "8.8.4.4",
+      "208.67.222.222",
+      "208.67.220.220",
+      "77.88.8.8",
+      "77.88.8.1",
+      "185.228.168.9",
+      "185.228.169.9"
+     ],
+     "port": "53,443,853",
+     "network": "tcp",
+     "outboundTag": "block-http"
+    },
+    {
+     "domain": [
+      "full:cloudflare-dns.com",
+      "full:dns.cloudflare.com",
+      "full:dns.google",
+      "full:dns.quad9.net",
+      "full:common.dot.dns.yandex.net",
+      "full:doh.dns.apple.com",
+      "full:dns.apple.com",
+      "full:mask.icloud.com",
+      "full:mask-h2.icloud.com"
+     ],
+     "ruleTag": "block-doh",
+     "outboundTag": "block"
+    },
+    {
+     "domain": [
+      "domain:imposeresult.online",
+      "geosite:category-ru",
+      "geosite:category-gov-ru",
+      "regexp:.*\\.by$",
+      "regexp:.*\\.ru$",
+      "regexp:.*\\.su$",
+      "regexp:.*\\.xn--p1ai$",
+      "geosite:vk",
+      "geosite:ok",
+      "geosite:yandex",
+      "regexp:.*\\.2gis\\.",
+      "myip.wtf",
+      "showip.net",
+      "ip.hetzner.com",
+      "ozonru.me",
+      "beeline.tv",
+      "cdnvideohub.com",
+      "alfabank.st",
+      "bps-sberbank.by",
+      "sber-bank.by",
+      "giga.chat",
+      "megamarket.tech",
+      "sberauto.com",
+      "sbercloud.tech",
+      "zvuk-b2b.com",
+      "zvuk.com",
+      "sber.pro",
+      "tinkoff-group.com",
+      "unidraw.io",
+      "cloudru.cn",
+      "ip.comss.net",
+      "ipv6check-http.steamserver.net",
+      "ipv6check-udp.steamserver.net",
+      "test.steampowered.com",
+      "nodedata.io",
+      "receive-sentry.lmru.tech",
+      "pachca.com",
+      "lk.useinsaneroast.online",
+      "regexp:.*\\.2gis\\.",
+      "regexp:.*\\.ozon\\.",
+      "radar.cloudflare.com",
+      "regexp:.*\\.telega\\.",
+      "regexp:.*\\.gazprombank\\.",
+      "ipgeolocation.io",
+      "find-my-ip.net",
+      "2ip.ua",
+      "51degrees.com",
+      "abstractapi.com",
+      "apiip.net",
+      "apivoid.com",
+      "bigdatacloud.net",
+      "check-host.net",
+      "ipify.org",
+      "country.is",
+      "curlmyip.net",
+      "db-ip.com",
+      "extreme-ip-lookup.com",
+      "find-my-ip.com",
+      "ipinfo.io",
+      "findip.net",
+      "flagfox.net",
+      "fraudguard.io",
+      "fraudlogix.com",
+      "freegeoip.app",
+      "freeipapi.com",
+      "geodatatool.com",
+      "geojs.io",
+      "geolocation-db.com",
+      "geoplugin.com",
+      "geoplugin.net",
+      "getipintel.net",
+      "greip.io",
+      "hackertarget.com",
+      "httpbin.org",
+      "icanhazip.com",
+      "ident.me",
+      "ifconfig.co",
+      "ifconfig.es",
+      "ifconfig.me",
+      "ip-adress.com",
+      "ip-api.com",
+      "ip-api.io",
+      "ip-check.info",
+      "ip-score.com",
+      "ip.me",
+      "ip.sb",
+      "ip2c.org",
+      "ip2location.com",
+      "ip2location.io",
+      "ip2ruscity.com",
+      "ip4.me",
+      "ip6.me",
+      "ip6only.me",
+      "ip8.com",
+      "ipaddr.site",
+      "ipaddress.com",
+      "ipaddress.my",
+      "ipaddress.sh",
+      "ipapi.co",
+      "ipapi.com",
+      "ipapi.is",
+      "ipbase.com",
+      "ipcalf.com",
+      "ipchicken.com",
+      "ipdata.co",
+      "ipecho.net",
+      "ipfind.io",
+      "ipfinder.io",
+      "2ip.io",
+      "checkip.org",
+      "ipleak.net",
+      "ipligence.com",
+      "iplocate.io",
+      "iplocation.com",
+      "iplocation.io",
+      "iplocation.net",
+      "ipqualityscore.com",
+      "ipquery.io",
+      "ipregistry.co",
+      "iproyal.com",
+      "ipstack.com",
+      "ipverify.com",
+      "ipwhois.io",
+      "ipxapi.com",
+      "l2.io",
+      "maxmind.com",
+      "mon-ip.com",
+      "monip.org",
+      "myexternalip.com",
+      "myip.com",
+      "myip.ms",
+      "myip.wtf",
+      "myipaddress.com",
+      "myiplookup.com",
+      "mylocation.org",
+      "osint.sh",
+      "proxycheck.io",
+      "realip.cc",
+      "seeip.org",
+      "showip.net",
+      "showmyip.com",
+      "showmyipaddress.com",
+      "spur.us",
+      "sxgeo.city",
+      "sypexgeo.net",
+      "tnx.nl",
+      "tracemyip.org",
+      "trustmyip.com",
+      "wgetip.com",
+      "whatismyip.com",
+      "whatismyip.net",
+      "whatismyip.org",
+      "whatismyipaddress.com",
+      "whatismyipaddress.net",
+      "whatismyisp.com",
+      "whatismyv6.com",
+      "whatsmyip.com",
+      "whatsmyip.org",
+      "where-am-i.co",
+      "whoer.net",
+      "whoerip.com",
+      "whoisxmlapi.com",
+      "wieistmeineip.de",
+      "wtfismyip.com",
+      "ipip.net",
+      "my.ipinfo.app",
+      "ip.hetzner.com",
+      "ip.tyk.nu",
+      "ipgeo.vercel.app",
+      "iplark.com",
+      "ipw.cn",
+      "whois.pconline.com.cn",
+      "myip.la",
+      "checkip.amazonaws.com",
+      "ipv4-check-perf.radar.cloudflare.com",
+      "ipv6-check-perf.radar.cloudflare.com",
+      "nodedata.io"
+     ],
+     "ruleTag": "direct-big-list",
+     "outboundTag": "direct"
+    },
+    {
+     "domain": [
+      "geosite:youtube"
+     ],
+     "ruleTag": "youtube-and-ru-suffixes",
+     "balancerTag": "youtube_main"
+    },
+    {
+     "ip": [
+      "0.0.0.0/8",
+      "10.0.0.0/8",
+      "100.64.0.0/10",
+      "127.0.0.0/8",
+      "169.254.0.0/16",
+      "172.16.0.0/12",
+      "192.0.0.0/24",
+      "192.0.2.0/24",
+      "192.88.99.0/24",
+      "192.168.0.0/16",
+      "198.18.0.0/15",
+      "198.51.100.0/24",
+      "203.0.113.0/24",
+      "224.0.0.0/3",
+      "geoip:ru"
+     ],
+     "outboundTag": "direct"
+    },
+    {
+     "ip": [
+      "198.18.0.0/15"
+     ],
+     "ruleTag": "drop-leaked-fakeip",
+     "outboundTag": "block"
+    },
+    {
+     "network": "tcp,udp",
+     "ruleTag": "default-optimum",
+     "balancerTag": "optimum_main"
+    }
+   ],
+   "balancers": [
+    {
+     "tag": "Balancer_DNS",
+     "selector": [
+      "direct"
+     ],
+     "strategy": {
+      "type": "roundRobin"
+     }
+    },
+    {
+     "tag": "youtube_main",
+     "selector": [
+      "youtube"
+     ],
+     "strategy": {
+      "type": "roundRobin"
+     },
+     "fallbackTag": "lb-optimum_main"
+    },
+    {
+     "tag": "optimum_main",
+     "selector": [
+      "proxy"
+     ],
+     "strategy": {
+      "type": "roundRobin"
+     }
+    }
+   ],
+   "domainMatcher": "hybrid",
+   "domainStrategy": "IPIfNonMatch"
+  },
+  "inbounds": [
+   {
+    "tag": "socks",
+    "port": 10808,
+    "listen": "127.0.0.1",
+    "protocol": "socks",
+    "settings": {
+     "udp": true,
+     "auth": "noauth"
+    },
+    "sniffing": {
+     "enabled": true,
+     "routeOnly": false,
+     "destOverride": [
+      "fakedns",
+      "http",
+      "tls",
+      "quic"
+     ]
+    }
+   },
+   {
+    "tag": "http",
+    "port": 10809,
+    "listen": "127.0.0.1",
+    "protocol": "http",
+    "settings": {
+     "allowTransparent": false
+    },
+    "sniffing": {
+     "enabled": true,
+     "routeOnly": false,
+     "destOverride": [
+      "fakedns",
+      "http",
+      "tls",
+      "quic"
+     ]
+    }
+   },
+   {
+    "tag": "socks-direct",
+    "port": 10820,
+    "listen": "127.0.0.1",
+    "protocol": "socks",
+    "settings": {
+     "udp": true,
+     "auth": "noauth"
+    },
+    "sniffing": {
+     "destOverride": [
+      "fakedns",
+      "tls",
+      "http",
+      "quic"
+     ]
+    }
+   },
+   {
+    "tag": "dns-in",
+    "port": 10853,
+    "protocol": "dokodemo-door",
+    "settings": {
+     "network": "tcp,udp"
+    }
+   }
+  ],
+  "outbounds": [
+   {
+    "tag": "proxy",
+    "protocol": "vless",
+    "settings": {
+     "vnext": [
+      {
+       "address": "167.104.217.110",
+       "port": 443,
+       "users": [
+        {
+         "id": "b711d929-d28f-4af4-af79-16e00730255c",
+         "encryption": "none",
+         "flow": ""
+        }
+       ]
+      }
+     ]
+    },
+    "streamSettings": {
+     "network": "xhttp",
+     "xhttpSettings": {
+      "mode": "auto",
+      "host": "nl2.sharedock.tech",
+      "path": "/assets/build/_app/immutable/chunks/stream-one/",
+      "extra": {
+       "xmux": {
+        "cMaxReuseTimes": 0,
+        "maxConnections": 3,
+        "hKeepAlivePeriod": 0,
+        "hMaxRequestTimes": "600-900",
+        "hMaxReusableSecs": "1800-3000"
+       },
+       "noSSEHeader": false,
+       "noGRPCHeader": false,
+       "xPaddingBytes": "100-1000",
+       "scMaxEachPostBytes": "1000000",
+       "scMinPostsIntervalMs": "30",
+       "scStreamUpServerSecs": "20-80"
+      }
+     },
+     "security": "tls",
+     "tlsSettings": {
+      "serverName": "nl2.sharedock.tech",
+      "fingerprint": "edge",
+      "alpn": [
+       "h2",
+       "http/1.1"
+      ]
+     },
+     "sockopt": {
+      "tcpNoDelay": true,
+      "tcpUserTimeout": 6000,
+      "tcpKeepAliveIdle": 30,
+      "tcpKeepAliveInterval": 10
+     }
+    }
+   },
+   {
+    "tag": "direct",
+    "protocol": "freedom"
+   },
+   {
+    "tag": "dns",
+    "protocol": "dns",
+    "settings": {
+     "blockTypes": [
+      65,
+      28
+     ],
+     "nonIPQuery": "reject"
+    }
+   },
+   {
+    "tag": "block",
+    "protocol": "blackhole"
+   },
+   {
+    "tag": "block-http",
+    "protocol": "blackhole",
+    "settings": {
+     "response": {
+      "type": "http"
+     }
+    }
+   },
+   {
+    "tag": "lb-optimum_main",
+    "protocol": "loopback",
+    "settings": {
+     "inboundTag": "lb-optimum_main"
+    }
+   }
+  ],
+  "observatory": {
+   "probeUrl": "https://www.youtube.com/generate_204",
+   "probeInterval": "30s",
+   "subjectSelector": [
+    "youtube"
+   ],
+   "enableConcurrency": true
+  },
+  "remarks": "Нидерланды 🇳🇱"
+ }
+]

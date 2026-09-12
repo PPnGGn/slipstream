@@ -279,7 +279,8 @@ void main() {
     });
 
     test(
-      'strips geosite:/geoip: entries (unresolvable without geosite.dat)',
+      'leaves geosite:/geoip: refs untouched — GeoConfigGate handles them at '
+      'connect time',
       () {
         final json = jsonEncode([
           {
@@ -296,6 +297,14 @@ void main() {
                 },
               },
             ],
+            'dns': {
+              'servers': [
+                {
+                  'address': '77.88.8.8',
+                  'domains': ['geosite:category-ru'],
+                },
+              ],
+            },
             'routing': {
               'rules': [
                 {
@@ -306,33 +315,28 @@ void main() {
                 {
                   'type': 'field',
                   'outboundTag': 'direct',
-                  'ip': ['geoip:cn', '10.0.0.0/8'],
-                },
-                {
-                  'type': 'field',
-                  'outboundTag': 'block',
-                  'domain': ['geosite:category-ads'],
-                },
-                {
-                  'type': 'field',
-                  'outboundTag': 'direct',
-                  'protocol': ['bittorrent'],
+                  'ip': ['geoip:ru', '10.0.0.0/8'],
                 },
               ],
             },
           },
         ]);
 
-        final servers = parser.parse(json, 'my-subscription');
-        final routing =
-            jsonDecode(servers.single.configJson)['routing']
+        final config =
+            jsonDecode(parser.parse(json, 'sub').single.configJson)
                 as Map<String, dynamic>;
-        final rules = (routing['rules'] as List).cast<Map<String, dynamic>>();
 
-        expect(rules, hasLength(3));
-        expect(rules[0]['domain'], equals(['domain:example.com']));
-        expect(rules[1]['ip'], equals(['10.0.0.0/8']));
-        expect(rules[2]['protocol'], equals(['bittorrent']));
+        // dns passes through verbatim
+        expect(
+          (config['dns']['servers'] as List).single['domains'],
+          equals(['geosite:category-ru']),
+        );
+        // routing rules keep their geo tokens
+        final rules = (config['routing']['rules'] as List)
+            .cast<Map<String, dynamic>>();
+        expect(rules[0]['domain'],
+            equals(['geosite:category-ru', 'domain:example.com']));
+        expect(rules[1]['ip'], equals(['geoip:ru', '10.0.0.0/8']));
       },
     );
   });

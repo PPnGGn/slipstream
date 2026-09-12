@@ -45,18 +45,20 @@ class V2RayVpnService : VpnService() {
             Log.e("VPN_SERVICE", "Config is missing. Aborting.")
             return START_NOT_STICKY
         }
+        val geoDir = intent.getStringExtra("GEO_DIR")
+                ?: java.io.File(filesDir, "geo").apply { mkdirs() }.absolutePath
 
         Log.d("VPN_SERVICE", "Starting service and core...")
         isStopping = false
         startForegroundWithNotification(buildNotification("Подключение…"))
         VpnEventBridge.notifyStatus(VpnStatus.CONNECTING)
         Android.setHandler(VpnEventBridge)
-        setupVpn(configJson)
+        setupVpn(configJson, geoDir)
 
         return START_STICKY
     }
 
-    private fun setupVpn(configJson: String) {
+    private fun setupVpn(configJson: String, geoDir: String) {
         try {
             val tunnel =
                     Builder()
@@ -74,8 +76,8 @@ class V2RayVpnService : VpnService() {
             localTunnel = tunnel
 
             val fd = tunnel.detachFd()
-            Android.start(configJson, fd.toLong(), SOCKS_PORT.toLong())
-            Log.d("VPN_SERVICE", "Xray + tun2socks started, fd=$fd, port=$SOCKS_PORT")
+            Android.start(configJson, fd.toLong(), SOCKS_PORT.toLong(), geoDir)
+            Log.d("VPN_SERVICE", "Xray + tun2socks started, fd=$fd, port=$SOCKS_PORT, geoDir=$geoDir")
 
             val connectedAtMs = System.currentTimeMillis()
             VpnEventBridge.notifyStatus(VpnStatus.CONNECTED, connectedAtEpochMs = connectedAtMs)

@@ -1,11 +1,17 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:slipstream/app/di/injector.dart';
 import 'package:slipstream/core/service/update_service/update_service_cubit.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/theme/app_theme.dart';
 import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
+import 'package:slipstream/features/geo/cubit/geo_cubit.dart';
+import 'package:slipstream/features/routing/cubit/ad_block_cubit.dart';
+import 'package:slipstream/features/routing/cubit/ru_bypass_cubit.dart';
+import 'package:slipstream/features/routing/data/ad_block_mode.dart';
+import 'package:slipstream/features/routing/data/ru_bypass_mode.dart';
 import 'package:slipstream/features/update/data/updater_api.g.dart';
 import 'package:slipstream/features/update/ui/widgets/update_dialog.dart';
 
@@ -69,7 +75,9 @@ class _SettingsPageState extends State<SettingsPage> {
         return Scaffold(
           appBar: AppBar(title: const Text('Settings')),
           body: ListView(
-            padding: const .symmetric(horizontal: AppDims.horizontalPadding),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppDims.horizontalPadding,
+            ),
             children: [
               if (Platform.isAndroid)
                 ListTile(
@@ -84,10 +92,86 @@ class _SettingsPageState extends State<SettingsPage> {
                     child: const Text('Check for updates'),
                   ),
                 ),
+              BlocBuilder<RuBypassCubit, RuBypassMode>(
+                bloc: getIt<RuBypassCubit>(),
+                builder: (context, ruBypass) =>
+                    BlocBuilder<AdBlockCubit, AdBlockMode>(
+                      bloc: getIt<AdBlockCubit>(),
+                      builder: (context, adBlock) =>
+                          BlocBuilder<GeoCubit, GeoState>(
+                            bloc: getIt<GeoCubit>(),
+                            builder: (context, geo) => _NavRow(
+                              title: 'Правила маршрутизации',
+                              subtitle: _routingSubtitle(
+                                ruBypass,
+                                adBlock,
+                                geo,
+                              ),
+                              onTap: () => context.push('/settings/routing'),
+                            ),
+                          ),
+                    ),
+              ),
             ],
           ),
         );
       },
+    );
+  }
+
+  static String _routingSubtitle(
+    RuBypassMode ruBypass,
+    AdBlockMode adBlock,
+    GeoState geo,
+  ) {
+    final parts = [
+      ruBypass == RuBypassMode.bypassRu ? 'Обход РФ' : 'Обход РФ выкл',
+      switch (adBlock) {
+        AdBlockMode.off => 'реклама выкл',
+        AdBlockMode.basic => 'реклама: базовая',
+        AdBlockMode.full => 'реклама: полная',
+      },
+      _geoSubtitle(geo),
+    ];
+    return parts.join(' · ');
+  }
+
+  static String _geoSubtitle(GeoState state) => switch (state) {
+    GeoAbsent() => 'гео-базы не загружены',
+    GeoChecking() => 'проверка гео-баз…',
+    GeoDownloading(:final fraction) => 'гео-базы: ${(fraction * 100).round()}%',
+    GeoReady() => 'гео-базы актуальны',
+    GeoUpdateAvailable() => 'доступно обновление гео-баз',
+    GeoFailed() => 'ошибка загрузки гео-баз',
+    _ => '',
+  };
+}
+
+class _NavRow extends StatelessWidget {
+  const _NavRow({
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = getIt<AppColors>();
+    final textTheme = Theme.of(context).textTheme;
+
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(title),
+      subtitle: Text(
+        subtitle,
+        style: textTheme.labelMedium?.copyWith(color: colors.textSecondary),
+      ),
+      trailing: Icon(Icons.chevron_right, color: colors.textMuted),
+      onTap: onTap,
     );
   }
 }

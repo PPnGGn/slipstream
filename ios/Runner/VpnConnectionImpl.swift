@@ -8,6 +8,7 @@ final class VpnConnectionImpl: NSObject, VpnConnection {
 
     private static let extensionBundleID = "vpn.oko.XrayTunnel"
     private static let socksPort = 10808
+    static let appGroupID = "group.vpn.oko"
 
     private let eventReceiver: VpnEventReceiver
     private var manager: NETunnelProviderManager?
@@ -48,6 +49,26 @@ final class VpnConnectionImpl: NSObject, VpnConnection {
         stopTrafficPolling()
         manager?.connection.stopVPNTunnel()
         completion(.success(VpnResult(successful: true)))
+    }
+
+    func geoAssetDir() throws -> String? {
+        let fm = FileManager.default
+        let base: URL
+        if let container = fm.containerURL(
+            forSecurityApplicationGroupIdentifier: Self.appGroupID) {
+            base = container.appendingPathComponent("geo", isDirectory: true)
+        } else {
+            appLog.error("geoAssetDir: App Group \(Self.appGroupID, privacy: .public) unavailable, using app-local dir")
+            base = try fm.url(for: .applicationSupportDirectory, in: .userDomainMask,
+                              appropriateFor: nil, create: true)
+                .appendingPathComponent("geo", isDirectory: true)
+        }
+        try? fm.createDirectory(at: base, withIntermediateDirectories: true)
+        var mutableBase = base
+        var resourceValues = URLResourceValues()
+        resourceValues.isExcludedFromBackup = true
+        try? mutableBase.setResourceValues(resourceValues)
+        return base.path
     }
 
     func getStatus(completion: @escaping (Result<VpnStatusMessage, Error>) -> Void) {
@@ -126,10 +147,14 @@ final class VpnConnectionImpl: NSObject, VpnConnection {
         completion: @escaping (Result<VpnResult, Error>) -> Void
     ) {
         if let proto = manager.protocolConfiguration as? NETunnelProviderProtocol {
-            proto.providerConfiguration = [
+            var providerConfiguration: [String: Any] = [
                 "configJson": config.configJson,
                 "socksPort": Self.socksPort,
             ]
+            if let geoAssetDir = config.geoAssetDir {
+                providerConfiguration["geoAssetDir"] = geoAssetDir
+            }
+            proto.providerConfiguration = providerConfiguration
         }
         manager.saveToPreferences { error in
             if let error {
@@ -142,10 +167,13 @@ final class VpnConnectionImpl: NSObject, VpnConnection {
                     return
                 }
                 do {
-                    let options: [String: NSObject] = [
+                    var options: [String: NSObject] = [
                         "configJson": config.configJson as NSObject,
                         "socksPort": NSNumber(value: Self.socksPort),
                     ]
+                    if let geoAssetDir = config.geoAssetDir {
+                        options["geoAssetDir"] = geoAssetDir as NSObject
+                    }
                     let session = manager.connection as! NETunnelProviderSession
                     appLog.notice("startTunnel: calling startVPNTunnel; current status.rawValue=\(session.status.rawValue, privacy: .public)")
                     
