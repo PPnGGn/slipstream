@@ -43,6 +43,9 @@ abstract class VpnConnection {
   @async
   VpnStatusMessage getStatus();
   String? geoAssetDir();
+
+  /// The embedded xray-core version (Android-only).
+  String xrayCoreVersion();
 }
 
 /// native -> Flutter

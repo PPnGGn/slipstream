@@ -39,7 +39,7 @@ class ConnectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AppThemeCubit, AppThemeMode>(
+    return BlocBuilder<AppThemeCubit, AppThemeState>(
       bloc: getIt<AppThemeCubit>(),
       builder: (context, _) {
         final colors = getIt<AppColors>();
@@ -87,14 +87,14 @@ class ConnectionCard extends StatelessWidget {
                           active: active,
                           busy: busy,
                         ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _Status(
-                          colors: colors,
-                          state: state,
-                          selectedServer: selectedServer,
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _Status(
+                            colors: colors,
+                            state: state,
+                            selectedServer: selectedServer,
+                          ),
                         ),
-                      ),
                       ],
                     ),
                   ),

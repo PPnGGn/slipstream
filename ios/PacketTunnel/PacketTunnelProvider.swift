@@ -9,6 +9,83 @@ enum TunnelLog {
     static let core       = Logger(subsystem: subsystem, category: "core")
 }
 
+/// Compact binary encoding for the traffic/logs replies sent back over
+/// `handleAppMessage`, instead of `JSONSerialization`. This runs on a 1s
+/// timer inside the extension's tight (~50MB) memory budget, so avoiding a
+/// transient NSDictionary/NSNumber/NSString graph per poll — plus a smaller
+/// wire payload — is a straight win, never a cost.
+/// Mirrored by the decoder in ios/Runner/VpnConnectionImpl.swift — keep both
+/// in sync if the format changes.
+enum AppMessageWire {
+    /// `[uplink: UInt64 BE][downlink: UInt64 BE]` — 16 bytes, always.
+    static func encodeTraffic(uplink: Int64, downlink: Int64) -> Data {
+        var w = ByteWriter()
+        w.writeUInt64BE(UInt64(bitPattern: uplink))
+        w.writeUInt64BE(UInt64(bitPattern: downlink))
+        return w.data
+    }
+
+    /// `[count: UInt32 BE]`, then per entry:
+    /// `[level: UInt8][timestampMs: UInt64 BE][source: UInt16-len-prefixed utf8][message: UInt32-len-prefixed utf8]`.
+    static func encodeLogs(_ entries: [CoreLogBridge.Entry]) -> Data {
+        var w = ByteWriter()
+        w.writeUInt32BE(UInt32(entries.count))
+        for e in entries {
+            w.writeUInt8(levelCode(e.level))
+            w.writeUInt64BE(UInt64(bitPattern: e.timestampMs))
+            w.writeString16(e.source)
+            w.writeString32(e.message)
+        }
+        return w.data
+    }
+
+    // Canonicalizes zap's ("warn", "fatal", "panic") and xray's own severity
+    // names down to the 4 levels the Flutter side actually distinguishes —
+    // same grouping TunnelLog's own routing above already uses.
+    private static func levelCode(_ level: String) -> UInt8 {
+        switch level {
+        case "debug": return 0
+        case "warning", "warn": return 2
+        case "error", "fatal", "panic": return 3
+        default: return 1 // info
+        }
+    }
+}
+
+/// Minimal big-endian byte writer backing [AppMessageWire]'s encoders.
+private struct ByteWriter {
+    private(set) var data = Data()
+
+    mutating func writeUInt8(_ v: UInt8) { data.append(v) }
+
+    mutating func writeUInt16BE(_ v: UInt16) {
+        var be = v.bigEndian
+        withUnsafeBytes(of: &be) { data.append(contentsOf: $0) }
+    }
+
+    mutating func writeUInt32BE(_ v: UInt32) {
+        var be = v.bigEndian
+        withUnsafeBytes(of: &be) { data.append(contentsOf: $0) }
+    }
+
+    mutating func writeUInt64BE(_ v: UInt64) {
+        var be = v.bigEndian
+        withUnsafeBytes(of: &be) { data.append(contentsOf: $0) }
+    }
+
+    mutating func writeString16(_ s: String) {
+        let bytes = Array(s.utf8.prefix(Int(UInt16.max)))
+        writeUInt16BE(UInt16(bytes.count))
+        data.append(contentsOf: bytes)
+    }
+
+    mutating func writeString32(_ s: String) {
+        let bytes = Array(s.utf8.prefix(Int(UInt32.max)))
+        writeUInt32BE(UInt32(bytes.count))
+        data.append(contentsOf: bytes)
+    }
+}
+
 
 final class CoreLogBridge: NSObject, IosHandlerProtocol {
     struct Entry {
@@ -320,22 +397,12 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
         case "traffic":
             let stats = IosQueryTraffic()
             TunnelLog.packetFlow.debug("traffic query: up=\(stats?.uplinkBytes ?? 0, privacy: .public) down=\(stats?.downlinkBytes ?? 0, privacy: .public)")
-            let response: [String: Int64] = [
-                "uplink": stats?.uplinkBytes ?? 0,
-                "downlink": stats?.downlinkBytes ?? 0,
-            ]
-            completionHandler?(try? JSONSerialization.data(withJSONObject: response))
+            completionHandler?(AppMessageWire.encodeTraffic(
+                uplink: stats?.uplinkBytes ?? 0,
+                downlink: stats?.downlinkBytes ?? 0
+            ))
         case "logs":
-           
-            let entries = logBridge.drain().map { e -> [String: Any] in
-                [
-                    "level": e.level,
-                    "message": e.message,
-                    "source": e.source,
-                    "timestampMs": e.timestampMs,
-                ]
-            }
-            completionHandler?(try? JSONSerialization.data(withJSONObject: entries))
+            completionHandler?(AppMessageWire.encodeLogs(logBridge.drain()))
         default:
             completionHandler?(messageData)
         }
