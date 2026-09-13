@@ -139,9 +139,6 @@ class VpnConfigMessage {
 
   String? title;
 
-  /// Directory holding geosite.dat / geoip.dat for xray to resolve
-  /// `geosite:` / `geoip:` routing rules. Null => xray uses its default
-  /// (next to the binary), which on mobile means no geo data.
   String? geoAssetDir;
 
   List<Object?> _toList() {
@@ -292,16 +289,28 @@ class VpnTrafficMessage {
   VpnTrafficMessage({
     required this.uplinkBytes,
     required this.downlinkBytes,
+    this.memoryBytes,
   });
 
   int uplinkBytes;
 
   int downlinkBytes;
 
+  /// xray-core's own memory footprint, sampled on the same 1 Hz tick as the
+  /// counters above. Android: `runtime.MemStats.Sys` from the embedded Go
+  /// runtime — isolated from the surrounding Flutter/Android process, which
+  /// carries its own (much larger) Skia/engine overhead. iOS: `phys_footprint`
+  /// of the whole PacketTunnel extension process, whose jetsam budget is
+  /// ~50 MB — there the extension has nothing else heavy resident, so the
+  /// whole-process number is already a clean proxy for xray-core's own cost.
+  /// Null if the sample failed.
+  int? memoryBytes;
+
   List<Object?> _toList() {
     return <Object?>[
       uplinkBytes,
       downlinkBytes,
+      memoryBytes,
     ];
   }
 
@@ -313,6 +322,7 @@ class VpnTrafficMessage {
     return VpnTrafficMessage(
       uplinkBytes: result[0]! as int,
       downlinkBytes: result[1]! as int,
+      memoryBytes: result[2] as int?,
     );
   }
 
@@ -325,7 +335,7 @@ class VpnTrafficMessage {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(uplinkBytes, other.uplinkBytes) && _deepEquals(downlinkBytes, other.downlinkBytes);
+    return _deepEquals(uplinkBytes, other.uplinkBytes) && _deepEquals(downlinkBytes, other.downlinkBytes) && _deepEquals(memoryBytes, other.memoryBytes);
   }
 
   @override
@@ -503,11 +513,6 @@ class VpnConnection {
     return pigeonVar_replyValue! as VpnStatusMessage;
   }
 
-  /// OS-appropriate directory where the app should keep geosite.dat /
-  /// geoip.dat: on Android the app's internal files dir, on Apple the shared
-  /// App Group container (the tunnel runs in a separate process and only
-  /// sees that). Null => the platform has no opinion and Dart falls back to
-  /// path_provider (desktop).
   Future<String?> geoAssetDir() async {
     final pigeonVar_channelName = 'dev.flutter.pigeon.slipstream.VpnConnection.geoAssetDir$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
@@ -525,6 +530,26 @@ class VpnConnection {
     )
     ;
     return pigeonVar_replyValue as String?;
+  }
+
+  /// The embedded xray-core version (Android-only).
+  Future<String> xrayCoreVersion() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.slipstream.VpnConnection.xrayCoreVersion$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return pigeonVar_replyValue! as String;
   }
 }
 

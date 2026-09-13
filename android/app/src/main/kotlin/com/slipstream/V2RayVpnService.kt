@@ -103,7 +103,11 @@ class V2RayVpnService : VpnService() {
                                     null
                                 }
                         if (stats != null) {
-                            VpnEventBridge.notifyTraffic(stats.uplinkBytes, stats.downlinkBytes)
+                            VpnEventBridge.notifyTraffic(
+                                    stats.uplinkBytes,
+                                    stats.downlinkBytes,
+                                    sampleMemoryBytes(),
+                            )
                             updateNotification(
                                     buildNotification(
                                             "↑ ${formatBytes(stats.uplinkBytes)} · ↓ ${formatBytes(stats.downlinkBytes)}",
@@ -121,6 +125,21 @@ class V2RayVpnService : VpnService() {
         trafficPollRunnable?.let { mainHandler.removeCallbacks(it) }
         trafficPollRunnable = null
     }
+
+    // Go's own view of its memory (runtime.MemStats.Sys), not the app
+    // process's RSS: the VpnService runs in the same process as the Flutter
+    // engine (no android:process override), so process-wide RSS is mostly
+    // Skia/Flutter overhead and would wildly overstate what xray-core itself
+    // costs. Sys only grows (Go rarely hands pages back), so it tracks a
+    // live footprint far more steadily than HeapAlloc, which saws up and
+    // down every GC cycle.
+    private fun sampleMemoryBytes(): Long? =
+            try {
+                Android.queryMemory()?.sysBytes
+            } catch (e: Exception) {
+                Log.w("VPN_SERVICE", "queryMemory failed: ${e.message}")
+                null
+            }
 
     // another VPN took over
     override fun onRevoke() {

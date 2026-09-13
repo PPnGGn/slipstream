@@ -10,9 +10,9 @@ import 'package:slipstream/features/routing/cubit/ad_block_cubit.dart';
 import 'package:slipstream/features/routing/cubit/ru_bypass_cubit.dart';
 import 'package:slipstream/features/routing/data/ad_block_mode.dart';
 import 'package:slipstream/features/routing/data/ru_bypass_mode.dart';
+import 'package:slipstream/features/settings/ui/widgets/help_sheet.dart';
+import 'package:slipstream/features/settings/ui/widgets/settings_card.dart';
 
-/// Settings page for the client's own routing policy: RU-bypass, ad-block and
-/// the geo databases (geosite.dat / geoip.dat) both of them run on.
 class RoutingSettingsPage extends StatelessWidget {
   const RoutingSettingsPage({super.key});
 
@@ -27,7 +27,44 @@ class RoutingSettingsPage extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Правила маршрутизации')),
+      appBar: AppBar(
+        title: const Text('Routing'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            tooltip: 'Об этих настройках',
+            onPressed: () => showHelpSheet(
+              context,
+              title: 'Правила маршрутизации',
+              entries: const [
+                HelpEntry(
+                  title: 'Обход РФ',
+                  body:
+                      'Российские домены, IP-диапазоны и приватные сети идут '
+                      'напрямую, минуя тоннель. Работает только для серверов '
+                      'без собственных правил маршрутизации — подписки '
+                      'провайдеров этот переключатель не затрагивает.',
+                ),
+                HelpEntry(
+                  title: 'Блокировка рекламы',
+                  body:
+                      'Базовая блокирует ядро рекламных и трекерных сетей '
+                      '(~830 доменов). Полная — расширенный список '
+                      '(~150 000 доменов), но занимает больше памяти и может '
+                      'быть нестабильна на iOS.',
+                ),
+                HelpEntry(
+                  title: 'Гео-базы (geosite / geoip)',
+                  body:
+                      'Списки доменов и IP-диапазонов, на которые опираются '
+                      'правила выше. Скачиваются отдельно от приложения и '
+                      'обновляются вручную.',
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(
           AppDims.horizontalPadding,
@@ -36,110 +73,145 @@ class RoutingSettingsPage extends StatelessWidget {
           AppDims.gapXxl,
         ),
         children: [
-          BlocBuilder<RuBypassCubit, RuBypassMode>(
-            bloc: ruBypassCubit,
-            builder: (context, mode) => SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Обход РФ'),
-              value: mode == RuBypassMode.bypassRu,
-              onChanged: (enabled) async {
-                await ruBypassCubit.setBypassRu(enabled: enabled);
-                if (context.mounted) _notifyIfConnected(context, vpn);
-              },
-            ),
-          ),
-          const SizedBox(height: AppDims.gapXxl),
-          _Heading('Блокировка рекламы', textTheme: textTheme, colors: colors),
-          const SizedBox(height: AppDims.gapS),
-          BlocBuilder<AdBlockCubit, AdBlockMode>(
-            bloc: adBlockCubit,
-            builder: (context, mode) => Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (final option in AdBlockMode.values)
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(_adBlockLabel(option)),
-                    trailing: option == mode
-                        ? const Icon(Icons.check)
-                        : const SizedBox.shrink(),
-                    onTap: () async {
-                      await adBlockCubit.setMode(option);
-                      if (context.mounted) _notifyIfConnected(context, vpn);
-                    },
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppDims.gapXxl),
-          BlocBuilder<GeoCubit, GeoState>(
-            bloc: geoCubit,
-            builder: (context, state) {
-              final (String status, _Action? action) = switch (state) {
-                GeoAbsent() => (
-                  'Не загружены',
-                  _Action('Загрузить', () => geoService.downloadNow()),
+          const SectionHeader('Rule profiles'),
+          SettingsCard(
+            children: [
+              BlocBuilder<RuBypassCubit, RuBypassMode>(
+                bloc: ruBypassCubit,
+                builder: (context, mode) => SwitchListTile(
+                  title: const Text('Обход РФ'),
+                  subtitle: const Text('geosite:ru + geoip:ru → напрямую'),
+                  value: mode == RuBypassMode.bypassRu,
+                  onChanged: (enabled) async {
+                    await ruBypassCubit.setBypassRu(enabled: enabled);
+                    if (context.mounted) _notifyIfConnected(context, vpn);
+                  },
                 ),
-                GeoChecking() => ('Проверка обновлений…', null),
-                GeoDownloading(:final fraction) => (
-                  'Загрузка… ${(fraction * 100).round()}%',
-                  null,
-                ),
-                GeoReady(:final tag, :final updatedAt) => (
-                  'Актуально · $tag · ${_date(updatedAt)}',
-                  _Action('Обновить', () => _update(context, geoService)),
-                ),
-                GeoUpdateAvailable(:final latestTag) => (
-                  'Доступно обновление: $latestTag',
-                  _Action('Обновить', () => geoService.downloadNow()),
-                ),
-                GeoFailed(:final message) => (
-                  message,
-                  _Action('Повторить', () => geoService.downloadNow()),
-                ),
-                _ => ('', null),
-              };
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Гео-базы (geosite / geoip)'),
-                    subtitle: Text(
-                      status,
-                      style: textTheme.labelMedium?.copyWith(
-                        color: state is GeoFailed
-                            ? colors.danger
-                            : colors.textSecondary,
+              ),
+              BlocBuilder<AdBlockCubit, AdBlockMode>(
+                bloc: adBlockCubit,
+                builder: (context, mode) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    SwitchListTile(
+                      title: const Text('Блокировка рекламы и трекеров'),
+                      subtitle: Text(
+                        mode.enabled
+                            ? '${mode.token} → блокировка'
+                            : 'Выключена',
                       ),
+                      value: mode.enabled,
+                      onChanged: (enabled) async {
+                        await adBlockCubit.setEnabled(enabled: enabled);
+                        if (context.mounted) _notifyIfConnected(context, vpn);
+                      },
                     ),
-                    trailing: action == null
-                        ? null
-                        : TextButton(
-                            onPressed: () => action.onPressed(),
-                            child: Text(action.label),
+                    if (mode.enabled)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          16,
+                          0,
+                          16,
+                          AppDims.gapM,
+                        ),
+                        child: SegmentedButton<AdBlockMode>(
+                          segments: const [
+                            ButtonSegment(
+                              value: AdBlockMode.basic,
+                              label: Text('Базовая'),
+                            ),
+                            ButtonSegment(
+                              value: AdBlockMode.full,
+                              label: Text('Полная'),
+                            ),
+                          ],
+                          selected: {mode},
+                          showSelectedIcon: false,
+                          onSelectionChanged: (selection) async {
+                            await adBlockCubit.setMode(selection.first);
+                            if (context.mounted) {
+                              _notifyIfConnected(context, vpn);
+                            }
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SwitchListTile(
+                title: Text('Обход LAN'),
+                subtitle: Text('192.168/16 · 10/8 · localhost → напрямую'),
+                value: false,
+                onChanged: null,
+              ),
+              BlocBuilder<GeoCubit, GeoState>(
+                bloc: geoCubit,
+                builder: (context, state) {
+                  final (String status, _Action? action) = switch (state) {
+                    GeoAbsent() => (
+                      'Не загружены',
+                      _Action('Загрузить', () => geoService.downloadNow()),
+                    ),
+                    GeoChecking() => ('Проверка обновлений…', null),
+                    GeoDownloading(:final fraction) => (
+                      'Загрузка… ${(fraction * 100).round()}%',
+                      null,
+                    ),
+                    GeoReady(:final tag, :final updatedAt) => (
+                      'Актуально · $tag · ${_date(updatedAt)}',
+                      _Action('Обновить', () => _update(context, geoService)),
+                    ),
+                    GeoUpdateAvailable(:final latestTag) => (
+                      'Доступно обновление: $latestTag',
+                      _Action('Обновить', () => geoService.downloadNow()),
+                    ),
+                    GeoFailed(:final message) => (
+                      message,
+                      _Action('Повторить', () => geoService.downloadNow()),
+                    ),
+                    _ => ('', null),
+                  };
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ListTile(
+                        title: const Text('Гео-базы (geosite / geoip)'),
+                        subtitle: Text(
+                          status,
+                          style: textTheme.labelMedium?.copyWith(
+                            color: state is GeoFailed
+                                ? colors.danger
+                                : colors.textSecondary,
                           ),
-                  ),
-                  if (state is GeoDownloading)
-                    Padding(
-                      padding: const EdgeInsets.only(top: AppDims.gapS),
-                      child: LinearProgressIndicator(value: state.fraction),
-                    ),
-                ],
-              );
-            },
+                        ),
+                        trailing: action == null
+                            ? null
+                            : TextButton(
+                                onPressed: () => action.onPressed(),
+                                child: Text(action.label),
+                              ),
+                      ),
+                      if (state is GeoDownloading)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            16,
+                            0,
+                            16,
+                            AppDims.gapM,
+                          ),
+                          child: LinearProgressIndicator(value: state.fraction),
+                        ),
+                    ],
+                  );
+                },
+              ),
+            ],
           ),
         ],
       ),
     );
   }
-
-  static String _adBlockLabel(AdBlockMode mode) => switch (mode) {
-    AdBlockMode.off => 'Выключена',
-    AdBlockMode.basic => 'Базовая',
-    AdBlockMode.full => 'Полная',
-  };
 
   static Future<void> _update(
     BuildContext context,
@@ -172,22 +244,6 @@ class RoutingSettingsPage extends StatelessWidget {
       ..showSnackBar(
         const SnackBar(content: Text('Применится при переподключении')),
       );
-  }
-}
-
-class _Heading extends StatelessWidget {
-  const _Heading(this.text, {required this.textTheme, required this.colors});
-
-  final String text;
-  final TextTheme textTheme;
-  final AppColors colors;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: textTheme.titleSmall?.copyWith(color: colors.textPrimary),
-    );
   }
 }
 

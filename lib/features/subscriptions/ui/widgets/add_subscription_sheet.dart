@@ -92,7 +92,7 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AppThemeCubit, AppThemeMode>(
+    return BlocBuilder<AppThemeCubit, AppThemeState>(
       bloc: getIt<AppThemeCubit>(),
       builder: (context, _) {
         final colors = getIt<AppColors>();
@@ -101,6 +101,7 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
         return Padding(
           padding: .only(bottom: MediaQuery.viewInsetsOf(context).bottom),
           child: SafeArea(
+            top: false,
             child: SingleChildScrollView(
               padding: const .fromLTRB(20, 8, 20, 20),
               child: Column(

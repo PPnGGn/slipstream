@@ -32,10 +32,10 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final themeCubit = getIt<AppThemeCubit>();
 
-    return BlocBuilder<AppThemeCubit, AppThemeMode>(
+    return BlocBuilder<AppThemeCubit, AppThemeState>(
       bloc: themeCubit,
-      builder: (context, state) {
-        final isDark = state == AppThemeMode.dark;
+      builder: (context, _) {
+        final isDark = themeCubit.isDark;
 
         return Scaffold(
           appBar: AppBar(

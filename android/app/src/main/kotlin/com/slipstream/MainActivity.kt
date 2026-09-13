@@ -18,6 +18,7 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
 import androidx.core.content.pm.PackageInfoCompat
+import com.slipstream.android.Android
 import com.slipstream.updater.AppVersionMessage
 import com.slipstream.updater.InstallResult
 import com.slipstream.updater.UpdateInstaller
@@ -71,6 +72,8 @@ class MainActivity : FlutterActivity(), VpnConnection, UpdateInstaller {
             File(filesDir, "geo").apply { mkdirs() }.absolutePath
 
     override fun geoAssetDir(): String = geoDir()
+
+    override fun xrayCoreVersion(): String = Android.version()
 
     override fun start(config: VpnConfigMessage, callback: (Result<VpnResult>) -> Unit) {
         Log.d("VPN_BRIDGE", "Requesting VPN start with dynamic config...")
