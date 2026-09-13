@@ -1,3 +1,4 @@
+import Darwin
 import Network
 import NetworkExtension
 import os
@@ -17,11 +18,13 @@ enum TunnelLog {
 /// Mirrored by the decoder in ios/Runner/VpnConnectionImpl.swift — keep both
 /// in sync if the format changes.
 enum AppMessageWire {
-    /// `[uplink: UInt64 BE][downlink: UInt64 BE]` — 16 bytes, always.
-    static func encodeTraffic(uplink: Int64, downlink: Int64) -> Data {
+    /// `[uplink: UInt64 BE][downlink: UInt64 BE][memory: UInt64 BE]` — 24
+    /// bytes, always.
+    static func encodeTraffic(uplink: Int64, downlink: Int64, memory: Int64) -> Data {
         var w = ByteWriter()
         w.writeUInt64BE(UInt64(bitPattern: uplink))
         w.writeUInt64BE(UInt64(bitPattern: downlink))
+        w.writeUInt64BE(UInt64(bitPattern: memory))
         return w.data
     }
 
@@ -50,6 +53,22 @@ enum AppMessageWire {
         default: return 1 // info
         }
     }
+}
+
+/// `phys_footprint` from `TASK_VM_INFO` — the exact figure jetsam charges
+/// this extension against its ~50MB budget (unlike `resident_size`, which
+/// undercounts compressed memory and so under-warns right up to the kill).
+private func currentFootprintBytes() -> Int64 {
+    var info = task_vm_info_data_t()
+    var count = mach_msg_type_number_t(
+        MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<integer_t>.size
+    )
+    let kerr = withUnsafeMutablePointer(to: &info) { ptr -> kern_return_t in
+        ptr.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+            task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
+        }
+    }
+    return kerr == KERN_SUCCESS ? Int64(info.phys_footprint) : 0
 }
 
 /// Minimal big-endian byte writer backing [AppMessageWire]'s encoders.
@@ -399,7 +418,8 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
             TunnelLog.packetFlow.debug("traffic query: up=\(stats?.uplinkBytes ?? 0, privacy: .public) down=\(stats?.downlinkBytes ?? 0, privacy: .public)")
             completionHandler?(AppMessageWire.encodeTraffic(
                 uplink: stats?.uplinkBytes ?? 0,
-                downlink: stats?.downlinkBytes ?? 0
+                downlink: stats?.downlinkBytes ?? 0,
+                memory: currentFootprintBytes()
             ))
         case "logs":
             completionHandler?(AppMessageWire.encodeLogs(logBridge.drain()))

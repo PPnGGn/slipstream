@@ -7,6 +7,8 @@ import 'package:slipstream/core/service/update_service/update_service_cubit.dart
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/theme/app_theme.dart';
 import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
+import 'package:slipstream/features/diagnostics/cubit/memory_monitor_cubit.dart';
+import 'package:slipstream/features/diagnostics/data/memory_monitor_mode.dart';
 import 'package:slipstream/features/geo/cubit/geo_cubit.dart';
 import 'package:slipstream/features/routing/cubit/ad_block_cubit.dart';
 import 'package:slipstream/features/routing/cubit/ru_bypass_cubit.dart';
@@ -201,6 +203,27 @@ class _SettingsPageState extends State<SettingsPage> {
                     subtitle: Text('Connection drops & subscription updates'),
                     value: true,
                     onChanged: null,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppDims.gapXxl),
+              const SectionHeader('Diagnostics'),
+              const SizedBox(height: AppDims.gapS),
+              SettingsCard(
+                children: [
+                  BlocBuilder<MemoryMonitorCubit, MemoryMonitorMode>(
+                    bloc: getIt<MemoryMonitorCubit>(),
+                    builder: (context, mode) => SwitchListTile(
+                      title: const Text('Memory monitor'),
+                      subtitle: Text(
+                        Platform.isIOS
+                            ? 'Tunnel footprint on the home screen · 50 MB limit'
+                            : 'Xray-core memory on the home screen',
+                      ),
+                      value: mode.enabled,
+                      onChanged: (enabled) => getIt<MemoryMonitorCubit>()
+                          .setEnabled(enabled: enabled),
+                    ),
                   ),
                 ],
               ),

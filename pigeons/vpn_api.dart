@@ -25,6 +25,16 @@ class VpnLogMessage {
 class VpnTrafficMessage {
   int uplinkBytes;
   int downlinkBytes;
+
+  /// xray-core's own memory footprint, sampled on the same 1 Hz tick as the
+  /// counters above. Android: `runtime.MemStats.Sys` from the embedded Go
+  /// runtime — isolated from the surrounding Flutter/Android process, which
+  /// carries its own (much larger) Skia/engine overhead. iOS: `phys_footprint`
+  /// of the whole PacketTunnel extension process, whose jetsam budget is
+  /// ~50 MB — there the extension has nothing else heavy resident, so the
+  /// whole-process number is already a clean proxy for xray-core's own cost.
+  /// Null if the sample failed.
+  int? memoryBytes;
 }
 
 /// Result of a start/stop request.

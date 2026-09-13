@@ -8,10 +8,18 @@ private let appLog = Logger(subsystem: "vpn.oko", category: "vpnstatus")
 /// sends back over `handleAppMessage`. Mirrors the encoder in
 /// ios/PacketTunnel/PacketTunnelProvider.swift — keep both in sync.
 private enum AppMessageWire {
-    static func decodeTraffic(_ data: Data) -> (uplink: Int64, downlink: Int64)? {
+    static func decodeTraffic(_ data: Data) -> (uplink: Int64, downlink: Int64, memory: Int64?)? {
         var r = ByteReader(data: data)
         guard let uplink = r.readUInt64BE(), let downlink = r.readUInt64BE() else { return nil }
-        return (Int64(bitPattern: uplink), Int64(bitPattern: downlink))
+        // The memory field is new; a stale extension (mid-upgrade, or a dev
+        // build with a version skew) may still reply with the old 16-byte
+        // payload — degrade to a missing reading rather than fail decoding.
+        let memory = r.readUInt64BE()
+        return (
+            Int64(bitPattern: uplink),
+            Int64(bitPattern: downlink),
+            memory.map { Int64(bitPattern: $0) }
+        )
     }
 
     static func decodeLogs(_ data: Data) -> [(level: String, message: String, source: String, timestampMs: Int64)] {
@@ -338,7 +346,11 @@ final class VpnConnectionImpl: NSObject, VpnConnection {
                   let traffic = AppMessageWire.decodeTraffic(responseData)
             else { return }
 
-            let msg = VpnTrafficMessage(uplinkBytes: traffic.uplink, downlinkBytes: traffic.downlink)
+            let msg = VpnTrafficMessage(
+                uplinkBytes: traffic.uplink,
+                downlinkBytes: traffic.downlink,
+                memoryBytes: traffic.memory
+            )
             self?.eventReceiver.onTraffic(message: msg) { _ in }
         }
     }

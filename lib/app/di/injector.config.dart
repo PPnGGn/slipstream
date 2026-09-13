@@ -21,6 +21,9 @@ import '../../core/service/vpn_service/vpn_service_cubit.dart' as _i202;
 import '../../core/theme/app_colors.dart' as _i962;
 import '../../core/theme/cubit/theme_cubit.dart' as _i11;
 import '../../core/theme/data/theme_store.dart' as _i802;
+import '../../features/diagnostics/cubit/memory_monitor_cubit.dart' as _i628;
+import '../../features/diagnostics/cubit/memory_usage_cubit.dart' as _i190;
+import '../../features/diagnostics/data/memory_monitor_store.dart' as _i193;
 import '../../features/geo/cubit/geo_cubit.dart' as _i818;
 import '../../features/geo/data/geo_config_gate.dart' as _i951;
 import '../../features/geo/data/geo_paths.dart' as _i262;
@@ -110,6 +113,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i802.ThemeStore>(
       () => _i802.ThemeStore(gh<_i460.SharedPreferences>()),
     );
+    gh.lazySingleton<_i193.MemoryMonitorStore>(
+      () => _i193.MemoryMonitorStore(gh<_i460.SharedPreferences>()),
+    );
     gh.lazySingleton<_i117.AdBlockStore>(
       () => _i117.AdBlockStore(gh<_i460.SharedPreferences>()),
     );
@@ -135,6 +141,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i744.LocalProxyPort>(),
       ),
       dispose: (i) => i.dispose(),
+    );
+    gh.lazySingleton<_i628.MemoryMonitorCubit>(
+      () => _i628.MemoryMonitorCubit(store: gh<_i193.MemoryMonitorStore>()),
     );
     gh.lazySingleton<_i11.UpdateRepository>(
       () => _i11.UpdateRepository(
@@ -181,6 +190,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i863.AdBlockCubit>(),
       ),
       dispose: (i) => i.dispose(),
+    );
+    gh.lazySingleton<_i190.MemoryUsageCubit>(
+      () => _i190.MemoryUsageCubit(repository: gh<_i1056.VpnRepository>()),
     );
     gh.lazySingleton<_i202.VpnServiceCubit>(
       () => _i202.VpnServiceCubit(

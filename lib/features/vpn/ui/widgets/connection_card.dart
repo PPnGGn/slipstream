@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
@@ -11,6 +12,9 @@ import 'package:slipstream/core/service/vpn_service/vpn_service_cubit.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/theme/app_theme.dart';
 import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
+import 'package:slipstream/features/diagnostics/cubit/memory_monitor_cubit.dart';
+import 'package:slipstream/features/diagnostics/cubit/memory_usage_cubit.dart';
+import 'package:slipstream/features/diagnostics/data/memory_monitor_mode.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
 import 'package:slipstream/features/vpn/ui/widgets/connection_timer.dart';
 
@@ -354,13 +358,17 @@ class _Chips extends StatelessWidget {
         ? _protocolOf(selectedServer!.configJson)
         : 'NO SERVER';
 
-    return Wrap(
-      spacing: 6,
-      runSpacing: 6,
-      children: [
-        _Chip(colors: colors, label: protocolLabel),
-        _Chip(colors: colors, label: trafficLabel),
-      ],
+    return BlocBuilder<MemoryMonitorCubit, MemoryMonitorMode>(
+      bloc: getIt<MemoryMonitorCubit>(),
+      builder: (context, monitorMode) => Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        children: [
+          _Chip(colors: colors, label: protocolLabel),
+          _Chip(colors: colors, label: trafficLabel),
+          if (monitorMode.enabled) _MemoryChip(colors: colors),
+        ],
+      ),
     );
   }
 
@@ -375,10 +383,12 @@ class _Chips extends StatelessWidget {
 }
 
 class _Chip extends StatelessWidget {
-  const _Chip({required this.colors, required this.label});
+  const _Chip({required this.colors, required this.label, this.dotColor});
 
   final AppColors colors;
   final String label;
+
+  final Color? dotColor;
 
   @override
   Widget build(BuildContext context) {
@@ -388,16 +398,62 @@ class _Chip extends StatelessWidget {
         color: colors.chip,
         borderRadius: .circular(100),
       ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontFamily: 'monospace',
-          fontFeatures: const [FontFeature.tabularFigures()],
-          fontSize: 10,
-          fontWeight: .w600,
-          color: colors.textSecondary,
-        ),
+      child: Row(
+        mainAxisSize: .min,
+        children: [
+          if (dotColor != null) ...[
+            Container(
+              width: 5,
+              height: 5,
+              decoration: BoxDecoration(shape: .circle, color: dotColor),
+            ),
+            const SizedBox(width: 5),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'monospace',
+              fontFeatures: const [FontFeature.tabularFigures()],
+              fontSize: 10,
+              fontWeight: .w600,
+              color: colors.textSecondary,
+            ),
+          ),
+        ],
       ),
     );
   }
+}
+
+class _MemoryChip extends StatelessWidget {
+  const _MemoryChip({required this.colors});
+
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<MemoryUsageCubit, MemoryUsage>(
+      bloc: getIt<MemoryUsageCubit>(),
+      builder: (context, usage) {
+        final bytes = usage.bytes;
+        if (bytes == null) {
+          return _Chip(colors: colors, label: 'RAM — MB', dotColor: colors.textMuted);
+        }
+
+        final dotColor = switch (usage.health) {
+          MemoryHealth.ok => colors.ok,
+          MemoryHealth.warn => colors.warn,
+          MemoryHealth.danger => colors.danger,
+        };
+        // The budget only matters on iOS, where it's a real jetsam kill
+        // threshold worth showing headroom against; Android has none.
+        final label = Platform.isIOS
+            ? 'RAM ${_mb(bytes)}/${_mb(memoryBudgetBytes)} MB'
+            : 'RAM ${_mb(bytes)} MB';
+        return _Chip(colors: colors, label: label, dotColor: dotColor);
+      },
+    );
+  }
+
+  static int _mb(int bytes) => (bytes / (1024 * 1024)).round();
 }
