@@ -66,36 +66,41 @@ class ConnectionCard extends StatelessWidget {
                 return GestureDetector(
                   onTap: () => cubit.toggle(selectedServer),
                   behavior: .opaque,
-                  child: Container(
-                    padding: const .all(18),
-                    decoration: BoxDecoration(
-                      color: colors.surface,
-                      borderRadius: .circular(AppDims.radiusCard),
-                      border: .all(color: colors.border),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.06),
-                          blurRadius: 24,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        _PowerButton(
-                          colors: colors,
-                          active: active,
-                          busy: busy,
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: _Status(
-                            colors: colors,
-                            state: state,
-                            selectedServer: selectedServer,
+                  child: AnimatedSize(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeOut,
+                    alignment: Alignment.topCenter,
+                    child: Container(
+                      padding: const .all(18),
+                      decoration: BoxDecoration(
+                        color: colors.surface,
+                        borderRadius: .circular(AppDims.radiusCard),
+                        border: .all(color: colors.border),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.06),
+                            blurRadius: 24,
+                            offset: const Offset(0, 8),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          _PowerButton(
+                            colors: colors,
+                            active: active,
+                            busy: busy,
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: _Status(
+                              colors: colors,
+                              state: state,
+                              selectedServer: selectedServer,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -277,6 +282,13 @@ class _Status extends StatelessWidget {
         server?.title ??
         'Add a subscription to get started';
 
+    final timerStyle = textTheme.titleMedium?.copyWith(
+      fontFamily: 'monospace',
+      fontFeatures: const [FontFeature.tabularFigures()],
+      letterSpacing: 0.5,
+    );
+    final connectedAt = state.whenOrNull(connected: (_, at, _, _) => at);
+
     return Column(
       crossAxisAlignment: .start,
       mainAxisSize: .min,
@@ -305,19 +317,14 @@ class _Status extends StatelessWidget {
           maxLines: 1,
           overflow: .ellipsis,
         ),
-        state.maybeWhen(
-          connected: (_, connectedAt, _, _) => Padding(
-            padding: const .only(top: 6),
-            child: ConnectionTimer(
-              connectedAt: connectedAt,
-              style: textTheme.titleMedium?.copyWith(
-                fontFamily: 'monospace',
-                fontFeatures: const [FontFeature.tabularFigures()],
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
-          orElse: () => const SizedBox.shrink(),
+        Padding(
+          padding: const .only(top: 6),
+          child: connectedAt != null
+              ? ConnectionTimer(connectedAt: connectedAt, style: timerStyle)
+              : Text(
+                  '--:--:--',
+                  style: timerStyle?.copyWith(color: colors.textMuted),
+                ),
         ),
         const SizedBox(height: 9),
         _Chips(colors: colors, state: state, selectedServer: selectedServer),
@@ -339,19 +346,22 @@ class _Chips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final traffic = state.whenOrNull(
-      connected: (_, _, up, down) =>
-          '↑ ${formatBytes(up)} ↓ ${formatBytes(down)}',
+    final traffic = state.whenOrNull(connected: (_, _, up, down) => (up, down));
+    final trafficLabel =
+        '↑ ${formatBytesFixed(traffic?.$1 ?? 0)} '
+        '↓ ${formatBytesFixed(traffic?.$2 ?? 0)}';
+    final protocolLabel = selectedServer != null
+        ? _protocolOf(selectedServer!.configJson)
+        : 'NO SERVER';
+
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        _Chip(colors: colors, label: protocolLabel),
+        _Chip(colors: colors, label: trafficLabel),
+      ],
     );
-
-    final chips = <Widget>[
-      if (selectedServer != null)
-        _Chip(colors: colors, label: _protocolOf(selectedServer!.configJson)),
-      if (traffic != null) _Chip(colors: colors, label: traffic),
-    ];
-    if (chips.isEmpty) return const SizedBox.shrink();
-
-    return Wrap(spacing: 6, runSpacing: 6, children: chips);
   }
 
   static String _protocolOf(String configJson) {
