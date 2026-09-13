@@ -56,6 +56,10 @@ private struct ByteReader {
     let data: Data
     private var offset: Int = 0
 
+    init(data: Data) {
+        self.data = data
+    }
+
     private mutating func take(_ length: Int) -> Data? {
         guard length >= 0, offset + length <= data.count else { return nil }
         let start = data.startIndex + offset
