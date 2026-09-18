@@ -15,4 +15,5 @@ class AppAssets {
   static const String trash = 'assets/svg/trash.svg';
   static const String copy = 'assets/svg/copy.svg';
   static const String cloudOff = 'assets/svg/cloud_off.svg';
+  static const String ping = 'assets/svg/ping.svg';
 }

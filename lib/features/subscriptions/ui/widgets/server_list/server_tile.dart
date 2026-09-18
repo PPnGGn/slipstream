@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:slipstream/app/app_assets.dart';
-import 'package:slipstream/app/di/injector.dart';
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
-import 'package:slipstream/features/subscriptions/data/ping/ping_quality.dart';
-import 'package:slipstream/features/subscriptions/data/ping/ping_service.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/xray_config_meta.dart';
 import 'package:slipstream/features/subscriptions/data/vpn_server_display.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/server_info_sheet.dart';
@@ -16,14 +13,12 @@ class ServerTile extends StatelessWidget {
     required this.colors,
     required this.server,
     required this.selected,
-    required this.pingDelay,
     required this.onTap,
   });
 
   final AppColors colors;
   final VpnServer server;
   final bool selected;
-  final Duration pingDelay;
   final VoidCallback onTap;
 
   @override
@@ -70,13 +65,6 @@ class ServerTile extends StatelessWidget {
                   ],
                 ),
               ),
-              if (meta.hasEndpoint)
-                _PingPill(
-                  colors: colors,
-                  host: meta.host!,
-                  port: meta.port!,
-                  delay: pingDelay,
-                ),
               GestureDetector(
                 onTap: () => showServerInfoSheet(context, server),
                 behavior: .opaque,
@@ -171,104 +159,3 @@ class _ProtoChips extends StatelessWidget {
   }
 }
 
-class _PingPill extends StatefulWidget {
-  const _PingPill({
-    required this.colors,
-    required this.host,
-    required this.port,
-    required this.delay,
-  });
-
-  final AppColors colors;
-  final String host;
-  final int port;
-  final Duration delay;
-
-  @override
-  State<_PingPill> createState() => _PingPillState();
-}
-
-class _PingPillState extends State<_PingPill> {
-  PingQuality? _quality;
-  Duration? _rtt;
-
-  @override
-  void initState() {
-    super.initState();
-    _run();
-  }
-
-  Future<void> _run() async {
-    if (widget.delay > Duration.zero) {
-      await Future<void>.delayed(widget.delay);
-    }
-    if (!mounted) return;
-    final rtt = await getIt<PingService>().ping(widget.host, widget.port);
-    if (!mounted) return;
-    setState(() {
-      _rtt = rtt;
-      _quality = PingQuality.of(rtt);
-    });
-  }
-
-  Color _colorFor(PingQuality quality) => switch (quality) {
-    PingQuality.good => widget.colors.ok,
-    PingQuality.fair => widget.colors.warn,
-    PingQuality.poor || PingQuality.timeout => widget.colors.danger,
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = widget.colors;
-    final quality = _quality;
-
-    if (quality == null) {
-      return SizedBox(
-        width: 46,
-        height: 18,
-        child: Center(
-          child: SizedBox(
-            width: 10,
-            height: 10,
-            child: CircularProgressIndicator(
-              strokeWidth: 1.6,
-              valueColor: AlwaysStoppedAnimation(colors.textMuted),
-            ),
-          ),
-        ),
-      );
-    }
-
-    final color = _colorFor(quality);
-    final ms = _rtt?.inMilliseconds;
-    final label = ms == null ? 'timeout' : '$ms ms';
-
-    return Container(
-      padding: const .symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
-        borderRadius: .circular(100),
-      ),
-      child: Row(
-        mainAxisSize: .min,
-        spacing: 5,
-        children: [
-          Container(
-            width: 5,
-            height: 5,
-            decoration: BoxDecoration(shape: .circle, color: color),
-          ),
-          Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'monospace',
-              fontSize: 10,
-              fontWeight: .w600,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

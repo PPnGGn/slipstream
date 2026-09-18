@@ -36,7 +36,6 @@ import '../../features/routing/data/local_proxy_gate.dart' as _i744;
 import '../../features/routing/data/routing_policy_gate.dart' as _i194;
 import '../../features/routing/data/ru_bypass_store.dart' as _i310;
 import '../../features/subscriptions/cubit/subscriptions_cubit.dart' as _i83;
-import '../../features/subscriptions/data/ping/ping_service.dart' as _i189;
 import '../../features/subscriptions/data/selected_server_store.dart' as _i830;
 import '../../features/subscriptions/data/subscription_factory.dart' as _i179;
 import '../../features/subscriptions/data/subscription_parser/subscription_parser_service.dart'
@@ -81,7 +80,6 @@ extension GetItInjectableX on _i174.GetIt {
       () => vpnModule.vpnEventReceiver,
     );
     gh.lazySingleton<_i744.LocalProxyPort>(() => _i744.LocalProxyPort());
-    gh.lazySingleton<_i189.PingService>(() => _i189.PingService());
     gh.lazySingleton<_i179.SubscriptionFactory>(
       () => _i179.SubscriptionFactory(),
     );
