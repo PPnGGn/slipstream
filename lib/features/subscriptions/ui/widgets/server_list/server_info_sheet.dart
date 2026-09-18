@@ -30,7 +30,7 @@ class _ServerInfoSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AppThemeCubit, AppThemeMode>(
+    return BlocBuilder<AppThemeCubit, AppThemeState>(
       bloc: getIt<AppThemeCubit>(),
       builder: (context, _) {
         final colors = getIt<AppColors>();
@@ -38,20 +38,34 @@ class _ServerInfoSheet extends StatelessWidget {
         final pretty = prettyJson(server.configJson);
 
         return SafeArea(
+          top: false,
           child: Padding(
-            padding: const .fromLTRB(20, 12, 20, 20),
+            padding: const .fromLTRB(16, 12, 16, 0),
             child: Column(
               crossAxisAlignment: .stretch,
               mainAxisSize: .min,
               children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    margin: const .only(bottom: 14),
+                    decoration: BoxDecoration(
+                      color: colors.border,
+                      borderRadius: .circular(100),
+                    ),
+                  ),
+                ),
                 Row(
                   children: [
                     Expanded(
                       child: Text(server.title, style: textTheme.titleMedium),
                     ),
                     IconButton(
-                      onPressed: () =>
-                          copyToClipboard(context, pretty, 'Config copied'),
+                      onPressed: () {
+                        copyToClipboard(context, pretty, 'Config copied');
+                        Navigator.of(context).pop();
+                      },
                       icon: SvgPicture.asset(
                         AppAssets.copy,
                         width: 18,
@@ -61,7 +75,7 @@ class _ServerInfoSheet extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 4),
                 Flexible(
                   child: SingleChildScrollView(
                     child: Container(

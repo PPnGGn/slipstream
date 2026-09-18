@@ -46,9 +46,9 @@ object VpnEventBridge : CoreLogHandler {
         }
     }
 
-    fun notifyTraffic(uplinkBytes: Long, downlinkBytes: Long) {
+    fun notifyTraffic(uplinkBytes: Long, downlinkBytes: Long, memoryBytes: Long? = null) {
         val receiver = this.receiver ?: return
-        val message = VpnTrafficMessage(uplinkBytes, downlinkBytes)
+        val message = VpnTrafficMessage(uplinkBytes, downlinkBytes, memoryBytes)
         mainHandler.post {
             receiver.onTraffic(message) { result ->
                 result.onFailure { e ->

@@ -4,6 +4,97 @@ import os
 
 private let appLog = Logger(subsystem: "vpn.oko", category: "vpnstatus")
 
+/// Decoder for the binary traffic/logs replies the PacketTunnel extension
+/// sends back over `handleAppMessage`. Mirrors the encoder in
+/// ios/PacketTunnel/PacketTunnelProvider.swift — keep both in sync.
+private enum AppMessageWire {
+    static func decodeTraffic(_ data: Data) -> (uplink: Int64, downlink: Int64, memory: Int64?)? {
+        var r = ByteReader(data: data)
+        guard let uplink = r.readUInt64BE(), let downlink = r.readUInt64BE() else { return nil }
+        // The memory field is new; a stale extension (mid-upgrade, or a dev
+        // build with a version skew) may still reply with the old 16-byte
+        // payload — degrade to a missing reading rather than fail decoding.
+        let memory = r.readUInt64BE()
+        return (
+            Int64(bitPattern: uplink),
+            Int64(bitPattern: downlink),
+            memory.map { Int64(bitPattern: $0) }
+        )
+    }
+
+    static func decodeLogs(_ data: Data) -> [(level: String, message: String, source: String, timestampMs: Int64)] {
+        var r = ByteReader(data: data)
+        guard let count = r.readUInt32BE() else { return [] }
+
+        var out: [(level: String, message: String, source: String, timestampMs: Int64)] = []
+        out.reserveCapacity(Int(count))
+        for _ in 0..<count {
+            guard let code = r.readUInt8(),
+                  let timestampMs = r.readUInt64BE(),
+                  let source = r.readString16(),
+                  let message = r.readString32()
+            else { break }
+            out.append((levelName(code), message, source, Int64(bitPattern: timestampMs)))
+        }
+        return out
+    }
+
+    private static func levelName(_ code: UInt8) -> String {
+        switch code {
+        case 0: return "debug"
+        case 2: return "warning"
+        case 3: return "error"
+        default: return "info"
+        }
+    }
+}
+
+/// Minimal big-endian byte reader backing [AppMessageWire]'s decoders. Every
+/// read fails soft (returns nil) instead of trapping on truncated/malformed
+/// data, since this parses IPC input rather than trusted in-process state.
+private struct ByteReader {
+    let data: Data
+    private var offset: Int = 0
+
+    init(data: Data) {
+        self.data = data
+    }
+
+    private mutating func take(_ length: Int) -> Data? {
+        guard length >= 0, offset + length <= data.count else { return nil }
+        let start = data.startIndex + offset
+        let slice = data.subdata(in: start..<(start + length))
+        offset += length
+        return slice
+    }
+
+    mutating func readUInt8() -> UInt8? {
+        take(1)?.first
+    }
+
+    mutating func readUInt16BE() -> UInt16? {
+        take(2).map { $0.withUnsafeBytes { $0.loadUnaligned(as: UInt16.self).bigEndian } }
+    }
+
+    mutating func readUInt32BE() -> UInt32? {
+        take(4).map { $0.withUnsafeBytes { $0.loadUnaligned(as: UInt32.self).bigEndian } }
+    }
+
+    mutating func readUInt64BE() -> UInt64? {
+        take(8).map { $0.withUnsafeBytes { $0.loadUnaligned(as: UInt64.self).bigEndian } }
+    }
+
+    mutating func readString16() -> String? {
+        guard let length = readUInt16BE(), let bytes = take(Int(length)) else { return nil }
+        return String(data: bytes, encoding: .utf8)
+    }
+
+    mutating func readString32() -> String? {
+        guard let length = readUInt32BE(), let bytes = take(Int(length)) else { return nil }
+        return String(data: bytes, encoding: .utf8)
+    }
+}
+
 final class VpnConnectionImpl: NSObject, VpnConnection {
 
     private static let extensionBundleID = "vpn.oko.XrayTunnel"
@@ -69,6 +160,12 @@ final class VpnConnectionImpl: NSObject, VpnConnection {
         resourceValues.isExcludedFromBackup = true
         try? mutableBase.setResourceValues(resourceValues)
         return base.path
+    }
+
+    func xrayCoreVersion() throws -> String {
+        // Android-only feature (see the pigeon doc comment) — xray-core runs
+        // inside the PacketTunnel extension here, not this process.
+        "n/a"
     }
 
     func getStatus(completion: @escaping (Result<VpnStatusMessage, Error>) -> Void) {
@@ -250,12 +347,14 @@ final class VpnConnectionImpl: NSObject, VpnConnection {
         let request = Data("traffic".utf8)
         try? session.sendProviderMessage(request) { [weak self] responseData in
             guard let responseData,
-                  let json = try? JSONSerialization.jsonObject(with: responseData) as? [String: Any],
-                  let uplink = json["uplink"] as? Int64,
-                  let downlink = json["downlink"] as? Int64
+                  let traffic = AppMessageWire.decodeTraffic(responseData)
             else { return }
 
-            let msg = VpnTrafficMessage(uplinkBytes: uplink, downlinkBytes: downlink)
+            let msg = VpnTrafficMessage(
+                uplinkBytes: traffic.uplink,
+                downlinkBytes: traffic.downlink,
+                memoryBytes: traffic.memory
+            )
             self?.eventReceiver.onTraffic(message: msg) { _ in }
         }
     }
@@ -267,17 +366,14 @@ final class VpnConnectionImpl: NSObject, VpnConnection {
 
         let request = Data("logs".utf8)
         try? session.sendProviderMessage(request) { [weak self] responseData in
-            guard let self,
-                  let responseData,
-                  let entries = try? JSONSerialization.jsonObject(with: responseData) as? [[String: Any]]
-            else { return }
+            guard let self, let responseData else { return }
 
-            for entry in entries {
+            for entry in AppMessageWire.decodeLogs(responseData) {
                 let msg = VpnLogMessage(
-                    level: entry["level"] as? String ?? "info",
-                    message: entry["message"] as? String ?? "",
-                    source: entry["source"] as? String ?? "core",
-                    timestampMs: (entry["timestampMs"] as? NSNumber)?.int64Value ?? 0
+                    level: entry.level,
+                    message: entry.message,
+                    source: entry.source,
+                    timestampMs: entry.timestampMs
                 )
                 self.eventReceiver.onLog(message: msg) { _ in }
             }

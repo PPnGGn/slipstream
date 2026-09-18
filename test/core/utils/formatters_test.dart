@@ -82,4 +82,19 @@ void main() {
       expect(countryFlag('N'), equals('🏳️'));
     });
   });
+
+  group('formatBytesFixed', () {
+    test('pads every reasonable value to the same glyph count', () {
+      final lengths = [
+        0,
+        512,
+        1024,
+        1536,
+        99 * 1024 * 1024,
+        1000 * 1024 * 1024,
+      ].map((bytes) => formatBytesFixed(bytes).length).toSet();
+
+      expect(lengths, equals({7}));
+    });
+  });
 }

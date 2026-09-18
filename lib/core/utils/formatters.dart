@@ -24,6 +24,12 @@ String formatBytes(int bytes) {
   return '${value.toStringAsFixed(fractionDigits)} ${units[unit]}';
 }
 
+/// [formatBytes] padded to a constant glyph count: in a monospace label with
+/// tabular figures this keeps its rendered width fixed, so a growing counter
+/// never shifts a `Wrap`'s line break. Longest realistic [formatBytes] output
+/// is 7 characters (e.g. "1023 KB", "99.9 MB").
+String formatBytesFixed(int bytes) => formatBytes(bytes).padLeft(7);
+
 /// Elapsed time as HH:MM:SS.
 String formatDuration(Duration d) {
   String two(int n) => n.toString().padLeft(2, '0');

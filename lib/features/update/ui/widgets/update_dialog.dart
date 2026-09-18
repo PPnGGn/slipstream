@@ -31,7 +31,7 @@ class _UpdateDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final cubit = getIt<UpdateServiceCubit>();
 
-    return BlocBuilder<AppThemeCubit, AppThemeMode>(
+    return BlocBuilder<AppThemeCubit, AppThemeState>(
       bloc: getIt<AppThemeCubit>(),
       builder: (context, _) {
         final colors = getIt<AppColors>();

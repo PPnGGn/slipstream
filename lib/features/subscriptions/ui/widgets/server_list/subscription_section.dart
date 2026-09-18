@@ -8,12 +8,11 @@ import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/theme/app_theme.dart';
 import 'package:slipstream/core/ui/clipboard.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
-import 'package:slipstream/features/subscriptions/data/ping/ping_quality.dart';
 import 'package:slipstream/features/subscriptions/data/search.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/server_tile.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/subscription_info.dart';
 
-enum _SectionAction { refresh, copyUrl, delete }
+enum _SectionAction { refresh, copyUrl, delete, pingAll }
 
 class SubscriptionSection extends StatefulWidget {
   const SubscriptionSection({
@@ -85,6 +84,8 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
         copyToClipboard(context, url, 'URL copied');
       case _SectionAction.delete:
         cubit.removeSubscription(id);
+      case _SectionAction.pingAll:
+      // TODO: wire to the ping cubit once it exists.
     }
   }
 
@@ -129,12 +130,11 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
               crossAxisAlignment: .stretch,
               children: [
                 Divider(height: 1, color: colors.border),
-                for (final (index, server) in servers.indexed)
+                for (final server in servers)
                   ServerTile(
                     colors: colors,
                     server: server,
                     selected: server.id == widget.selectedServerId,
-                    pingDelay: pingStagger(index),
                     onTap: () => widget.onSelect(server),
                   ),
                 const SizedBox(height: 4),
@@ -209,6 +209,11 @@ class _Header extends StatelessWidget {
                 spinning: refreshing,
                 onTap: () => onAction(_SectionAction.refresh),
               ),
+              _CircleButton(
+                colors: colors,
+                icon: AppAssets.ping,
+                onTap: () => onAction(_SectionAction.pingAll),
+              ),
             _SectionMenu(colors: colors, isUrl: isUrl, onAction: onAction),
           ],
         ),
@@ -276,8 +281,8 @@ class _CircleButton extends StatelessWidget {
                 )
               : SvgPicture.asset(
                   icon,
-                  width: 15,
-                  height: 15,
+                  width: 20,
+                  height: 20,
                   colorFilter: .mode(colors.textSecondary, .srcIn),
                 ),
         ),

@@ -17,16 +17,18 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeCubit = getIt<AppThemeCubit>();
 
-    return BlocBuilder<AppThemeCubit, AppThemeMode>(
+    return BlocBuilder<AppThemeCubit, AppThemeState>(
       bloc: themeCubit,
       builder: (context, state) {
         return MaterialApp.router(
           routerConfig: appRouter,
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
-          themeMode: state == AppThemeMode.dark
-              ? ThemeMode.dark
-              : ThemeMode.light,
+          themeMode: switch (state.mode) {
+            AppThemeMode.light => ThemeMode.light,
+            AppThemeMode.dark => ThemeMode.dark,
+            AppThemeMode.system => ThemeMode.system,
+          },
           builder: (context, child) {
             return _UpdaterHost(child: child ?? const SizedBox.shrink());
           },
