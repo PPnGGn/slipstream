@@ -32,41 +32,40 @@ class RoutingSettingsPage extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.help_outline),
-            tooltip: 'Об этих настройках',
+            tooltip: 'About these settings',
             onPressed: () => showHelpSheet(
               context,
-              title: 'Маршрутизация',
+              title: 'Routing',
               entries: const [
                 HelpEntry(
-                  title: 'Обход РФ',
+                  title: 'RU bypass',
                   body:
-                      'Напрямую, мимо VPN: домены .ru и .рф, российские '
-                      'сервисы и IP-адреса, локальная сеть, торренты. '
-                      'Остальной трафик идёт через VPN.',
+                      'Sent directly, bypassing the VPN: .ru and .рф domains, '
+                      'Russian services and IP addresses, local network, '
+                      'torrents. All other traffic goes through the VPN.',
                 ),
                 HelpEntry(
-                  title: 'Блокировка рекламы',
+                  title: 'Ad blocking',
                   body:
-                      'Базовая — основные рекламные и трекинговые сети '
-                      '(~830 доменов).\n'
-                      'Полная — расширенный список (~150 000 доменов). '
-                      'Больше расход памяти, возможны ложные срабатывания, '
-                      'на iOS может работать нестабильно.',
+                      'Basic — major ad and tracking networks '
+                      '(~830 domains).\n'
+                      'Full — extended list (~150,000 domains). Higher memory '
+                      'use, possible false positives, may be unstable on iOS.',
                 ),
                 HelpEntry(
-                  title: 'Гео-базы',
+                  title: 'Geo databases',
                   body:
-                      'Списки доменов и IP для правил выше. Загружаются '
-                      'отдельно от приложения, обновляются вручную.\n'
-                      'Без них реклама не блокируется, обход РФ работает '
-                      'только для .ru и .рф.',
+                      'Domain and IP lists used by the rules above. '
+                      'Downloaded separately from the app, updated manually.\n'
+                      'Without them ads are not blocked, and RU bypass covers '
+                      'only .ru and .рф.',
                 ),
                 HelpEntry(
-                  title: 'Применение',
+                  title: 'When applied',
                   body:
-                      'Изменения применяются при переподключении.\n'
-                      'Не действуют на серверы, у которых в конфиге свои '
-                      'правила маршрутизации (задаются VPN-сервисом).',
+                      'Changes take effect on reconnect.\n'
+                      'Not applied to servers whose config has its own '
+                      'routing rules (set by the VPN provider).',
                 ),
               ],
             ),

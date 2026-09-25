@@ -11,18 +11,21 @@ class SubscriptionInfo extends StatelessWidget {
     required this.colors,
     required this.subscription,
     required this.serverCount,
+    required this.showDescription,
   });
 
   final AppColors colors;
   final Subscription subscription;
   final int serverCount;
+  final bool showDescription;
 
   @override
   Widget build(BuildContext context) {
     final used = subscription.usedBytes;
     final expiresAt = subscription.expiresAt;
     final announce = subscription.announce?.trim();
-    final hasAnnounce = announce != null && announce.isNotEmpty;
+    final hasAnnounce =
+        showDescription && announce != null && announce.isNotEmpty;
 
     final metaStyle = TextStyle(
       fontFamily: 'monospace',

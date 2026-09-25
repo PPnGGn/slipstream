@@ -48,6 +48,8 @@ import '../../features/routing/data/routing_policy_gate.dart' as _i194;
 import '../../features/routing/data/ru_bypass_store.dart' as _i310;
 import '../../features/subscriptions/cubit/subscriptions_cubit.dart' as _i83;
 import '../../features/subscriptions/data/selected_server_store.dart' as _i830;
+import '../../features/subscriptions/data/subscription_description_store.dart'
+    as _i811;
 import '../../features/subscriptions/data/subscription_factory.dart' as _i179;
 import '../../features/subscriptions/data/subscription_parser/subscription_parser_service.dart'
     as _i302;
@@ -148,6 +150,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i830.SelectedServerStore>(
       () => _i830.SelectedServerStore(gh<_i460.SharedPreferences>()),
+    );
+    gh.lazySingleton<_i811.SubscriptionDescriptionStore>(
+      () => _i811.SubscriptionDescriptionStore(gh<_i460.SharedPreferences>()),
     );
     gh.lazySingleton<_i871.VpnSessionStore>(
       () => _i871.VpnSessionStore(gh<_i460.SharedPreferences>()),

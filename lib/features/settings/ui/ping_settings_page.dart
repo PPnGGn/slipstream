@@ -15,46 +15,47 @@ class PingSettingsPage extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.help_outline),
-            tooltip: 'Об этих настройках',
+            tooltip: 'About these settings',
             onPressed: () => showHelpSheet(
               context,
-              title: 'Пинг',
+              title: 'Ping',
               entries: const [
                 HelpEntry(
-                  title: 'Замер',
+                  title: 'Measurement',
                   body:
-                      'TCP-подключение к серверу, для Hysteria2 — UDP (QUIC). '
-                      'До 3 попыток, итог — медиана.\n'
-                      'Проверяет только доступность сервера, не '
-                      'работоспособность VPN.',
+                      'TCP connection to the server; UDP (QUIC) for '
+                      'Hysteria2. Up to 3 attempts, the result is the '
+                      'median.\n'
+                      'Checks only that the server is reachable, not that '
+                      'the VPN works.',
                 ),
                 HelpEntry(
-                  title: 'Обозначения',
+                  title: 'Legend',
                   body:
-                      'зелёный — до 80 мс\n'
-                      'жёлтый — 80–160 мс\n'
-                      'красный — больше 160 мс\n'
-                      'timeout — сервер не ответил\n'
-                      'refused — подключение отклонено, порт закрыт\n'
-                      'no dns — адрес сервера не найден\n'
-                      'error — сетевая ошибка, обычно на стороне устройства\n'
-                      'n/a — замер для этого протокола недоступен (mKCP)',
+                      'green — under 80 ms\n'
+                      'yellow — 80–160 ms\n'
+                      'red — over 160 ms\n'
+                      'timeout — no response\n'
+                      'refused — connection rejected, port closed\n'
+                      'no dns — server address not found\n'
+                      'error — network error, usually on the device side\n'
+                      'n/a — not measurable for this protocol (mKCP)',
                 ),
                 HelpEntry(
                   title: 'Ping on launch',
                   body:
-                      'Замер всех серверов при запуске. Вручную — кнопка у '
-                      'подписки или свайп вниз по списку.',
+                      'Measures all servers at startup. Manually: the button '
+                      'on a subscription, or pull down on the list.',
                 ),
                 HelpEntry(
                   title: 'Sort servers by latency',
                   body:
-                      'Сортировка по пингу после завершения замера. Во время '
-                      'замера порядок не меняется.',
+                      'Sorts by ping once measuring finishes. The order stays '
+                      'fixed while measuring.',
                 ),
                 HelpEntry(
                   title: 'Latency display',
-                  body: 'Numbers — значение в мс. Dots — только цвет.',
+                  body: 'Numbers — value in ms. Dots — color only.',
                 ),
               ],
             ),

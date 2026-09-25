@@ -12,10 +12,11 @@ import 'package:slipstream/features/ping/presentation/ping_cubit.dart';
 import 'package:slipstream/features/ping/presentation/ui/ping_sorting.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
 import 'package:slipstream/features/subscriptions/data/search.dart';
+import 'package:slipstream/features/subscriptions/data/subscription_description_store.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/server_tile.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/subscription_info.dart';
 
-enum _SectionAction { refresh, copyUrl, delete, pingAll }
+enum _SectionAction { refresh, copyUrl, delete, pingAll, toggleDescription }
 
 class SubscriptionSection extends StatefulWidget {
   const SubscriptionSection({
@@ -41,7 +42,11 @@ class SubscriptionSection extends StatefulWidget {
 
 class _SubscriptionSectionState extends State<SubscriptionSection> {
   final _controller = ExpansibleController();
+  final _descriptionStore = getIt<SubscriptionDescriptionStore>();
   late bool _expanded = widget.selectedServerId != null;
+  late bool _descriptionShown = _descriptionStore.isShown(
+    widget.stored.subscription.id,
+  );
 
   bool get _effectiveExpanded => _expanded || widget.query.isNotEmpty;
 
@@ -89,6 +94,10 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
         cubit.removeSubscription(id);
       case _SectionAction.pingAll:
         getIt<PingCubit>().runForServers(widget.stored.servers);
+      case _SectionAction.toggleDescription:
+        final shown = !_descriptionShown;
+        setState(() => _descriptionShown = shown);
+        _descriptionStore.setShown(id, shown);
     }
   }
 
@@ -116,6 +125,7 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
             isUrl: sub.url != null,
             refreshing: widget.refreshing,
             expanded: _effectiveExpanded,
+            descriptionShown: _descriptionShown,
             onTap: _toggle,
             onAction: _runAction,
           ),
@@ -123,6 +133,7 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
             colors: colors,
             subscription: sub,
             serverCount: widget.stored.servers.length,
+            showDescription: _descriptionShown,
           ),
           Expansible(
             controller: _controller,
@@ -178,6 +189,7 @@ class _Header extends StatelessWidget {
     required this.isUrl,
     required this.refreshing,
     required this.expanded,
+    required this.descriptionShown,
     required this.onTap,
     required this.onAction,
   });
@@ -188,6 +200,7 @@ class _Header extends StatelessWidget {
   final bool isUrl;
   final bool refreshing;
   final bool expanded;
+  final bool descriptionShown;
   final VoidCallback onTap;
   final ValueChanged<_SectionAction> onAction;
 
@@ -237,7 +250,12 @@ class _Header extends StatelessWidget {
               icon: AppAssets.ping,
               onTap: () => onAction(_SectionAction.pingAll),
             ),
-            _SectionMenu(colors: colors, isUrl: isUrl, onAction: onAction),
+            _SectionMenu(
+              colors: colors,
+              isUrl: isUrl,
+              descriptionShown: descriptionShown,
+              onAction: onAction,
+            ),
           ],
         ),
       ),
@@ -318,11 +336,13 @@ class _SectionMenu extends StatelessWidget {
   const _SectionMenu({
     required this.colors,
     required this.isUrl,
+    required this.descriptionShown,
     required this.onAction,
   });
 
   final AppColors colors;
   final bool isUrl;
+  final bool descriptionShown;
   final ValueChanged<_SectionAction> onAction;
 
   Future<void> _open(BuildContext context) async {
@@ -362,6 +382,13 @@ class _SectionMenu extends StatelessWidget {
             value: _SectionAction.copyUrl,
             child: item('Copy URL', AppAssets.copy),
           ),
+        PopupMenuItem(
+          value: _SectionAction.toggleDescription,
+          child: item(
+            descriptionShown ? 'Hide description' : 'Show description',
+            AppAssets.info,
+          ),
+        ),
         PopupMenuItem(
           value: _SectionAction.delete,
           child: item(
