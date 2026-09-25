@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:slipstream/app/app_assets.dart';
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
+import 'package:slipstream/features/ping/presentation/ui/ping_badge.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/xray_config_meta.dart';
 import 'package:slipstream/features/subscriptions/data/vpn_server_display.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/server_info_sheet.dart';
@@ -65,6 +66,7 @@ class ServerTile extends StatelessWidget {
                   ],
                 ),
               ),
+              PingBadge(serverId: server.id, colors: colors),
               GestureDetector(
                 onTap: () => showServerInfoSheet(context, server),
                 behavior: .opaque,
@@ -158,4 +160,3 @@ class _ProtoChips extends StatelessWidget {
     );
   }
 }
-

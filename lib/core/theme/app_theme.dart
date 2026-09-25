@@ -26,6 +26,8 @@ abstract class AppTheme {
     raised: AppColorsDark.surfaceRaised,
     border: AppColorsDark.border,
     inputFill: AppColorsDark.inputFill,
+    chip: AppColorsDark.chip,
+    switchKnob: AppColorsDark.switchKnob,
     tx1: AppColorsDark.textPrimary,
     tx2: AppColorsDark.textSecondary,
     tx3: AppColorsDark.textMuted,
@@ -44,6 +46,8 @@ abstract class AppTheme {
     raised: AppColorsLight.surfaceRaised,
     border: AppColorsLight.border,
     inputFill: AppColorsLight.inputFill,
+    chip: AppColorsLight.chip,
+    switchKnob: AppColorsLight.switchKnob,
     tx1: AppColorsLight.textPrimary,
     tx2: AppColorsLight.textSecondary,
     tx3: AppColorsLight.textMuted,
@@ -113,6 +117,8 @@ abstract class AppTheme {
     required Color raised,
     required Color border,
     required Color inputFill,
+    required Color chip,
+    required Color switchKnob,
     required Color tx1,
     required Color tx2,
     required Color tx3,
@@ -259,6 +265,34 @@ abstract class AppTheme {
         ),
       ),
       listTileTheme: ListTileThemeData(iconColor: tx2),
+      // Mirrors the design's WaveSwitch: a full-size white knob in both
+      // states, brand track when on, chip track + border when off. The
+      // M3 default (a small knob in `outline`, which we map to the border
+      // color, on a near-surface track) made an enabled "off" switch look
+      // disabled. Truly disabled switches (onChanged: null) are dimmed.
+      switchTheme: SwitchThemeData(
+        // A non-null icon keeps the off-state knob at full size; M3 shrinks
+        // an icon-less off knob to 16 px.
+        thumbIcon: const WidgetStatePropertyAll(Icon(null)),
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.disabled)
+              ? switchKnob.withValues(alpha: 0.5)
+              : switchKnob,
+        ),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          final color = states.contains(WidgetState.selected) ? primary : chip;
+          return states.contains(WidgetState.disabled)
+              ? color.withValues(alpha: 0.4)
+              : color;
+        }),
+        trackOutlineColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return Colors.transparent;
+          return states.contains(WidgetState.disabled)
+              ? border.withValues(alpha: 0.4)
+              : border;
+        }),
+        trackOutlineWidth: const WidgetStatePropertyAll(1.5),
+      ),
     );
   }
 }

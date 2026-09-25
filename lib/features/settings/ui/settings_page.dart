@@ -10,6 +10,8 @@ import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
 import 'package:slipstream/features/diagnostics/cubit/memory_monitor_cubit.dart';
 import 'package:slipstream/features/diagnostics/data/memory_monitor_mode.dart';
 import 'package:slipstream/features/geo/cubit/geo_cubit.dart';
+import 'package:slipstream/features/ping/data/ping_settings_store.dart';
+import 'package:slipstream/features/ping/presentation/ping_cubit.dart';
 import 'package:slipstream/features/routing/cubit/ad_block_cubit.dart';
 import 'package:slipstream/features/routing/cubit/ru_bypass_cubit.dart';
 import 'package:slipstream/features/routing/data/ad_block_mode.dart';
@@ -131,6 +133,17 @@ class _SettingsPageState extends State<SettingsPage> {
                                 ),
                               ),
                         ),
+                  ),
+                  BlocBuilder<PingCubit, PingViewState>(
+                    bloc: getIt<PingCubit>(),
+                    builder: (context, ping) => _NavRow(
+                      title: 'Ping',
+                      subtitle: _pingSubtitle(
+                        getIt<PingSettingsStore>().loadPingOnAppStart(),
+                        ping,
+                      ),
+                      onTap: () => context.push('/settings/ping'),
+                    ),
                   ),
                   const ListTile(
                     enabled: false,
@@ -268,6 +281,15 @@ class _SettingsPageState extends State<SettingsPage> {
         AdBlockMode.full => 'реклама: полная',
       },
       _geoSubtitle(geo),
+    ];
+    return parts.join(' · ');
+  }
+
+  static String _pingSubtitle(bool pingOnAppStart, PingViewState ping) {
+    final parts = [
+      pingOnAppStart ? 'on launch' : 'manual only',
+      ping.sortByPing ? 'sorted' : 'unsorted',
+      ping.displayMode == PingDisplayMode.dots ? 'dots' : 'numbers',
     ];
     return parts.join(' · ');
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
+import 'package:slipstream/features/settings/ui/ping_settings_page.dart';
 import 'package:slipstream/features/settings/ui/routing_settings_page.dart';
 import 'package:slipstream/features/settings/ui/settings_page.dart';
 import 'package:talker_flutter/talker_flutter.dart';
@@ -25,6 +26,10 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: 'routing',
           builder: (context, state) => const RoutingSettingsPage(),
+        ),
+        GoRoute(
+          path: 'ping',
+          builder: (context, state) => const PingSettingsPage(),
         ),
       ],
     ),

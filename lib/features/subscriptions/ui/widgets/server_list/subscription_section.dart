@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:slipstream/app/app_assets.dart';
 import 'package:slipstream/app/di/injector.dart';
@@ -7,6 +8,8 @@ import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/theme/app_theme.dart';
 import 'package:slipstream/core/ui/clipboard.dart';
+import 'package:slipstream/features/ping/presentation/ping_cubit.dart';
+import 'package:slipstream/features/ping/presentation/ui/ping_sorting.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
 import 'package:slipstream/features/subscriptions/data/search.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/server_tile.dart';
@@ -85,7 +88,7 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
       case _SectionAction.delete:
         cubit.removeSubscription(id);
       case _SectionAction.pingAll:
-      // TODO: wire to the ping cubit once it exists.
+        getIt<PingCubit>().runForServers(widget.stored.servers);
     }
   }
 
@@ -125,21 +128,41 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
             controller: _controller,
             maintainState: false,
             headerBuilder: (context, animation) => const SizedBox.shrink(),
-            bodyBuilder: (context, animation) => Column(
-              mainAxisSize: .min,
-              crossAxisAlignment: .stretch,
-              children: [
-                Divider(height: 1, color: colors.border),
-                for (final server in servers)
-                  ServerTile(
-                    colors: colors,
-                    server: server,
-                    selected: server.id == widget.selectedServerId,
-                    onTap: () => widget.onSelect(server),
-                  ),
-                const SizedBox(height: 4),
-              ],
-            ),
+            bodyBuilder: (context, animation) =>
+                BlocBuilder<PingCubit, PingViewState>(
+                  bloc: getIt<PingCubit>(),
+                  // Only the sort order depends on ping state here —
+                  // each ServerTile's own PingBadge listens for its
+                  // live value independently. Without this, every
+                  // in-flight ping patch (dozens a second across a
+                  // whole run) rebuilt this entire server list.
+                  buildWhen: (previous, current) =>
+                      previous.sortByPing != current.sortByPing ||
+                      previous.isRunning != current.isRunning,
+                  builder: (context, ping) {
+                    var ordered = servers;
+                    // Sorted only between runs: mid-run re-sorting would
+                    // make rows jump under the user's finger (spec).
+                    if (ping.sortByPing && !ping.isRunning) {
+                      ordered = sortServersByPing(ordered, ping.entries);
+                    }
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Divider(height: 1, color: colors.border),
+                        for (final server in ordered)
+                          ServerTile(
+                            colors: colors,
+                            server: server,
+                            selected: server.id == widget.selectedServerId,
+                            onTap: () => widget.onSelect(server),
+                          ),
+                        const SizedBox(height: 4),
+                      ],
+                    );
+                  },
+                ),
           ),
         ],
       ),
@@ -209,11 +232,11 @@ class _Header extends StatelessWidget {
                 spinning: refreshing,
                 onTap: () => onAction(_SectionAction.refresh),
               ),
-              _CircleButton(
-                colors: colors,
-                icon: AppAssets.ping,
-                onTap: () => onAction(_SectionAction.pingAll),
-              ),
+            _CircleButton(
+              colors: colors,
+              icon: AppAssets.ping,
+              onTap: () => onAction(_SectionAction.pingAll),
+            ),
             _SectionMenu(colors: colors, isUrl: isUrl, onAction: onAction),
           ],
         ),

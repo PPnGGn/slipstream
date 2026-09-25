@@ -29,6 +29,17 @@ import '../../features/geo/data/geo_config_gate.dart' as _i951;
 import '../../features/geo/data/geo_paths.dart' as _i262;
 import '../../features/geo/data/geo_repository.dart' as _i236;
 import '../../features/geo/data/geo_update_service.dart' as _i196;
+import '../../features/ping/data/host_resolver.dart' as _i371;
+import '../../features/ping/data/ping_settings_store.dart' as _i384;
+import '../../features/ping/data/ping_target_resolver.dart' as _i142;
+import '../../features/ping/data/quic_probe_pinger.dart' as _i874;
+import '../../features/ping/data/tcp_connect_pinger.dart' as _i970;
+import '../../features/ping/domain/contracts/host_resolver.dart' as _i139;
+import '../../features/ping/domain/contracts/server_pinger.dart' as _i437;
+import '../../features/ping/domain/usecases/measure_ping_use_case.dart'
+    as _i283;
+import '../../features/ping/presentation/ping_auto_runner.dart' as _i918;
+import '../../features/ping/presentation/ping_cubit.dart' as _i629;
 import '../../features/routing/cubit/ad_block_cubit.dart' as _i863;
 import '../../features/routing/cubit/ru_bypass_cubit.dart' as _i1048;
 import '../../features/routing/data/ad_block_store.dart' as _i117;
@@ -79,6 +90,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i924.NativeVpnEventReceiver>(
       () => vpnModule.vpnEventReceiver,
     );
+    gh.lazySingleton<_i142.PingTargetResolver>(
+      () => const _i142.PingTargetResolver(),
+    );
     gh.lazySingleton<_i744.LocalProxyPort>(() => _i744.LocalProxyPort());
     gh.lazySingleton<_i179.SubscriptionFactory>(
       () => _i179.SubscriptionFactory(),
@@ -86,6 +100,14 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i490.XrayLogStore>(
       () => _i490.XrayLogStore(),
       dispose: (i) => i.dispose(),
+    );
+    gh.lazySingleton<_i437.ServerPinger>(
+      () => _i970.TcpConnectPinger(),
+      instanceName: 'tcp',
+    );
+    gh.lazySingleton<_i437.ServerPinger>(
+      () => _i874.QuicProbePinger(),
+      instanceName: 'quic',
     );
     gh.lazySingleton<_i951.GeoConfigGate>(
       () => _i951.GeoConfigGate(gh<_i207.Talker>()),
@@ -108,11 +130,15 @@ extension GetItInjectableX on _i174.GetIt {
       instanceName: 'updatesDir',
       preResolve: true,
     );
+    gh.lazySingleton<_i139.HostResolver>(() => const _i371.DnsHostResolver());
     gh.lazySingleton<_i802.ThemeStore>(
       () => _i802.ThemeStore(gh<_i460.SharedPreferences>()),
     );
     gh.lazySingleton<_i193.MemoryMonitorStore>(
       () => _i193.MemoryMonitorStore(gh<_i460.SharedPreferences>()),
+    );
+    gh.lazySingleton<_i384.PingSettingsStore>(
+      () => _i384.PingSettingsStore(gh<_i460.SharedPreferences>()),
     );
     gh.lazySingleton<_i117.AdBlockStore>(
       () => _i117.AdBlockStore(gh<_i460.SharedPreferences>()),
@@ -139,6 +165,13 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i744.LocalProxyPort>(),
       ),
       dispose: (i) => i.dispose(),
+    );
+    gh.lazySingleton<_i283.MeasurePingUseCase>(
+      () => _i283.MeasurePingUseCase(
+        gh<_i437.ServerPinger>(instanceName: 'tcp'),
+        gh<_i437.ServerPinger>(instanceName: 'quic'),
+        gh<_i139.HostResolver>(),
+      ),
     );
     gh.lazySingleton<_i628.MemoryMonitorCubit>(
       () => _i628.MemoryMonitorCubit(store: gh<_i193.MemoryMonitorStore>()),
@@ -168,6 +201,13 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i1048.RuBypassCubit>(
       () => _i1048.RuBypassCubit(store: gh<_i310.RuBypassStore>()),
+    );
+    gh.lazySingleton<_i629.PingCubit>(
+      () => _i629.PingCubit(
+        gh<_i283.MeasurePingUseCase>(),
+        gh<_i142.PingTargetResolver>(),
+        gh<_i384.PingSettingsStore>(),
+      ),
     );
     gh.lazySingleton<_i962.AppColors>(
       () => _i962.AppColors(themeCubit: gh<_i11.AppThemeCubit>()),
@@ -215,6 +255,13 @@ extension GetItInjectableX on _i174.GetIt {
         factory: gh<_i179.SubscriptionFactory>(),
         vpnServiceCubit: gh<_i202.VpnServiceCubit>(),
         talker: gh<_i207.Talker>(),
+      ),
+    );
+    gh.lazySingleton<_i918.PingAutoRunner>(
+      () => _i918.PingAutoRunner(
+        gh<_i629.PingCubit>(),
+        gh<_i384.PingSettingsStore>(),
+        gh<_i83.SubscriptionsCubit>(),
       ),
     );
     return this;

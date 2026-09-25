@@ -9,6 +9,9 @@ import 'package:slipstream/core/theme/app_theme.dart';
 import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
 import 'package:slipstream/core/ui/clipboard.dart';
 import 'package:slipstream/core/utils/formatters.dart';
+import 'package:slipstream/features/ping/presentation/ping_cubit.dart';
+import 'package:slipstream/features/ping/presentation/ping_entry.dart';
+import 'package:slipstream/features/ping/presentation/ui/ping_badge.dart';
 
 Future<void> showServerInfoSheet(BuildContext context, VpnServer server) {
   final media = MediaQuery.of(context);
@@ -61,6 +64,8 @@ class _ServerInfoSheet extends StatelessWidget {
                     Expanded(
                       child: Text(server.title, style: textTheme.titleMedium),
                     ),
+                    _ServerPingPill(colors: colors, serverId: server.id),
+                    const SizedBox(width: 4),
                     IconButton(
                       onPressed: () {
                         copyToClipboard(context, pretty, 'Config copied');
@@ -101,6 +106,26 @@ class _ServerInfoSheet extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Ping pill in the sheet's header (design:
+/// SlipStream App v2.dc.html's `infoPing`/`infoLatCol` fields) —
+/// always the value pill regardless of the list's dots/numbers
+/// setting, since this is a detail view, not a compact row.
+class _ServerPingPill extends StatelessWidget {
+  const _ServerPingPill({required this.colors, required this.serverId});
+
+  final AppColors colors;
+  final String serverId;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocSelector<PingCubit, PingViewState, PingEntry>(
+      bloc: getIt<PingCubit>(),
+      selector: (view) => view.entries[serverId] ?? const PingEntry.notTested(),
+      builder: (context, entry) => PingPill(colors: colors, entry: entry),
     );
   }
 }

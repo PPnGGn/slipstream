@@ -15,6 +15,8 @@ import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
 import 'package:slipstream/features/diagnostics/cubit/memory_monitor_cubit.dart';
 import 'package:slipstream/features/diagnostics/cubit/memory_usage_cubit.dart';
 import 'package:slipstream/features/diagnostics/data/memory_monitor_mode.dart';
+import 'package:slipstream/features/ping/presentation/ping_cubit.dart';
+import 'package:slipstream/features/ping/presentation/ping_entry.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
 import 'package:slipstream/features/vpn/ui/widgets/connection_timer.dart';
 
@@ -365,6 +367,8 @@ class _Chips extends StatelessWidget {
         runSpacing: 6,
         children: [
           _Chip(colors: colors, label: protocolLabel),
+          if (selectedServer != null)
+            _PingChip(colors: colors, serverId: selectedServer!.id),
           _Chip(colors: colors, label: trafficLabel),
           if (monitorMode.enabled) _MemoryChip(colors: colors),
         ],
@@ -380,6 +384,46 @@ class _Chips extends StatelessWidget {
     if (protocol == 'hysteria') return 'HYSTERIA2';
     return protocol?.toUpperCase() ?? 'PROXY';
   }
+}
+
+/// Ping chip for the selected/connected server (design: the pill
+/// between the protocol chip and the traffic chip). Selects its own
+/// entry out of the ping cubit so an in-flight run doesn't rebuild
+/// the whole connection card on every patch.
+class _PingChip extends StatelessWidget {
+  const _PingChip({required this.colors, required this.serverId});
+
+  final AppColors colors;
+  final String serverId;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocSelector<PingCubit, PingViewState, PingEntry>(
+      bloc: getIt<PingCubit>(),
+      selector: (view) => view.entries[serverId] ?? const PingEntry.notTested(),
+      builder: (context, entry) {
+        final (label, dotColor) = switch (entry.status) {
+          PingRunStatus.measured => (
+            '${entry.latencyMs!.round()} ms',
+            _qualityColor(colors, entry.latencyMs!),
+          ),
+          PingRunStatus.dead => ('timeout', colors.danger),
+          PingRunStatus.queued ||
+          PingRunStatus.measuring => ('··· ms', colors.textMuted),
+          PingRunStatus.unsupported => ('n/a', colors.textMuted),
+          PingRunStatus.notTested => ('— ms', colors.textMuted),
+        };
+        return _Chip(colors: colors, label: label, dotColor: dotColor);
+      },
+    );
+  }
+
+  static Color _qualityColor(AppColors colors, double latencyMs) =>
+      switch (pingQualityOf(latencyMs)) {
+        PingQuality.good => colors.ok,
+        PingQuality.medium => colors.warn,
+        PingQuality.poor => colors.danger,
+      };
 }
 
 class _Chip extends StatelessWidget {
