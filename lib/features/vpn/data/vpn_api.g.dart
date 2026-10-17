@@ -343,6 +343,59 @@ class VpnTrafficMessage {
   int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
 }
 
+/// The core's loopback HTTP proxy for the app's own requests while the tunnel
+/// is up (the app is excluded from its own tunnel). Port and credentials are
+/// fresh every session. Carries a password: never log it.
+class LocalProxyMessage {
+  LocalProxyMessage({
+    required this.port,
+    required this.user,
+    required this.pass,
+  });
+
+  int port;
+
+  String user;
+
+  String pass;
+
+  List<Object?> _toList() {
+    return <Object?>[
+      port,
+      user,
+      pass,
+    ];
+  }
+
+  Object encode() {
+    return _toList();  }
+
+  static LocalProxyMessage decode(Object result) {
+    result as List<Object?>;
+    return LocalProxyMessage(
+      port: result[0]! as int,
+      user: result[1]! as String,
+      pass: result[2]! as String,
+    );
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) {
+    if (other is! LocalProxyMessage || other.runtimeType != runtimeType) {
+      return false;
+    }
+    if (identical(this, other)) {
+      return true;
+    }
+    return _deepEquals(port, other.port) && _deepEquals(user, other.user) && _deepEquals(pass, other.pass);
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
+}
+
 /// Result of a start/stop request.
 class VpnResult {
   VpnResult({
@@ -412,8 +465,11 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is VpnTrafficMessage) {
       buffer.putUint8(133);
       writeValue(buffer, value.encode());
-    }    else if (value is VpnResult) {
+    }    else if (value is LocalProxyMessage) {
       buffer.putUint8(134);
+      writeValue(buffer, value.encode());
+    }    else if (value is VpnResult) {
+      buffer.putUint8(135);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -435,6 +491,8 @@ class _PigeonCodec extends StandardMessageCodec {
       case 133:
         return VpnTrafficMessage.decode(readValue(buffer)!);
       case 134:
+        return LocalProxyMessage.decode(readValue(buffer)!);
+      case 135:
         return VpnResult.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -550,6 +608,28 @@ class VpnConnection {
     )
     ;
     return pigeonVar_replyValue! as String;
+  }
+
+  /// The running session's HTTP proxy, or null while the tunnel is down.
+  /// Ask right before use: the value changes every session. iOS always
+  /// returns null (the core lives in the Packet Tunnel process).
+  Future<LocalProxyMessage?> localProxy() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.slipstream.VpnConnection.localProxy$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
+    return pigeonVar_replyValue as LocalProxyMessage?;
   }
 }
 

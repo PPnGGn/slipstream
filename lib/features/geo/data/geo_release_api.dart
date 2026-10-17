@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:slipstream/features/routing/data/local_proxy_client.dart';
-import 'package:slipstream/features/routing/data/local_proxy_gate.dart';
 import 'geo_release.dart';
 import 'geo_source.dart';
 
@@ -18,21 +17,22 @@ import 'geo_source.dart';
 class GeoReleaseApi {
   GeoReleaseApi({
     http.Client? client,
-    LocalProxyPort? proxyPort,
+    LocalProxyProvider? proxy,
     GeoSource source = const GeoSource(),
   }) : _overrideClient = client,
-       _proxyPort = proxyPort,
+       _proxy = proxy,
        _source = source;
 
   /// A caller-supplied client (tests). When set it's used as-is and never
   /// closed here; otherwise a fresh client is built per call, routed through
   /// the active connection's local proxy if there is one.
   final http.Client? _overrideClient;
-  final LocalProxyPort? _proxyPort;
+  final LocalProxyProvider? _proxy;
   final GeoSource _source;
 
   Future<GeoRelease> fetchLatest() async {
-    final client = _overrideClient ?? buildProxiedClient(_proxyPort?.value);
+    final client =
+        _overrideClient ?? buildProxiedClient(await _proxy?.current());
     try {
       final info =
           jsonDecode(await _get(client, _source.releaseInfoUrl))

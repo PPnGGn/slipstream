@@ -7,7 +7,7 @@ import 'package:injectable/injectable.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:slipstream/core/models/result.dart';
 import 'package:slipstream/features/routing/data/local_proxy_client.dart';
-import 'package:slipstream/features/routing/data/local_proxy_gate.dart';
+import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
 import 'geo_catalog.dart';
 import 'geo_meta.dart';
 import 'geo_paths.dart';
@@ -38,18 +38,18 @@ class GeoRepository {
   GeoRepository(
     this._paths,
     this._talker,
-    LocalProxyPort proxyPort, {
+    LocalProxyProvider proxy, {
     @ignoreParam GeoReleaseApi? releaseApi,
-    @ignoreParam http.Client Function(int?)? clientFactory,
-  }) : _proxyPort = proxyPort,
+    @ignoreParam http.Client Function(LocalProxyMessage?)? clientFactory,
+  }) : _proxy = proxy,
        _clientFactory = clientFactory ?? buildProxiedClient,
-       _releaseApi = releaseApi ?? GeoReleaseApi(proxyPort: proxyPort);
+       _releaseApi = releaseApi ?? GeoReleaseApi(proxy: proxy);
 
   final GeoPaths _paths;
   final Talker _talker;
-  final LocalProxyPort _proxyPort;
+  final LocalProxyProvider _proxy;
   final GeoReleaseApi _releaseApi;
-  final http.Client Function(int?) _clientFactory;
+  final http.Client Function(LocalProxyMessage?) _clientFactory;
 
   Future<String> get _dir => _paths.dir();
 
@@ -95,7 +95,7 @@ class GeoRepository {
     final total = release.totalBytes;
     var received = 0;
 
-    final client = _clientFactory(_proxyPort.value);
+    final client = _clientFactory(await _proxy.current());
     final tmpPaths = [
       for (final name in const [GeoSource.geositeFile, GeoSource.geoipFile])
         '$dir${Platform.pathSeparator}$name.tmp',

@@ -8,7 +8,6 @@ import 'package:slipstream/features/geo/data/geo_config_gate.dart';
 import 'package:slipstream/features/geo/data/geo_paths.dart';
 import 'package:slipstream/features/routing/cubit/ad_block_cubit.dart';
 import 'package:slipstream/features/routing/cubit/ru_bypass_cubit.dart';
-import 'package:slipstream/features/routing/data/local_proxy_gate.dart';
 import 'package:slipstream/features/routing/data/routing_policy_gate.dart';
 import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
 import 'package:slipstream/features/vpn/data/vpn_event_receiver.dart';
@@ -23,8 +22,6 @@ class VpnRepository {
   final GeoConfigGate _geoGate;
   final GeoCubit _geoCubit;
   final GeoPaths _geoPaths;
-  final LocalProxyGate _localProxyGate;
-  final LocalProxyPort _localProxyPort;
   final RoutingPolicyGate _routingPolicyGate;
   final RuBypassCubit _ruBypassCubit;
   final AdBlockCubit _adBlockCubit;
@@ -38,8 +35,6 @@ class VpnRepository {
     this._geoGate,
     this._geoCubit,
     this._geoPaths,
-    this._localProxyGate,
-    this._localProxyPort,
     this._routingPolicyGate,
     this._ruBypassCubit,
     this._adBlockCubit,
@@ -53,25 +48,20 @@ class VpnRepository {
   Future<VpnStatusMessage> getStatus() => _vpnConnection.getStatus();
 
   Future<Result<void>> start(VpnServer server) async {
-    _localProxyPort.value =
-        null; // set below only once the core confirms it's up
     try {
       _talker.debug('Starting VPN with server: ${server.title}');
       final geoDir = await _geoPaths.dir();
 
-      // 1. guarantee a loopback http inbound and learn its port, before any
-      //    gate touches the config (the gates only rewrite routing/dns).
-      final (withInbound, proxyPort) = _localProxyGate.ensureHttpInbound(
-        server.configJson,
-      );
-      // 2. client's own split policy (RU-bypass, ad-block), for scaffold
+      // Inbounds are not touched here: the core replaces them with its own
+      // authenticated pair on random ports (see LocalProxyProvider).
+      // 1. client's own split policy (RU-bypass, ad-block), for scaffold
       //    configs that carry no routing of their own.
       final withPolicy = _routingPolicyGate.apply(
-        withInbound,
+        server.configJson,
         split: _ruBypassCubit.state,
         adBlock: _adBlockCubit.state,
       );
-      // 3. strip geo tokens the installed .dat can't resolve.
+      // 2. strip geo tokens the installed .dat can't resolve.
       final configJson = _geoGate.prepare(withPolicy, _geoCubit.state);
       final result = await _vpnConnection.start(
         VpnConfigMessage(
@@ -83,7 +73,6 @@ class VpnRepository {
       );
 
       if (result.successful) {
-        _localProxyPort.value = proxyPort;
         _talker.info('Xray core started successfully');
         return const Success(null);
       }
@@ -97,7 +86,6 @@ class VpnRepository {
   }
 
   Future<Result<void>> stop() async {
-    _localProxyPort.value = null;
     try {
       _talker.debug('Stopping VPN...');
       final result = await _vpnConnection.stop();

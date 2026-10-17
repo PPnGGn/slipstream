@@ -68,5 +68,6 @@ macos/Frameworks/
 # Claude Code / AI agents
 .claude/
 .agents/
+.zcode/
 CLAUDE.md
 skills-lock.json

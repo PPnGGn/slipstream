@@ -43,7 +43,7 @@ import '../../features/ping/presentation/ping_cubit.dart' as _i629;
 import '../../features/routing/cubit/ad_block_cubit.dart' as _i863;
 import '../../features/routing/cubit/ru_bypass_cubit.dart' as _i1048;
 import '../../features/routing/data/ad_block_store.dart' as _i117;
-import '../../features/routing/data/local_proxy_gate.dart' as _i744;
+import '../../features/routing/data/local_proxy_client.dart' as _i863;
 import '../../features/routing/data/routing_policy_gate.dart' as _i194;
 import '../../features/routing/data/ru_bypass_store.dart' as _i310;
 import '../../features/subscriptions/cubit/subscriptions_cubit.dart' as _i83;
@@ -95,7 +95,6 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i142.PingTargetResolver>(
       () => const _i142.PingTargetResolver(),
     );
-    gh.lazySingleton<_i744.LocalProxyPort>(() => _i744.LocalProxyPort());
     gh.lazySingleton<_i179.SubscriptionFactory>(
       () => _i179.SubscriptionFactory(),
     );
@@ -113,9 +112,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i951.GeoConfigGate>(
       () => _i951.GeoConfigGate(gh<_i207.Talker>()),
-    );
-    gh.lazySingleton<_i744.LocalProxyGate>(
-      () => _i744.LocalProxyGate(gh<_i207.Talker>()),
     );
     gh.lazySingleton<_i194.RoutingPolicyGate>(
       () => _i194.RoutingPolicyGate(gh<_i207.Talker>()),
@@ -163,13 +159,11 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i262.GeoPaths>(
       () => _i262.GeoPaths(gh<_i482.VpnConnection>(), gh<_i207.Talker>()),
     );
-    gh.lazySingleton<_i236.GeoRepository>(
-      () => _i236.GeoRepository(
-        gh<_i262.GeoPaths>(),
+    gh.lazySingleton<_i863.LocalProxyProvider>(
+      () => _i863.LocalProxyProvider(
+        gh<_i482.VpnConnection>(),
         gh<_i207.Talker>(),
-        gh<_i744.LocalProxyPort>(),
       ),
-      dispose: (i) => i.dispose(),
     );
     gh.lazySingleton<_i283.MeasurePingUseCase>(
       () => _i283.MeasurePingUseCase(
@@ -198,11 +192,13 @@ extension GetItInjectableX on _i174.GetIt {
         talker: gh<_i207.Talker>(),
       ),
     );
-    gh.lazySingleton<_i818.GeoCubit>(
-      () => _i818.GeoCubit(
-        repository: gh<_i236.GeoRepository>(),
-        talker: gh<_i207.Talker>(),
+    gh.lazySingleton<_i236.GeoRepository>(
+      () => _i236.GeoRepository(
+        gh<_i262.GeoPaths>(),
+        gh<_i207.Talker>(),
+        gh<_i863.LocalProxyProvider>(),
       ),
+      dispose: (i) => i.dispose(),
     );
     gh.lazySingleton<_i1048.RuBypassCubit>(
       () => _i1048.RuBypassCubit(store: gh<_i310.RuBypassStore>()),
@@ -217,6 +213,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i962.AppColors>(
       () => _i962.AppColors(themeCubit: gh<_i11.AppThemeCubit>()),
     );
+    gh.lazySingleton<_i818.GeoCubit>(
+      () => _i818.GeoCubit(
+        repository: gh<_i236.GeoRepository>(),
+        talker: gh<_i207.Talker>(),
+      ),
+    );
     gh.lazySingleton<_i1056.VpnRepository>(
       () => _i1056.VpnRepository(
         gh<_i207.Talker>(),
@@ -226,8 +228,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i951.GeoConfigGate>(),
         gh<_i818.GeoCubit>(),
         gh<_i262.GeoPaths>(),
-        gh<_i744.LocalProxyGate>(),
-        gh<_i744.LocalProxyPort>(),
         gh<_i194.RoutingPolicyGate>(),
         gh<_i1048.RuBypassCubit>(),
         gh<_i863.AdBlockCubit>(),

@@ -75,6 +75,13 @@ class MainActivity : FlutterActivity(), VpnConnection, UpdateInstaller {
 
     override fun xrayCoreVersion(): String = Android.version()
 
+    // Same process as V2RayVpnService, so the Go core's session state is right here.
+    // Carries the proxy password: never log the result.
+    override fun localProxy(): LocalProxyMessage? {
+        val proxy = Android.localHTTPProxy() ?: return null
+        return LocalProxyMessage(port = proxy.port, user = proxy.user, pass = proxy.pass)
+    }
+
     override fun start(config: VpnConfigMessage, callback: (Result<VpnResult>) -> Unit) {
         Log.d("VPN_BRIDGE", "Requesting VPN start with dynamic config...")
 

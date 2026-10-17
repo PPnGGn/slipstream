@@ -302,7 +302,8 @@ class XrayConfigBuilder {
         "queryStrategy": "UseIP",
         "servers": ["https://8.8.8.8/dns-query", "https://8.8.4.4/dns-query"],
       },
-      // fixed local ports, the app always points its socks/http proxy here
+      // Placeholder only: the core swaps these for an authenticated pair on
+      // random ports before starting (slipstream-core hardenConfig).
       "inbounds": [
         {
           "listen": "127.0.0.1",

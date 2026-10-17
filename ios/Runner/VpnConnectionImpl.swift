@@ -167,6 +167,12 @@ final class VpnConnectionImpl: NSObject, VpnConnection {
         "n/a"
     }
 
+    func localProxy() throws -> LocalProxyMessage? {
+        // The core runs in the PacketTunnel extension, not this process, and the
+        // app itself is routed through the system tunnel here: no proxy needed.
+        nil
+    }
+
     func getStatus(completion: @escaping (Result<VpnStatusMessage, Error>) -> Void) {
         guard manager != nil else {
             loadExistingManager { [weak self] in

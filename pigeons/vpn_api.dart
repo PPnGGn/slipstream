@@ -37,6 +37,15 @@ class VpnTrafficMessage {
   int? memoryBytes;
 }
 
+/// The core's loopback HTTP proxy for the app's own requests while the tunnel
+/// is up (the app is excluded from its own tunnel). Port and credentials are
+/// fresh every session. Carries a password: never log it.
+class LocalProxyMessage {
+  int port;
+  String user;
+  String pass;
+}
+
 /// Result of a start/stop request.
 class VpnResult {
   bool successful;
@@ -56,6 +65,11 @@ abstract class VpnConnection {
 
   /// The embedded xray-core version (Android-only).
   String xrayCoreVersion();
+
+  /// The running session's HTTP proxy, or null while the tunnel is down.
+  /// Ask right before use: the value changes every session. iOS always
+  /// returns null (the core lives in the Packet Tunnel process).
+  LocalProxyMessage? localProxy();
 }
 
 /// native -> Flutter

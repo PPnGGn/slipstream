@@ -10,13 +10,20 @@ import 'package:slipstream/features/geo/data/geo_paths.dart';
 import 'package:slipstream/features/geo/data/geo_release.dart';
 import 'package:slipstream/features/geo/data/geo_repository.dart';
 import 'package:slipstream/features/geo/data/geo_source.dart';
-import 'package:slipstream/features/routing/data/local_proxy_gate.dart';
+import 'package:slipstream/features/routing/data/local_proxy_client.dart';
+import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
 
 class _FixedPaths implements GeoPaths {
   _FixedPaths(this._dir);
   final String _dir;
   @override
   Future<String> dir() async => _dir;
+}
+
+/// No tunnel up: every request goes direct.
+class _NoProxy implements LocalProxyProvider {
+  @override
+  Future<LocalProxyMessage?> current() async => null;
 }
 
 void main() {
@@ -71,7 +78,7 @@ void main() {
   GeoRepository repoWith(http.Client client) => GeoRepository(
     _FixedPaths(geoDir),
     Talker(),
-    LocalProxyPort(),
+    _NoProxy(),
     clientFactory: (_) => client,
   );
 
