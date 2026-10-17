@@ -98,7 +98,6 @@ private struct ByteReader {
 final class VpnConnectionImpl: NSObject, VpnConnection {
 
     private static let extensionBundleID = "vpn.oko.XrayTunnel"
-    private static let socksPort = 10808
     static let appGroupID = "group.vpn.oko"
 
     private let eventReceiver: VpnEventReceiver
@@ -246,7 +245,6 @@ final class VpnConnectionImpl: NSObject, VpnConnection {
         if let proto = manager.protocolConfiguration as? NETunnelProviderProtocol {
             var providerConfiguration: [String: Any] = [
                 "configJson": config.configJson,
-                "socksPort": Self.socksPort,
             ]
             if let geoAssetDir = config.geoAssetDir {
                 providerConfiguration["geoAssetDir"] = geoAssetDir
@@ -266,7 +264,6 @@ final class VpnConnectionImpl: NSObject, VpnConnection {
                 do {
                     var options: [String: NSObject] = [
                         "configJson": config.configJson as NSObject,
-                        "socksPort": NSNumber(value: Self.socksPort),
                     ]
                     if let geoAssetDir = config.geoAssetDir {
                         options["geoAssetDir"] = geoAssetDir as NSObject

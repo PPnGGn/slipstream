@@ -253,18 +253,14 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
         let providerConfig = (protocolConfiguration as? NETunnelProviderProtocol)?.providerConfiguration
 
         let configJson = (options?["configJson"] as? String) ?? (providerConfig?["configJson"] as? String)
-        let socksPort = (options?["socksPort"] as? NSNumber)
-            ?? (providerConfig?["socksPort"] as? NSNumber)
-            ?? (providerConfig?["socksPort"] as? Int).map(NSNumber.init(value:))
-      
         let geoAssetDir = (options?["geoAssetDir"] as? String) ?? (providerConfig?["geoAssetDir"] as? String) ?? ""
 
-        guard let configJson, let socksPort else {
-            TunnelLog.lifecycle.error("startTunnel: missing configJson/socksPort in both options and providerConfiguration; aborting")
+        guard let configJson else {
+            TunnelLog.lifecycle.error("startTunnel: missing configJson in both options and providerConfiguration; aborting")
             completionHandler(NSError(
                 domain: "vpn.oko.XrayTunnel",
                 code: 1,
-                userInfo: [NSLocalizedDescriptionKey: "Missing configJson/socksPort in tunnel options"]
+                userInfo: [NSLocalizedDescriptionKey: "Missing configJson in tunnel options"]
             ))
             return
         }
@@ -291,8 +287,9 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
             self.flowBridge = bridge
 
             var startError: NSError?
-            let ok = IosStart(configJson, bridge, socksPort.intValue, geoAssetDir, &startError)
-            TunnelLog.lifecycle.notice("IosStart(socksPort=\(socksPort.intValue, privacy: .public), configLen=\(configJson.count, privacy: .public), geoAssetDir=\(geoAssetDir.isEmpty ? "<default>" : geoAssetDir, privacy: .public)) -> ok=\(ok, privacy: .public)")
+            // The core picks the SOCKS port and credentials itself; they never leave Go.
+            let ok = IosStart(configJson, bridge, geoAssetDir, &startError)
+            TunnelLog.lifecycle.notice("IosStart(configLen=\(configJson.count, privacy: .public), geoAssetDir=\(geoAssetDir.isEmpty ? "<default>" : geoAssetDir, privacy: .public)) -> ok=\(ok, privacy: .public)")
             if !ok {
                 TunnelLog.lifecycle.error("IosStart FAILED: \(startError?.localizedDescription ?? "unknown", privacy: .public)")
                 completionHandler(startError ?? NSError(

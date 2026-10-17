@@ -29,7 +29,6 @@ class V2RayVpnService : VpnService() {
         private const val NOTIFICATION_CHANNEL_ID = "slipstream_vpn_status"
         private const val NOTIFICATION_ID = 1
         private const val ACTION_STOP_VPN = "ACTION_STOP_VPN"
-        private const val SOCKS_PORT = 10808
         private const val TRAFFIC_POLL_INTERVAL_MS = 1000L
     }
 
@@ -76,8 +75,9 @@ class V2RayVpnService : VpnService() {
             localTunnel = tunnel
 
             val fd = tunnel.detachFd()
-            Android.start(configJson, fd.toLong(), SOCKS_PORT.toLong(), geoDir)
-            Log.d("VPN_SERVICE", "Xray + tun2socks started, fd=$fd, port=$SOCKS_PORT, geoDir=$geoDir")
+            // The core picks the SOCKS port and credentials itself; they never leave Go.
+            Android.start(configJson, fd.toLong(), geoDir)
+            Log.d("VPN_SERVICE", "Xray + tun2socks started, fd=$fd, geoDir=$geoDir")
 
             val connectedAtMs = System.currentTimeMillis()
             VpnEventBridge.notifyStatus(VpnStatus.CONNECTED, connectedAtEpochMs = connectedAtMs)
