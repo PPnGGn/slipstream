@@ -5,6 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.pm.ServiceInfo
 import android.net.VpnService
 import android.os.Build
@@ -85,6 +86,9 @@ class V2RayVpnService : VpnService() {
             localTunnel = tunnel
 
             val fd = tunnel.detachFd()
+            // Chatty core logs for debug builds only. The flag comes from the
+            // build itself (release APKs are never debuggable), not from Dart.
+            Android.setVerboseLogs(isDebuggable())
             // The core picks the SOCKS port and credentials itself; they never leave Go.
             Android.start(configJson, fd.toLong(), geoDir)
             Log.d("VPN_SERVICE", "Xray + tun2socks started, fd=$fd, dns=$dnsServers, geoDir=$geoDir")
@@ -99,6 +103,9 @@ class V2RayVpnService : VpnService() {
             stopVpn(dueToError = true)
         }
     }
+
+    private fun isDebuggable(): Boolean =
+            (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
 
     private fun startTrafficPolling() {
         stopTrafficPolling()
