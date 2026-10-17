@@ -60,6 +60,7 @@ class VpnRepository {
         server.configJson,
         split: _ruBypassCubit.state,
         adBlock: _adBlockCubit.state,
+        privateDnsStrict: await _privateDnsStrict(),
       );
       // 2. strip geo tokens the installed .dat can't resolve.
       final configJson = _geoGate.prepare(policy.configJson, _geoCubit.state);
@@ -83,6 +84,19 @@ class VpnRepository {
     } catch (e, st) {
       _talker.handle(e, st, 'Bridge crashed on start');
       return Failure('System failure: ${e.toString()}', e);
+    }
+  }
+
+  /// Asked on every connect: the user may flip the setting between sessions.
+  /// A channel failure counts as "not strict" — the default Android mode.
+  Future<bool> _privateDnsStrict() async {
+    try {
+      final strict = await _vpnConnection.privateDnsStrict();
+      if (strict) _talker.debug('VPN: strict Private DNS is on');
+      return strict;
+    } catch (e) {
+      _talker.warning('VPN: Private DNS mode unknown, assuming automatic: $e');
+      return false;
     }
   }
 

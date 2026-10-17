@@ -78,6 +78,12 @@ abstract class VpnConnection {
   /// Ask right before use: the value changes every session. iOS always
   /// returns null (the core lives in the Packet Tunnel process).
   LocalProxyMessage? localProxy();
+
+  /// Whether the OS runs strict Private DNS ("hostname" mode, Android 9+).
+  /// Then it never sends ordinary queries to the tunnel's DNS, only the lookup
+  /// of the DoT server's own name — which a provider's `dns.hosts` may
+  /// deliberately blackhole. Asked before the config is built. iOS: false.
+  bool privateDnsStrict();
 }
 
 /// native -> Flutter

@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.pm.Signature
+import android.net.ConnectivityManager
 import android.net.Uri
 import android.net.VpnService
 import android.os.Build
@@ -80,6 +81,15 @@ class MainActivity : FlutterActivity(), VpnConnection, UpdateInstaller {
     override fun localProxy(): LocalProxyMessage? {
         val proxy = Android.localHTTPProxy() ?: return null
         return LocalProxyMessage(port = proxy.port, user = proxy.user, pass = proxy.pass)
+    }
+
+    // Private DNS is a global setting, so any network's LinkProperties carry it:
+    // a server name is set only in strict ("hostname") mode.
+    override fun privateDnsStrict(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return false
+        val cm = getSystemService(ConnectivityManager::class.java) ?: return false
+        val network = cm.activeNetwork ?: return false
+        return cm.getLinkProperties(network)?.privateDnsServerName != null
     }
 
     override fun start(config: VpnConfigMessage, callback: (Result<VpnResult>) -> Unit) {

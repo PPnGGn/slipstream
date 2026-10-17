@@ -229,6 +229,17 @@ void main() {
     }
   });
 
+  test('strict Private DNS — own configs still hijack (no hosts blackholes)', () {
+    final result = gate.apply(
+      jsonEncode(scaffold()),
+      split: RuBypassMode.bypassRu,
+      adBlock: AdBlockMode.off,
+      privateDnsStrict: true,
+    );
+    expect(result.hijacksDns, isTrue);
+    expect(tagsOf(decode(result.configJson)), contains('dns-hijack'));
+  });
+
   test('provider config with its own domain rule — untouched', () {
     final provider = {
       'outbounds': [
@@ -306,6 +317,21 @@ void main() {
       expect(config['dns'], src['dns']);
       expect(outbound(config, 'dns-out')!['protocol'], 'dns');
       expect(outbound(config, 'dns-out')!.containsKey('settings'), isFalse);
+    });
+
+    test('strict Private DNS — provider DNS left alone', () {
+      // Its dns.hosts may blackhole dns.google; hijacking would answer the
+      // OS's DoT bootstrap lookup with 0.0.0.0.
+      final src = jsonEncode(provider());
+      expectUntouched(
+        src,
+        gate.apply(
+          src,
+          split: RuBypassMode.bypassRu,
+          adBlock: AdBlockMode.off,
+          privateDnsStrict: true,
+        ),
+      );
     });
 
     test('an existing dns outbound is reused, not duplicated', () {

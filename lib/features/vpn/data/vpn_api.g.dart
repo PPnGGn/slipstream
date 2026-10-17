@@ -642,6 +642,29 @@ class VpnConnection {
     ;
     return pigeonVar_replyValue as LocalProxyMessage?;
   }
+
+  /// Whether the OS runs strict Private DNS ("hostname" mode, Android 9+).
+  /// Then it never sends ordinary queries to the tunnel's DNS, only the lookup
+  /// of the DoT server's own name — which a provider's `dns.hosts` may
+  /// deliberately blackhole. Asked before the config is built. iOS: false.
+  Future<bool> privateDnsStrict() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.slipstream.VpnConnection.privateDnsStrict$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return pigeonVar_replyValue! as bool;
+  }
 }
 
 /// native -> Flutter

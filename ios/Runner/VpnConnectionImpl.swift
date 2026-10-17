@@ -173,6 +173,11 @@ final class VpnConnectionImpl: NSObject, VpnConnection {
         nil
     }
 
+    func privateDnsStrict() throws -> Bool {
+        // No DNS hijack on iOS yet (hijackDns is ignored there), nothing to adapt.
+        false
+    }
+
     func getStatus(completion: @escaping (Result<VpnStatusMessage, Error>) -> Void) {
         guard manager != nil else {
             loadExistingManager { [weak self] in

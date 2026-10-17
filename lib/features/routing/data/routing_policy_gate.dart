@@ -104,10 +104,16 @@ class RoutingPolicyGate {
     'domain:doh.dns.sb',
   ];
 
+  /// [privateDnsStrict]: the OS runs strict Private DNS. Provider configs then
+  /// keep their DNS untouched: the OS only asks the tunnel for the DoT server's
+  /// own name, and a provider `dns.hosts` that blackholes DoH/DoT names (a
+  /// common anti-bypass trick) would answer 0.0.0.0 and leave the phone with
+  /// no DNS at all. Our own configs have no such entries and keep the hijack.
   PolicyResult apply(
     String configJson, {
     required RuBypassMode split,
     required AdBlockMode adBlock,
+    bool privateDnsStrict = false,
   }) {
     final untouched = (configJson: configJson, hijacksDns: false);
 
@@ -119,7 +125,7 @@ class RoutingPolicyGate {
     }
 
     if (_hasOwnRouting(config)) {
-      if (!_hijackProviderDns(config)) {
+      if (privateDnsStrict || !_hijackProviderDns(config)) {
         _talker.debug('RoutingPolicy: config routes by destination, left as is');
         return untouched;
       }
