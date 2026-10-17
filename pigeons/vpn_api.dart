@@ -7,6 +7,14 @@ class VpnConfigMessage {
   String? serverId;
   String? title;
   String? geoAssetDir;
+
+  /// True when the config answers the system's DNS itself (the client's own
+  /// policy was injected: port 53 on the `socks` inbound goes to `dns-out`).
+  /// The tunnel then hands the OS a DNS address inside its own subnet: nothing
+  /// listens on 853 there, so Android's automatic Private DNS can't upgrade to
+  /// DoT and bypass the config's resolvers. False/null keeps a public resolver
+  /// (provider configs route DNS their own way).
+  bool? hijackDns;
 }
 
 class VpnStatusMessage {

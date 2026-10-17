@@ -30,6 +30,13 @@ class V2RayVpnService : VpnService() {
         private const val NOTIFICATION_ID = 1
         private const val ACTION_STOP_VPN = "ACTION_STOP_VPN"
         private const val TRAFFIC_POLL_INTERVAL_MS = 1000L
+
+        // Inside the TUN subnet (we are 10.0.0.2/24). Nothing answers on 853 here,
+        // so automatic Private DNS can't upgrade to DoT and the config's port-53
+        // hijack sees every query. Only for configs that hijack DNS themselves:
+        // provider rules would send a private address direct, into nowhere.
+        private const val TUN_DNS = "10.0.0.1"
+        private val PUBLIC_DNS = listOf("1.1.1.1", "1.0.0.1")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -46,25 +53,28 @@ class V2RayVpnService : VpnService() {
         }
         val geoDir = intent.getStringExtra("GEO_DIR")
                 ?: java.io.File(filesDir, "geo").apply { mkdirs() }.absolutePath
+        val hijackDns = intent.getBooleanExtra("HIJACK_DNS", false)
 
         Log.d("VPN_SERVICE", "Starting service and core...")
         isStopping = false
         startForegroundWithNotification(buildNotification("Подключение…"))
         VpnEventBridge.notifyStatus(VpnStatus.CONNECTING)
         Android.setHandler(VpnEventBridge)
-        setupVpn(configJson, geoDir)
+        setupVpn(configJson, geoDir, hijackDns)
 
         return START_STICKY
     }
 
-    private fun setupVpn(configJson: String, geoDir: String) {
+    private fun setupVpn(configJson: String, geoDir: String, hijackDns: Boolean) {
         try {
-            val tunnel =
+            val dnsServers = if (hijackDns) listOf(TUN_DNS) else PUBLIC_DNS
+            val builder =
                     Builder()
                             .addAddress("10.0.0.2", 24)
                             .addAddress("fd00:10:10:10::2", 64)
-                            .addDnsServer("1.1.1.1")
-                            .addDnsServer("1.0.0.1")
+            dnsServers.forEach { builder.addDnsServer(it) }
+            val tunnel =
+                    builder
                             .addRoute("0.0.0.0", 0)
                             .addRoute("::", 0)
                             .addDisallowedApplication(packageName)
@@ -77,7 +87,7 @@ class V2RayVpnService : VpnService() {
             val fd = tunnel.detachFd()
             // The core picks the SOCKS port and credentials itself; they never leave Go.
             Android.start(configJson, fd.toLong(), geoDir)
-            Log.d("VPN_SERVICE", "Xray + tun2socks started, fd=$fd, geoDir=$geoDir")
+            Log.d("VPN_SERVICE", "Xray + tun2socks started, fd=$fd, dns=$dnsServers, geoDir=$geoDir")
 
             val connectedAtMs = System.currentTimeMillis()
             VpnEventBridge.notifyStatus(VpnStatus.CONNECTED, connectedAtEpochMs = connectedAtMs)

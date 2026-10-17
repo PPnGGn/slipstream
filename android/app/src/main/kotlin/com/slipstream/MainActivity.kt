@@ -30,7 +30,7 @@ import java.security.MessageDigest
 class MainActivity : FlutterActivity(), VpnConnection, UpdateInstaller {
 
     private var pendingVpnCallback: ((Result<VpnResult>) -> Unit)? = null
-    private var pendingConfig: String? = null
+    private var pendingConfig: VpnConfigMessage? = null
 
     companion object {
         private const val REQUEST_POST_NOTIFICATIONS = 42
@@ -85,25 +85,27 @@ class MainActivity : FlutterActivity(), VpnConnection, UpdateInstaller {
     override fun start(config: VpnConfigMessage, callback: (Result<VpnResult>) -> Unit) {
         Log.d("VPN_BRIDGE", "Requesting VPN start with dynamic config...")
 
-        val configJson = config.configJson
         val intent = VpnService.prepare(this)
 
         if (intent != null) {
             pendingVpnCallback = callback
-            pendingConfig = configJson
+            pendingConfig = config
             startActivityForResult(intent, 24)
         } else {
-            val serviceIntent =
-                    android.content.Intent(
-                            applicationContext,
-                            com.slipstream.V2RayVpnService::class.java
-                    )
-            serviceIntent.putExtra("XRAY_CONFIG", configJson)
-            serviceIntent.putExtra("GEO_DIR", config.geoAssetDir ?: geoDir())
-            startService(serviceIntent)
-
+            startVpnService(config)
             callback(Result.success(VpnResult(successful = true)))
         }
+    }
+
+    // One place that turns the Pigeon message into service extras, so the
+    // permission-dialog path can't drift from the direct one.
+    private fun startVpnService(config: VpnConfigMessage) {
+        val serviceIntent =
+                android.content.Intent(applicationContext, com.slipstream.V2RayVpnService::class.java)
+        serviceIntent.putExtra("XRAY_CONFIG", config.configJson)
+        serviceIntent.putExtra("GEO_DIR", config.geoAssetDir ?: geoDir())
+        serviceIntent.putExtra("HIJACK_DNS", config.hijackDns == true)
+        startService(serviceIntent)
     }
 
     override fun stop(callback: (Result<VpnResult>) -> Unit) {
@@ -130,14 +132,7 @@ class MainActivity : FlutterActivity(), VpnConnection, UpdateInstaller {
 
                 val config = pendingConfig
                 if (config != null) {
-                    val serviceIntent =
-                            android.content.Intent(
-                                    applicationContext,
-                                    com.slipstream.V2RayVpnService::class.java
-                            )
-                    serviceIntent.putExtra("XRAY_CONFIG", config)
-                    serviceIntent.putExtra("GEO_DIR", geoDir())
-                    startService(serviceIntent)
+                    startVpnService(config)
 
                     pendingVpnCallback?.invoke(Result.success(VpnResult(successful = true)))
                 } else {

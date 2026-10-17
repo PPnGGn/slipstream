@@ -131,6 +131,7 @@ class VpnConfigMessage {
     this.serverId,
     this.title,
     this.geoAssetDir,
+    this.hijackDns,
   });
 
   String configJson;
@@ -141,12 +142,21 @@ class VpnConfigMessage {
 
   String? geoAssetDir;
 
+  /// True when the config answers the system's DNS itself (the client's own
+  /// policy was injected: port 53 on the `socks` inbound goes to `dns-out`).
+  /// The tunnel then hands the OS a DNS address inside its own subnet: nothing
+  /// listens on 853 there, so Android's automatic Private DNS can't upgrade to
+  /// DoT and bypass the config's resolvers. False/null keeps a public resolver
+  /// (provider configs route DNS their own way).
+  bool? hijackDns;
+
   List<Object?> _toList() {
     return <Object?>[
       configJson,
       serverId,
       title,
       geoAssetDir,
+      hijackDns,
     ];
   }
 
@@ -160,6 +170,7 @@ class VpnConfigMessage {
       serverId: result[1] as String?,
       title: result[2] as String?,
       geoAssetDir: result[3] as String?,
+      hijackDns: result[4] as bool?,
     );
   }
 
@@ -172,7 +183,7 @@ class VpnConfigMessage {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(configJson, other.configJson) && _deepEquals(serverId, other.serverId) && _deepEquals(title, other.title) && _deepEquals(geoAssetDir, other.geoAssetDir);
+    return _deepEquals(configJson, other.configJson) && _deepEquals(serverId, other.serverId) && _deepEquals(title, other.title) && _deepEquals(geoAssetDir, other.geoAssetDir) && _deepEquals(hijackDns, other.hijackDns);
   }
 
   @override

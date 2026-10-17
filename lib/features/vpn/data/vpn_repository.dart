@@ -56,19 +56,20 @@ class VpnRepository {
       // authenticated pair on random ports (see LocalProxyProvider).
       // 1. client's own split policy (RU-bypass, ad-block), for scaffold
       //    configs that carry no routing of their own.
-      final withPolicy = _routingPolicyGate.apply(
+      final policy = _routingPolicyGate.apply(
         server.configJson,
         split: _ruBypassCubit.state,
         adBlock: _adBlockCubit.state,
       );
       // 2. strip geo tokens the installed .dat can't resolve.
-      final configJson = _geoGate.prepare(withPolicy, _geoCubit.state);
+      final configJson = _geoGate.prepare(policy.configJson, _geoCubit.state);
       final result = await _vpnConnection.start(
         VpnConfigMessage(
           configJson: configJson,
           serverId: server.id,
           title: server.title,
           geoAssetDir: geoDir,
+          hijackDns: policy.hijacksDns,
         ),
       );
 
