@@ -4,19 +4,25 @@ Cross-platform VPN client built with Flutter. VPN traffic is handled by [Xray-co
 
 ## Status
 
-Early MVP — Android and iOS only. Core connect/disconnect flow works; UI and protocol coverage are minimal.
+Android is the main platform. iOS builds and works but is frozen (no new features, not re-verified). Desktop
+(Windows) is planned.
 
 ## Supported protocols
 
-| Protocol | Transport / security |
-|----------|----------------------|
-| VLESS    | Reality (TCP)        |
-| Shadowsocks | TCP              |
+| Protocol | Link scheme |
+|----------|-------------|
+| VLESS (TCP, WS, gRPC, HTTPUpgrade, XHTTP, mKCP; TLS or Reality) | `vless://` |
+| VMess | `vmess://` |
+| Trojan | `trojan://` |
+| Shadowsocks | `ss://` |
+| Hysteria2 | `hy2://`, `hysteria2://` |
+
+Which transports each parser accepts is decided in `lib/features/subscriptions/data/subscription_parser/`.
 
 ## Subscription input
 
 - `https://` / `http://` subscription links (base64-encoded server lists)
-- Direct `vless://` and `ss://` URIs
+- Direct share links of the protocols above
 - Raw Xray JSON configs
 
 ## Features
@@ -25,6 +31,10 @@ Early MVP — Android and iOS only. Core connect/disconnect flow works; UI and p
 - Server list with country detection from server names
 - Connect / disconnect, switch server while connected
 - Connection status, uptime, and traffic stats
+- Ping for the server list (TCP and QUIC probes)
+- Routing: bypass Russia (geosite/geoip), ad blocking, trimmed geo databases downloaded by the app
+- Memory monitor of the core (Android)
+- Self-update (Android)
 - Xray log viewer
 
 ## Architecture
