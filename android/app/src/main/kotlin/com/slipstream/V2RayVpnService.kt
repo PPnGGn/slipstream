@@ -4,7 +4,10 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ApplicationInfo
 import android.content.pm.ServiceInfo
 import android.net.VpnService
@@ -14,6 +17,7 @@ import android.os.Looper
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import com.slipstream.android.Android
 
 class V2RayVpnService : VpnService() {
@@ -30,6 +34,7 @@ class V2RayVpnService : VpnService() {
         private const val NOTIFICATION_CHANNEL_ID = "slipstream_vpn_status"
         private const val NOTIFICATION_ID = 1
         private const val ACTION_STOP_VPN = "ACTION_STOP_VPN"
+        private const val ACTION_DUMP_HEAP = "com.slipstream.DUMP_HEAP"
         private const val TRAFFIC_POLL_INTERVAL_MS = 1000L
 
         // Inside the TUN subnet (we are 10.0.0.2/24). Nothing answers on 853 here,
@@ -38,6 +43,35 @@ class V2RayVpnService : VpnService() {
         // provider rules would send a private address direct, into nowhere.
         private const val TUN_DNS = "10.0.0.1"
         private val PUBLIC_DNS = listOf("1.1.1.1", "1.0.0.1")
+    }
+
+    // Debug builds only, while the service runs:
+    //   adb shell am broadcast -a com.slipstream.DUMP_HEAP -p com.slipstream [--es name before]
+    // writes the core's heap profile to files/heap[-name].pprof (the core checks the name).
+    private val heapDumpReceiver =
+            object : BroadcastReceiver() {
+                override fun onReceive(context: Context, intent: Intent) {
+                    try {
+                        val name = intent.getStringExtra("name") ?: ""
+                        val path = Android.writeHeapProfile(filesDir.absolutePath, name)
+                        Log.i("VPN_SERVICE", "Heap profile written: $path")
+                    } catch (e: Exception) {
+                        Log.w("VPN_SERVICE", "Heap profile failed: ${e.message}")
+                    }
+                }
+            }
+
+    override fun onCreate() {
+        super.onCreate()
+        if (isDebuggable()) {
+            // Exported: the broadcast comes from adb's shell user, not from this app.
+            ContextCompat.registerReceiver(
+                    this,
+                    heapDumpReceiver,
+                    IntentFilter(ACTION_DUMP_HEAP),
+                    ContextCompat.RECEIVER_EXPORTED,
+            )
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -143,16 +177,16 @@ class V2RayVpnService : VpnService() {
         trafficPollRunnable = null
     }
 
-    // Go's own view of its memory (runtime.MemStats.Sys), not the app
-    // process's RSS: the VpnService runs in the same process as the Flutter
-    // engine (no android:process override), so process-wide RSS is mostly
-    // Skia/Flutter overhead and would wildly overstate what xray-core itself
-    // costs. Sys only grows (Go rarely hands pages back), so it tracks a
-    // live footprint far more steadily than HeapAlloc, which saws up and
-    // down every GC cycle.
+    // Go's own view of its memory (totalBytes, ≈ runtime.MemStats.Sys), not
+    // the app process's RSS: the VpnService runs in the same process as the
+    // Flutter engine (no android:process override), so process-wide RSS is
+    // mostly Skia/Flutter overhead and would wildly overstate what xray-core
+    // itself costs. Total only grows (Go rarely hands pages back), so it
+    // tracks a live footprint far more steadily than the heap alone, which
+    // saws up and down every GC cycle.
     private fun sampleMemoryBytes(): Long? =
             try {
-                Android.queryMemory()?.sysBytes
+                Android.queryMemory()?.totalBytes
             } catch (e: Exception) {
                 Log.w("VPN_SERVICE", "queryMemory failed: ${e.message}")
                 null
@@ -191,6 +225,7 @@ class V2RayVpnService : VpnService() {
     override fun onDestroy() {
         super.onDestroy()
         stopVpn()
+        if (isDebuggable()) unregisterReceiver(heapDumpReceiver)
     }
 
     // Foreground notification
