@@ -35,6 +35,7 @@ class V2RayVpnService : VpnService() {
         private const val NOTIFICATION_ID = 1
         private const val ACTION_STOP_VPN = "ACTION_STOP_VPN"
         private const val ACTION_DUMP_HEAP = "com.slipstream.DUMP_HEAP"
+        private const val ACTION_SET_GC = "com.slipstream.SET_GC"
         private const val TRAFFIC_POLL_INTERVAL_MS = 1000L
 
         // Inside the TUN subnet (we are 10.0.0.2/24). Nothing answers on 853 here,
@@ -48,18 +49,30 @@ class V2RayVpnService : VpnService() {
     // Debug builds only, while the service runs:
     //   adb shell am broadcast -a com.slipstream.DUMP_HEAP -p com.slipstream [--es name before]
     // writes the core's goroutine stacks to files/goroutines[-name].txt and its
-    // heap profile to files/heap[-name].pprof (the core checks the name).
-    private val heapDumpReceiver =
+    // heap profile to files/heap[-name].pprof (the core checks the name);
+    //   adb shell am broadcast -a com.slipstream.SET_GC -p com.slipstream --ei percent 50 [--ei limit_mb 80]
+    // changes the core's GC settings on the live session (limit_mb 0 or absent = no limit).
+    private val debugReceiver =
             object : BroadcastReceiver() {
                 override fun onReceive(context: Context, intent: Intent) {
                     try {
-                        val name = intent.getStringExtra("name") ?: ""
-                        val dir = filesDir.absolutePath
-                        val goroutines = Android.writeGoroutineDump(dir, name)
-                        val heap = Android.writeHeapProfile(dir, name)
-                        Log.i("VPN_SERVICE", "Dumps written: $goroutines, $heap")
+                        when (intent.action) {
+                            ACTION_DUMP_HEAP -> {
+                                val name = intent.getStringExtra("name") ?: ""
+                                val dir = filesDir.absolutePath
+                                val goroutines = Android.writeGoroutineDump(dir, name)
+                                val heap = Android.writeHeapProfile(dir, name)
+                                Log.i("VPN_SERVICE", "Dumps written: $goroutines, $heap")
+                            }
+                            ACTION_SET_GC -> {
+                                val percent = intent.getIntExtra("percent", 100)
+                                val limitMb = intent.getIntExtra("limit_mb", 0)
+                                Android.setGCTuning(percent.toLong(), limitMb.toLong())
+                                Log.i("VPN_SERVICE", "GC tuning set: gogc=$percent limit_mb=$limitMb")
+                            }
+                        }
                     } catch (e: Exception) {
-                        Log.w("VPN_SERVICE", "Dump failed: ${e.message}")
+                        Log.w("VPN_SERVICE", "Debug command ${intent.action} failed: ${e.message}")
                     }
                 }
             }
@@ -70,8 +83,11 @@ class V2RayVpnService : VpnService() {
             // Exported: the broadcast comes from adb's shell user, not from this app.
             ContextCompat.registerReceiver(
                     this,
-                    heapDumpReceiver,
-                    IntentFilter(ACTION_DUMP_HEAP),
+                    debugReceiver,
+                    IntentFilter().apply {
+                        addAction(ACTION_DUMP_HEAP)
+                        addAction(ACTION_SET_GC)
+                    },
                     ContextCompat.RECEIVER_EXPORTED,
             )
         }
@@ -228,7 +244,7 @@ class V2RayVpnService : VpnService() {
     override fun onDestroy() {
         super.onDestroy()
         stopVpn()
-        if (isDebuggable()) unregisterReceiver(heapDumpReceiver)
+        if (isDebuggable()) unregisterReceiver(debugReceiver)
     }
 
     // The system is short on memory or the UI went to the background: hand back
