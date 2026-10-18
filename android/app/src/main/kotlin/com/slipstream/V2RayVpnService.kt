@@ -47,16 +47,19 @@ class V2RayVpnService : VpnService() {
 
     // Debug builds only, while the service runs:
     //   adb shell am broadcast -a com.slipstream.DUMP_HEAP -p com.slipstream [--es name before]
-    // writes the core's heap profile to files/heap[-name].pprof (the core checks the name).
+    // writes the core's goroutine stacks to files/goroutines[-name].txt and its
+    // heap profile to files/heap[-name].pprof (the core checks the name).
     private val heapDumpReceiver =
             object : BroadcastReceiver() {
                 override fun onReceive(context: Context, intent: Intent) {
                     try {
                         val name = intent.getStringExtra("name") ?: ""
-                        val path = Android.writeHeapProfile(filesDir.absolutePath, name)
-                        Log.i("VPN_SERVICE", "Heap profile written: $path")
+                        val dir = filesDir.absolutePath
+                        val goroutines = Android.writeGoroutineDump(dir, name)
+                        val heap = Android.writeHeapProfile(dir, name)
+                        Log.i("VPN_SERVICE", "Dumps written: $goroutines, $heap")
                     } catch (e: Exception) {
-                        Log.w("VPN_SERVICE", "Heap profile failed: ${e.message}")
+                        Log.w("VPN_SERVICE", "Dump failed: ${e.message}")
                     }
                 }
             }
