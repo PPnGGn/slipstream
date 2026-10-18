@@ -40,5 +40,14 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+    # Flutter's generated placeholder podspec pins the 'Flutter' pod to iOS 13.0,
+    # and podhelper only strips that for pods that depend on Flutter, not for the
+    # 'Flutter' pod itself. Xcode 27 rejects anything below 15.0 as an error.
+    target.build_configurations.each do |config|
+      target_version = config.build_settings['IPHONEOS_DEPLOYMENT_TARGET']
+      if target_version && target_version.to_f < 15.0
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+      end
+    end
   end
 end

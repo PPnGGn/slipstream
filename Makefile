@@ -41,10 +41,3 @@ build-core-ios:
 	rm -rf ios/Frameworks/slipstreamcore.xcframework
 	mkdir -p ios/Frameworks
 	cp -R ../slipstream-core/slipstreamcore-ios.xcframework ios/Frameworks/slipstreamcore.xcframework
-
-
-build-core-mac:
-	$(MAKE) -C ../slipstream-core bind-mac
-	rm -rf macos/Frameworks/slipstreamcore-mac.xcframework
-	mkdir -p macos/Frameworks
-	cp -R ../slipstream-core/slipstreamcore-mac.xcframework macos/Frameworks/

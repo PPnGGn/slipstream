@@ -60,10 +60,9 @@ app.*.map.json
 slipstream-release.jks
 key.properties
 
-# Native tunnel core (gomobile); build via `make build-core-android` / `make build-core-ios` / `make build-core-mac`
+# Native tunnel core (gomobile); build via `make build-core-android` / `make build-core-ios`
 android/app/libs/slipstreamcore.aar
 ios/Frameworks/
-macos/Frameworks/
 
 # Claude Code / AI agents
 .claude/
