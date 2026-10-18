@@ -36,6 +36,7 @@ class V2RayVpnService : VpnService() {
         private const val ACTION_STOP_VPN = "ACTION_STOP_VPN"
         private const val ACTION_DUMP_HEAP = "com.slipstream.DUMP_HEAP"
         private const val ACTION_SET_GC = "com.slipstream.SET_GC"
+        private const val ACTION_MEM_LOG = "com.slipstream.MEM_LOG"
         private const val TRAFFIC_POLL_INTERVAL_MS = 1000L
 
         // Inside the TUN subnet (we are 10.0.0.2/24). Nothing answers on 853 here,
@@ -51,7 +52,9 @@ class V2RayVpnService : VpnService() {
     // writes the core's goroutine stacks to files/goroutines[-name].txt and its
     // heap profile to files/heap[-name].pprof (the core checks the name);
     //   adb shell am broadcast -a com.slipstream.SET_GC -p com.slipstream --ei percent 50 [--ei limit_mb 80]
-    // changes the core's GC settings on the live session (limit_mb 0 or absent = no limit).
+    // changes the core's GC settings on the live session (limit_mb 0 or absent = no limit);
+    //   adb shell am broadcast -a com.slipstream.MEM_LOG -p com.slipstream --ez on true|false
+    // turns the core's "mem:" logcat line (every 3 s, tag GoLog) on or off; it stays on across switches.
     private val debugReceiver =
             object : BroadcastReceiver() {
                 override fun onReceive(context: Context, intent: Intent) {
@@ -70,6 +73,11 @@ class V2RayVpnService : VpnService() {
                                 Android.setGCTuning(percent.toLong(), limitMb.toLong())
                                 Log.i("VPN_SERVICE", "GC tuning set: gogc=$percent limit_mb=$limitMb")
                             }
+                            ACTION_MEM_LOG -> {
+                                val on = intent.getBooleanExtra("on", true)
+                                Android.setMemoryLog(on)
+                                Log.i("VPN_SERVICE", "Memory log ${if (on) "on" else "off"}")
+                            }
                         }
                     } catch (e: Exception) {
                         Log.w("VPN_SERVICE", "Debug command ${intent.action} failed: ${e.message}")
@@ -87,6 +95,7 @@ class V2RayVpnService : VpnService() {
                     IntentFilter().apply {
                         addAction(ACTION_DUMP_HEAP)
                         addAction(ACTION_SET_GC)
+                        addAction(ACTION_MEM_LOG)
                     },
                     ContextCompat.RECEIVER_EXPORTED,
             )
