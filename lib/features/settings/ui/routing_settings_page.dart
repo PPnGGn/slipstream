@@ -36,8 +36,8 @@ class RoutingSettingsPage extends StatelessWidget {
             onPressed: () => showHelpSheet(
               context,
               title: 'Routing',
-              entries: const [
-                HelpEntry(
+              entries: [
+                const HelpEntry(
                   title: 'RU bypass',
                   body:
                       'Sent directly, bypassing the VPN: .ru and .рф domains, '
@@ -46,13 +46,16 @@ class RoutingSettingsPage extends StatelessWidget {
                 ),
                 HelpEntry(
                   title: 'Ad blocking',
-                  body:
-                      'Basic — major ad and tracking networks '
-                      '(~830 domains).\n'
-                      'Full — extended list (~150,000 domains). Higher memory '
-                      'use, possible false positives, may be unstable on iOS.',
+                  body: adBlockCubit.fullAllowed
+                      ? 'Basic — major ad and tracking networks '
+                            '(~830 domains).\n'
+                            'Full — extended list (~150,000 domains). Higher '
+                            'memory use, possible false positives.'
+                      : 'Major ad and tracking networks (~830 domains). The '
+                            'extended list does not fit the memory limit of '
+                            'the iOS VPN extension.',
                 ),
-                HelpEntry(
+                const HelpEntry(
                   title: 'Geo databases',
                   body:
                       'Domain and IP lists used by the rules above. '
@@ -60,7 +63,7 @@ class RoutingSettingsPage extends StatelessWidget {
                       'Without them ads are not blocked, and RU bypass covers '
                       'only .ru and .рф.',
                 ),
-                HelpEntry(
+                const HelpEntry(
                   title: 'When applied',
                   body:
                       'Changes take effect on reconnect.\n'
@@ -113,7 +116,7 @@ class RoutingSettingsPage extends StatelessWidget {
                         if (context.mounted) _notifyIfConnected(context, vpn);
                       },
                     ),
-                    if (mode.enabled)
+                    if (mode.enabled && adBlockCubit.fullAllowed)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(
                           16,
