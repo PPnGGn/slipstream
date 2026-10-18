@@ -10,12 +10,17 @@ import 'package:slipstream/features/vpn/data/vpn_repository.dart';
 ///
 /// iOS: the actual jetsam kill threshold for a Network Extension (~50 MB) —
 /// this feature exists to watch that number.
-/// Android: no hard ceiling. `memoryBytes` there is Go's `MemStats.Sys` for
-/// xray-core/tun2socks (see `V2RayVpnService.sampleMemoryBytes`), not app
-/// RSS. 200 MB is just a rough reference point, comfortably above the
-/// ~34 MB the full ad-block list costs (`AdBlockMode.full`) — not measured,
-/// needs calibrating on a real device.
-int get memoryBudgetBytes => Platform.isIOS ? 50 * 1024 * 1024 : 200 * 1024 * 1024;
+/// Android: no hard ceiling. `memoryBytes` there is what the core's Go
+/// runtime holds from the OS right now (retained, see
+/// `V2RayVpnService.sampleMemoryBytes`), not app RSS. 150 MB is calibrated on
+/// a phone (2026-10-19, core GC at gogc=25): a plain config peaks at ~46 MB
+/// under video and one with RU geo rules at ~82 MB, both green; 90 MB+ warns;
+/// 128 MB+ — where the geo config peaked before the memory fixes, or a leak —
+/// is danger.
+int memoryBudgetBytesFor({required bool ios}) =>
+    ios ? 50 * 1024 * 1024 : 150 * 1024 * 1024;
+
+int get memoryBudgetBytes => memoryBudgetBytesFor(ios: Platform.isIOS);
 
 const _warnAtFraction = 0.60;
 const _dangerAtFraction = 0.85;

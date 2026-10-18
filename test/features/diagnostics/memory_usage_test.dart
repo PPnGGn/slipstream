@@ -43,4 +43,23 @@ void main() {
       expect(computeMemoryHealth(0.10, MemoryHealth.danger), MemoryHealth.ok);
     });
   });
+
+  group('memoryBudgetBytesFor', () {
+    const mb = 1024 * 1024;
+
+    test('iOS keeps the Network Extension jetsam limit', () {
+      expect(memoryBudgetBytesFor(ios: true), 50 * mb);
+    });
+
+    test('Android: measured peaks stay green, 90 MB warns, 128 MB is danger', () {
+      final budget = memoryBudgetBytesFor(ios: false);
+      MemoryHealth at(int megabytes) =>
+          computeMemoryHealth(megabytes * mb / budget, MemoryHealth.ok);
+
+      expect(at(46), MemoryHealth.ok); // plain config, video peak
+      expect(at(82), MemoryHealth.ok); // RU geo rules, video peak
+      expect(at(90), MemoryHealth.warn);
+      expect(at(128), MemoryHealth.danger); // the level before the memory fixes
+    });
+  });
 }
