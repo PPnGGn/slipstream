@@ -177,16 +177,16 @@ class V2RayVpnService : VpnService() {
         trafficPollRunnable = null
     }
 
-    // Go's own view of its memory (totalBytes, ≈ runtime.MemStats.Sys), not
-    // the app process's RSS: the VpnService runs in the same process as the
-    // Flutter engine (no android:process override), so process-wide RSS is
-    // mostly Skia/Flutter overhead and would wildly overstate what xray-core
-    // itself costs. Total only grows (Go rarely hands pages back), so it
-    // tracks a live footprint far more steadily than the heap alone, which
-    // saws up and down every GC cycle.
+    // What the core costs the phone right now: memory the Go runtime holds
+    // from the OS (retainedBytes = mapped minus handed back). Not the app
+    // process's RSS: the VpnService runs in the same process as the Flutter
+    // engine (no android:process override), so process-wide RSS is mostly
+    // Skia/Flutter overhead. Not totalBytes either: that one almost never
+    // drops and carries a heavy session's record into the next one.
+    // Retained does drop, with a lag — Go returns freed pages gradually.
     private fun sampleMemoryBytes(): Long? =
             try {
-                Android.queryMemory()?.totalBytes
+                Android.queryMemory()?.retainedBytes
             } catch (e: Exception) {
                 Log.w("VPN_SERVICE", "queryMemory failed: ${e.message}")
                 null
@@ -226,6 +226,14 @@ class V2RayVpnService : VpnService() {
         super.onDestroy()
         stopVpn()
         if (isDebuggable()) unregisterReceiver(heapDumpReceiver)
+    }
+
+    // The system is short on memory or the UI went to the background: hand back
+    // what the core holds but does not use. Any level will do; the call returns
+    // at once and the work runs in Go.
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        Android.freeMemory()
     }
 
     // Foreground notification
