@@ -7,16 +7,16 @@ import 'package:slipstream/core/models/stored_subscription/stored_subscription.d
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/theme/app_theme.dart';
-import 'package:slipstream/core/ui/clipboard.dart';
 import 'package:slipstream/features/ping/presentation/ping_cubit.dart';
 import 'package:slipstream/features/ping/presentation/ui/ping_sorting.dart';
+import 'package:slipstream/features/qr/ui/qr_share_sheet.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
 import 'package:slipstream/features/subscriptions/data/search.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_description_store.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/server_tile.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/subscription_info.dart';
 
-enum _SectionAction { refresh, copyUrl, delete, pingAll, toggleDescription }
+enum _SectionAction { refresh, share, delete, pingAll, toggleDescription }
 
 class SubscriptionSection extends StatefulWidget {
   const SubscriptionSection({
@@ -86,10 +86,14 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
     switch (action) {
       case _SectionAction.refresh:
         cubit.refreshSubscription(id);
-      case _SectionAction.copyUrl:
+      case _SectionAction.share:
         final url = widget.stored.subscription.url;
         if (url == null) return;
-        copyToClipboard(context, url, 'URL copied');
+        showQrShareSheet(
+          context,
+          title: widget.stored.subscription.name,
+          data: url,
+        );
       case _SectionAction.delete:
         cubit.removeSubscription(id);
       case _SectionAction.pingAll:
@@ -379,8 +383,8 @@ class _SectionMenu extends StatelessWidget {
       items: [
         if (isUrl)
           PopupMenuItem(
-            value: _SectionAction.copyUrl,
-            child: item('Copy URL', AppAssets.copy),
+            value: _SectionAction.share,
+            child: item('Share', AppAssets.scanQr),
           ),
         PopupMenuItem(
           value: _SectionAction.toggleDescription,

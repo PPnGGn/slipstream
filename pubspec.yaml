@@ -1,7 +1,7 @@
 name: slipstream
 description: "A new Flutter project."
 publish_to: 'none'
-version: 1.2.0+30
+version: 1.2.1+30
 
 environment:
   sdk: ^3.11.4
@@ -24,6 +24,8 @@ dependencies:
   uuid: ^4.6.0
   flutter_svg: ^2.3.0
   pointycastle: ^4.0.0
+  mobile_scanner: ^7.4.2
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:
