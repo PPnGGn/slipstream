@@ -1,13 +1,17 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:slipstream/app/app_assets.dart';
 import 'package:slipstream/app/di/injector.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
+import 'package:slipstream/features/qr/data/qr_image_import.dart';
+import 'package:slipstream/features/qr/data/qr_scan.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
 
 Future<void> showAddSubscriptionSheet(BuildContext context) {
@@ -78,16 +82,34 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
       setState(() => _error = 'Clipboard is empty');
       return;
     }
-    _input.text = text;
-    await _submit(activate: true);
+    await _addFromText(text);
   }
 
-  void _scanQr() {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        const SnackBar(content: Text('QR scanning is not available yet')),
-      );
+  Future<void> _scanQr() async {
+    final text = await context.push<String>('/scan');
+    if (!mounted || text == null) return;
+    await _addFromText(text);
+  }
+
+  Future<void> _importFromImage() async {
+    setState(() => _error = null);
+    final result = await getIt<QrImageImporter>().import();
+    if (!mounted) return;
+    switch (result) {
+      case QrImportCancelled():
+        return;
+      case QrImportNotFound():
+        setState(() => _error = 'No QR code found in this image');
+      case QrImportFound(:final text):
+        await _addFromText(text);
+    }
+  }
+
+  // Shared by Paste, Scan QR and Image: the text goes into the field and is
+  // added right away, so a bad value shows up in the field and in the error.
+  Future<void> _addFromText(String text) async {
+    _input.text = text;
+    await _submit(activate: true);
   }
 
   @override
@@ -167,18 +189,32 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
                   Row(
                     spacing: 8,
                     children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: _busy ? null : _scanQr,
-                          icon: SvgPicture.asset(
-                            AppAssets.scanQr,
-                            width: 15,
-                            height: 15,
-                            colorFilter: .mode(colors.textPrimary, .srcIn),
+                      if (isQrScanSupported(defaultTargetPlatform))
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: _busy ? null : _scanQr,
+                            icon: SvgPicture.asset(
+                              AppAssets.scanQr,
+                              width: 15,
+                              height: 15,
+                              colorFilter: .mode(colors.textPrimary, .srcIn),
+                            ),
+                            label: const Text('Scan QR'),
                           ),
-                          label: const Text('Scan QR'),
                         ),
-                      ),
+                      if (isQrScanSupported(defaultTargetPlatform))
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: _busy ? null : _importFromImage,
+                            icon: SvgPicture.asset(
+                              AppAssets.doc,
+                              width: 15,
+                              height: 15,
+                              colorFilter: .mode(colors.textPrimary, .srcIn),
+                            ),
+                            label: const Text('Image'),
+                          ),
+                        ),
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: _busy ? null : _paste,

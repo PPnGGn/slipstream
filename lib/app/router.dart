@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
+import 'package:slipstream/features/qr/ui/qr_scan_page.dart';
 import 'package:slipstream/features/settings/ui/ping_settings_page.dart';
 import 'package:slipstream/features/settings/ui/routing_settings_page.dart';
 import 'package:slipstream/features/settings/ui/settings_page.dart';
@@ -14,6 +15,7 @@ final GoRouter appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
   routes: [
     GoRoute(path: '/', builder: (context, state) => const HomePage()),
+    GoRoute(path: '/scan', builder: (context, state) => const QrScanPage()),
     GoRoute(path: '/logs', builder: (context, state) => const XrayLogsPage()),
     GoRoute(
       path: '/logs/flutter',
