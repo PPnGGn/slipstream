@@ -21,6 +21,8 @@ import '../../core/service/vpn_service/vpn_service_cubit.dart' as _i202;
 import '../../core/theme/app_colors.dart' as _i962;
 import '../../core/theme/cubit/theme_cubit.dart' as _i11;
 import '../../core/theme/data/theme_store.dart' as _i802;
+import '../../features/client_identity/data/client_identity_repository.dart'
+    as _i568;
 import '../../features/client_identity/data/client_identity_store.dart'
     as _i407;
 import '../../features/client_identity/data/device_info_api.g.dart' as _i1033;
@@ -199,6 +201,13 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i1021.UpdateServiceCubit(
         repository: gh<_i11.UpdateRepository>(),
         talker: gh<_i207.Talker>(),
+      ),
+    );
+    gh.lazySingleton<_i568.ClientIdentityRepository>(
+      () => _i568.ClientIdentityRepository(
+        gh<_i407.ClientIdentityStore>(),
+        gh<_i1033.DeviceInfoApi>(),
+        gh<_i207.Talker>(),
       ),
     );
     gh.lazySingleton<_i236.GeoRepository>(
