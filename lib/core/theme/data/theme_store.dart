@@ -12,7 +12,7 @@ class ThemeStore {
 
   AppThemeMode loadMode() => switch (_prefs.getString(_key)) {
     'dark' => AppThemeMode.dark,
-    'system' => AppThemeMode.system,
+    'phosphor' => AppThemeMode.phosphor,
     _ => AppThemeMode.light,
   };
 

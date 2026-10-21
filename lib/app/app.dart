@@ -22,13 +22,9 @@ class MainApp extends StatelessWidget {
       builder: (context, state) {
         return MaterialApp.router(
           routerConfig: appRouter,
-          theme: AppTheme.light,
-          darkTheme: AppTheme.dark,
-          themeMode: switch (state.mode) {
-            AppThemeMode.light => ThemeMode.light,
-            AppThemeMode.dark => ThemeMode.dark,
-            AppThemeMode.system => ThemeMode.system,
-          },
+          // One theme built from the chosen palette; there is no system mode,
+          // so no darkTheme/themeMode pair is needed.
+          theme: AppTheme.fromPalette(state.palette),
           builder: (context, child) {
             return _UpdaterHost(child: child ?? const SizedBox.shrink());
           },

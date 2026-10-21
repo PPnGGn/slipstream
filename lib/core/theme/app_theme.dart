@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:slipstream/core/theme/app_colors.dart';
+import 'package:slipstream/core/theme/app_palette.dart';
 
 abstract class AppDims {
   static const double horizontalPadding = 16;
@@ -19,57 +19,36 @@ abstract class AppDims {
 }
 
 abstract class AppTheme {
-  static ThemeData get dark => _build(
-    brightness: Brightness.dark,
-    bg: AppColorsDark.background,
-    surface: AppColorsDark.surface,
-    raised: AppColorsDark.surfaceRaised,
-    border: AppColorsDark.border,
-    inputFill: AppColorsDark.inputFill,
-    chip: AppColorsDark.chip,
-    switchKnob: AppColorsDark.switchKnob,
-    tx1: AppColorsDark.textPrimary,
-    tx2: AppColorsDark.textSecondary,
-    tx3: AppColorsDark.textMuted,
-    primary: AppColorsDark.primary,
-    ink: AppColorsDark.ink,
-    danger: AppColorsDark.danger,
-    brandGradient: AppColorsDark.brandGradient,
-    inverseSurface: AppColorsDark.inverseSurface,
-    onInverseSurface: AppColorsDark.onInverseSurface,
-  );
-
-  static ThemeData get light => _build(
-    brightness: Brightness.light,
-    bg: AppColorsLight.background,
-    surface: AppColorsLight.surface,
-    raised: AppColorsLight.surfaceRaised,
-    border: AppColorsLight.border,
-    inputFill: AppColorsLight.inputFill,
-    chip: AppColorsLight.chip,
-    switchKnob: AppColorsLight.switchKnob,
-    tx1: AppColorsLight.textPrimary,
-    tx2: AppColorsLight.textSecondary,
-    tx3: AppColorsLight.textMuted,
-    primary: AppColorsLight.primary,
-    ink: AppColorsLight.ink,
-    danger: AppColorsLight.danger,
-    brandGradient: AppColorsLight.brandGradient,
-    inverseSurface: AppColorsLight.inverseSurface,
-    onInverseSurface: AppColorsLight.onInverseSurface,
+  /// Material widgets (inputs, sheets, menus, SnackBar, Switch) take their
+  /// colors from here; custom widgets read the same palette via AppColors.
+  static ThemeData fromPalette(AppPalette p) => _build(
+    brightness: p.brightness,
+    bg: p.background,
+    surface: p.surface,
+    raised: p.surfaceRaised,
+    border: p.border,
+    inputFill: p.inputFill,
+    chip: p.chip,
+    switchKnob: p.switchKnob,
+    tx1: p.textPrimary,
+    tx2: p.textSecondary,
+    tx3: p.textMuted,
+    // The Material accent is the icon accent (--picon), not --pri: in Dark
+    // --pri is a muted grey that would make focus rings and links fade.
+    primary: p.accentIcon,
+    ink: p.ink,
+    danger: p.danger,
+    brandGradient: p.brandGradient,
+    inverseSurface: p.inverseSurface,
+    onInverseSurface: p.onInverseSurface,
   );
 
   /// Latency badge color: <80ms ok, <160ms warn, else danger.
-  static Color latencyColor(int ms, {required bool dark}) {
-    final c = dark ? AppColorsDark.ok : AppColorsLight.ok;
-    final w = dark ? AppColorsDark.warn : AppColorsLight.warn;
-    final d = dark ? AppColorsDark.danger : AppColorsLight.danger;
-    return ms < 80
-        ? c
-        : ms < 160
-        ? w
-        : d;
-  }
+  static Color latencyColor(int ms, AppPalette palette) => ms < 80
+      ? palette.ok
+      : ms < 160
+      ? palette.warn
+      : palette.danger;
 
   static TextTheme _textTheme(Color primary, Color secondary, Color muted) =>
       TextTheme(

@@ -96,7 +96,6 @@ class _SettingsPageState extends State<SettingsPage> {
                   padding: const EdgeInsets.all(14),
                   child: _ThemeModeSwitch(
                     mode: themeState.mode,
-                    isDark: themeState.isDark,
                     colors: colors,
                     onChanged: themeCubit.setMode,
                   ),
@@ -308,25 +307,23 @@ class _SettingsPageState extends State<SettingsPage> {
 class _ThemeModeSwitch extends StatelessWidget {
   const _ThemeModeSwitch({
     required this.mode,
-    required this.isDark,
     required this.colors,
     required this.onChanged,
   });
 
   final AppThemeMode mode;
-  final bool isDark;
   final AppColors colors;
   final ValueChanged<AppThemeMode> onChanged;
 
   static const _options = [
     (AppThemeMode.light, 'Light'),
     (AppThemeMode.dark, 'Dark'),
-    (AppThemeMode.system, 'System'),
+    (AppThemeMode.phosphor, 'Phosphor'),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = isDark ? const Color(0xFF4A4B70) : colors.surfaceRaised;
+    final activeColor = colors.segment;
 
     return Container(
       padding: const EdgeInsets.all(4),
