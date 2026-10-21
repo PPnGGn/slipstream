@@ -1,5 +1,17 @@
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:slipstream/features/client_identity/data/client_identity_repository.dart';
 import 'package:slipstream/features/client_identity/data/client_identity_store.dart';
 import 'package:slipstream/features/client_identity/data/device_info_api.g.dart';
+import 'package:talker_flutter/talker_flutter.dart';
+
+/// A real repository on empty mock prefs, for tests of code that depends on it.
+Future<ClientIdentityRepository> identityRepositoryWith(
+  FakeDeviceInfoApi api,
+) async {
+  SharedPreferences.setMockInitialValues({});
+  final prefs = await SharedPreferences.getInstance();
+  return ClientIdentityRepository(ClientIdentityStore(prefs), api, Talker());
+}
 
 /// Extends (not implements) the generated class: it carries Pigeon's own
 /// fields, and `implements` would force us to override all of them.

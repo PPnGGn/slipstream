@@ -1,4 +1,6 @@
 import 'package:http/http.dart' as http;
+import 'package:injectable/injectable.dart';
+import 'package:slipstream/features/client_identity/data/client_identity_repository.dart';
 import 'base64_codec.dart';
 
 class SubscriptionResponse {
@@ -21,17 +23,18 @@ class SubscriptionResponse {
   });
 }
 
+@lazySingleton
 class SubscriptionFetcher {
+  final ClientIdentityRepository _identity;
   final http.Client _client;
 
-  SubscriptionFetcher({http.Client? client})
+  SubscriptionFetcher(this._identity, {@ignoreParam http.Client? client})
     : _client = client ?? http.Client();
 
-  static const _userAgent = 'Happ/4.3.0';
-
   Future<SubscriptionResponse> fetch(String url) async {
+    final identity = await _identity.current();
     final response = await _client
-        .get(Uri.parse(url), headers: const {'User-Agent': _userAgent})
+        .get(Uri.parse(url), headers: identity.toHeaders())
         .timeout(
           const Duration(seconds: 10),
           onTimeout: () =>

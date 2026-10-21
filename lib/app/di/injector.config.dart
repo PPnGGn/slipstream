@@ -56,6 +56,8 @@ import '../../features/subscriptions/data/selected_server_store.dart' as _i830;
 import '../../features/subscriptions/data/subscription_description_store.dart'
     as _i811;
 import '../../features/subscriptions/data/subscription_factory.dart' as _i179;
+import '../../features/subscriptions/data/subscription_parser/subscription_fetcher.dart'
+    as _i746;
 import '../../features/subscriptions/data/subscription_parser/subscription_parser_service.dart'
     as _i302;
 import '../../features/subscriptions/data/subscription_storage/subscription_storage.dart'
@@ -127,9 +129,6 @@ extension GetItInjectableX on _i174.GetIt {
     await gh.singletonAsync<_i505.SubscriptionStorage>(
       () => storageModule.subscriptionStorage(gh<_i207.Talker>()),
       preResolve: true,
-    );
-    gh.lazySingleton<_i302.SubscriptionParserService>(
-      () => _i302.SubscriptionParserService(gh<_i207.Talker>()),
     );
     await gh.singletonAsync<_i497.Directory>(
       () => updaterModule.updatesDir,
@@ -230,6 +229,15 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i962.AppColors>(
       () => _i962.AppColors(themeCubit: gh<_i11.AppThemeCubit>()),
+    );
+    gh.lazySingleton<_i746.SubscriptionFetcher>(
+      () => _i746.SubscriptionFetcher(gh<_i568.ClientIdentityRepository>()),
+    );
+    gh.lazySingleton<_i302.SubscriptionParserService>(
+      () => _i302.SubscriptionParserService(
+        gh<_i207.Talker>(),
+        gh<_i746.SubscriptionFetcher>(),
+      ),
     );
     gh.lazySingleton<_i818.GeoCubit>(
       () => _i818.GeoCubit(

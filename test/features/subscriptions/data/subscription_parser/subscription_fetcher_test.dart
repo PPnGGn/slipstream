@@ -3,10 +3,21 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:slipstream/features/client_identity/data/hwid.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_fetcher.dart';
 
+import '../../../client_identity/fakes.dart';
+
 void main() {
-  Future<SubscriptionResponse> fetchWith(Map<String, String> headers) {
+  Future<SubscriptionFetcher> fetcherOn(
+    http.Client client, {
+    FakeDeviceInfoApi? api,
+  }) async => SubscriptionFetcher(
+    await identityRepositoryWith(api ?? FakeDeviceInfoApi(deviceId: 'abc')),
+    client: client,
+  );
+
+  Future<SubscriptionResponse> fetchWith(Map<String, String> headers) async {
     final client = MockClient(
       (_) async => http.Response(
         'vless://uuid@host.example.com:443',
@@ -14,7 +25,8 @@ void main() {
         headers: headers,
       ),
     );
-    return SubscriptionFetcher(client: client).fetch('https://sub.example.com');
+    final fetcher = await fetcherOn(client);
+    return fetcher.fetch('https://sub.example.com');
   }
 
   group('SubscriptionFetcher headers', () {
@@ -70,33 +82,87 @@ void main() {
       expect(response.profileTitle, isNull);
     });
 
-    test(
-      'masks the User-Agent as a whitelisted client so panels do not serve '
-      'a decoy/fallback format',
-      () async {
-        String? sentUserAgent;
-        final client = MockClient((request) async {
-          sentUserAgent = request.headers['User-Agent'];
-          return http.Response('vless://uuid@host.example.com:443', 200);
-        });
+    test('masks the User-Agent as a whitelisted client so panels do not serve '
+        'a decoy/fallback format', () async {
+      String? sentUserAgent;
+      final client = MockClient((request) async {
+        sentUserAgent = request.headers['User-Agent'];
+        return http.Response('vless://uuid@host.example.com:443', 200);
+      });
 
-        await SubscriptionFetcher(
-          client: client,
-        ).fetch('https://sub.example.com');
+      final fetcher = await fetcherOn(client);
+      await fetcher.fetch('https://sub.example.com');
 
-        // The panel matcher is prefix-anchored on 'Happ/'; the version is free.
-        expect(sentUserAgent, startsWith('Happ/'));
-      },
-    );
+      // The panel matcher is prefix-anchored on 'Happ/'; the version is free.
+      expect(sentUserAgent, startsWith('Happ/'));
+    });
 
     test('throws on a non-200 response', () async {
       final client = MockClient((_) async => http.Response('nope', 403));
+      final fetcher = await fetcherOn(client);
 
-      expect(
-        () =>
-            SubscriptionFetcher(client: client).fetch('https://x.example.com'),
-        throwsException,
-      );
+      expect(() => fetcher.fetch('https://x.example.com'), throwsException);
     });
+  });
+
+  group('SubscriptionFetcher client identity', () {
+    Future<Map<String, String>> sentHeaders(FakeDeviceInfoApi api) async {
+      late Map<String, String> sent;
+      final client = MockClient((request) async {
+        sent = request.headers;
+        return http.Response('vless://uuid@host.example.com:443', 200);
+      });
+      final fetcher = await fetcherOn(client, api: api);
+
+      await fetcher.fetch('https://sub.example.com');
+      return sent;
+    }
+
+    test('sends all five identity headers', () async {
+      final headers = await sentHeaders(
+        FakeDeviceInfoApi(
+          deviceId: 'abc',
+          os: 'Android',
+          osVersion: '14',
+          model: 'Pixel 8',
+        ),
+      );
+
+      expect(headers['User-Agent'], startsWith('Happ/'));
+      expect(headers['x-hwid'], equals(hwidFromDeviceId('abc')));
+      expect(headers['x-device-os'], equals('Android'));
+      expect(headers['x-ver-os'], equals('14'));
+      expect(headers['x-device-model'], equals('Pixel 8'));
+    });
+
+    test('sends the same HWID on every request', () async {
+      final seen = <String?>[];
+      final client = MockClient((request) async {
+        seen.add(request.headers['x-hwid']);
+        return http.Response('vless://uuid@host.example.com:443', 200);
+      });
+      final fetcher = await fetcherOn(client);
+
+      await fetcher.fetch('https://sub.example.com');
+      await fetcher.fetch('https://sub.example.com');
+
+      expect(seen, hasLength(2));
+      expect(seen[0], equals(seen[1]));
+    });
+
+    test(
+      'still sends User-Agent and HWID when the device info fails',
+      () async {
+        final headers = await sentHeaders(
+          FakeDeviceInfoApi(error: StateError('no bridge')),
+        );
+
+        expect(headers['User-Agent'], startsWith('Happ/'));
+        expect(isValidHwid(headers['x-hwid']!), isTrue);
+        expect(headers.containsKey('x-device-os'), isFalse);
+        expect(headers.containsKey('x-ver-os'), isFalse);
+        expect(headers.containsKey('x-device-model'), isFalse);
+      },
+    );
   });
 }

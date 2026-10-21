@@ -41,13 +41,11 @@ class SubscriptionParserService {
   final CustomJsonParser _customJsonParser;
   final List<UriSchemeParser> _uriParsers;
 
-  SubscriptionParserService(
-    Talker talker, {
-    @ignoreParam SubscriptionFetcher? fetcher,
-  }) : _talker = talker,
-       _fetcher = fetcher ?? SubscriptionFetcher(),
-       _customJsonParser = CustomJsonParser(talker),
-       _uriParsers = _buildUriParsers(talker);
+  SubscriptionParserService(Talker talker, SubscriptionFetcher fetcher)
+    : _talker = talker,
+      _fetcher = fetcher,
+      _customJsonParser = CustomJsonParser(talker),
+      _uriParsers = _buildUriParsers(talker);
 
   static List<UriSchemeParser> _buildUriParsers(Talker talker) {
     final builder = XrayConfigBuilder();

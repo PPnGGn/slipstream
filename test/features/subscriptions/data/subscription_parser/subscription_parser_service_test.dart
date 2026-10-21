@@ -8,24 +8,34 @@ import 'package:slipstream/core/models/result.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_fetcher.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_parser_service.dart';
 
+import '../../../client_identity/fakes.dart';
+
 void main() {
   const vlessLink =
       'vless://11111111-1111-1111-1111-111111111111@example.com:443#One';
   const trojanLink = 'trojan://secret@example.com:8443#Two';
 
-  SubscriptionParserService serviceServing(String body) {
-    final client = MockClient((_) async => http.Response(body, 200));
+  Future<SubscriptionParserService> serviceOn(http.Client client) async {
+    final identity = await identityRepositoryWith(FakeDeviceInfoApi());
     return SubscriptionParserService(
       Talker(),
-      fetcher: SubscriptionFetcher(client: client),
+      SubscriptionFetcher(identity, client: client),
     );
   }
 
+  Future<SubscriptionParserService> serviceServing(String body) =>
+      serviceOn(MockClient((_) async => http.Response(body, 200)));
+
+  // For input that never reaches the network.
+  Future<SubscriptionParserService> offlineService() => serviceOn(
+    MockClient((_) async => throw StateError('unexpected request')),
+  );
+
   group('SubscriptionParserService.parseFromInput', () {
     test('parses a pasted direct link', () async {
-      final result = await SubscriptionParserService(
-        Talker(),
-      ).parseFromInput(vlessLink);
+      final service = await offlineService();
+
+      final result = await service.parseFromInput(vlessLink);
 
       expect(result, isA<Success<ParsedSubscription>>());
       expect(
@@ -37,9 +47,9 @@ void main() {
     test('parses a pasted base64 block', () async {
       final encoded = base64.encode(utf8.encode('$vlessLink\n$trojanLink'));
 
-      final result = await SubscriptionParserService(
-        Talker(),
-      ).parseFromInput(encoded);
+      final service = await offlineService();
+
+      final result = await service.parseFromInput(encoded);
 
       expect(
         (result as Success<ParsedSubscription>).data.servers,
@@ -48,16 +58,16 @@ void main() {
     });
 
     test('rejects input that is neither a link, JSON nor base64', () async {
-      final result = await SubscriptionParserService(
-        Talker(),
-      ).parseFromInput('what is this?!');
+      final service = await offlineService();
+
+      final result = await service.parseFromInput('what is this?!');
 
       expect(result, isA<Failure<ParsedSubscription>>());
     });
 
     test('parses a fetched base64 body', () async {
       final body = base64.encode(utf8.encode('$vlessLink\n$trojanLink'));
-      final service = serviceServing(body);
+      final service = await serviceServing(body);
 
       final result = await service.parseFromInput('https://sub.example.com');
 
@@ -68,7 +78,9 @@ void main() {
     });
 
     test('parses a fetched plain text body that is not base64', () async {
-      final service = serviceServing('# my nodes\n$vlessLink\n$trojanLink\n');
+      final service = await serviceServing(
+        '# my nodes\n$vlessLink\n$trojanLink\n',
+      );
 
       final result = await service.parseFromInput('https://sub.example.com');
 
@@ -79,7 +91,7 @@ void main() {
     });
 
     test('keeps the servers of every supported scheme in one body', () async {
-      final service = serviceServing(
+      final service = await serviceServing(
         '$vlessLink\nssr://legacy-unsupported\n$trojanLink',
       );
 
@@ -92,7 +104,7 @@ void main() {
     });
 
     test('keeps the servers in the order of the subscription lines', () async {
-      final service = serviceServing('$trojanLink\n$vlessLink');
+      final service = await serviceServing('$trojanLink\n$vlessLink');
 
       final result = await service.parseFromInput('https://sub.example.com');
 
@@ -101,7 +113,7 @@ void main() {
     });
 
     test('numbers the ids by line, across different schemes', () async {
-      final service = serviceServing('$trojanLink\n$vlessLink');
+      final service = await serviceServing('$trojanLink\n$vlessLink');
 
       final result = await service.parseFromInput('https://sub.example.com');
 
@@ -111,7 +123,9 @@ void main() {
     });
 
     test('fails when the body has no supported server', () async {
-      final service = serviceServing('# nothing here\ntuic://a@b.com:443');
+      final service = await serviceServing(
+        '# nothing here\ntuic://a@b.com:443',
+      );
 
       final result = await service.parseFromInput('https://sub.example.com');
 
@@ -130,10 +144,7 @@ void main() {
           },
         ),
       );
-      final service = SubscriptionParserService(
-        Talker(),
-        fetcher: SubscriptionFetcher(client: client),
-      );
+      final service = await serviceOn(client);
 
       final result = await service.parseFromInput('https://sub.example.com');
 
@@ -146,10 +157,7 @@ void main() {
 
     test('fails instead of throwing when the fetch fails', () async {
       final client = MockClient((_) async => http.Response('nope', 500));
-      final service = SubscriptionParserService(
-        Talker(),
-        fetcher: SubscriptionFetcher(client: client),
-      );
+      final service = await serviceOn(client);
 
       final result = await service.parseFromInput('https://sub.example.com');
 
