@@ -6,7 +6,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:slipstream/features/qr/data/qr_image_renderer.dart';
 
-// Sends a QR code through the system share sheet as a PNG image.
+const _releasePage = 'https://github.com/PPnGGn/slipstream/releases/latest';
+
+// Sends a QR code through the system share sheet as a PNG image, with the
+// link as text next to it.
 @lazySingleton
 class QrShareService {
   QrShareService()
@@ -18,19 +21,20 @@ class QrShareService {
   QrShareService.custom({
     required Future<Uint8List> Function(String data) render,
     required Future<Directory> Function() tempDir,
-    required Future<void> Function(String path) send,
+    required Future<void> Function(String path, String text) send,
   }) : _render = render,
        _tempDir = tempDir,
        _send = send;
 
   final Future<Uint8List> Function(String data) _render;
   final Future<Directory> Function() _tempDir;
-  final Future<void> Function(String path) _send;
+  final Future<void> Function(String path, String text) _send;
 
   // The image is named after [name], so that is what the receiver sees.
-  // The file is not deleted afterwards: on Android the receiving app reads it
-  // only after the share sheet has returned. Instead the folder is emptied
-  // before the next share, so at most one image stays in the cache.
+  // The file is not deleted right after sharing: on iOS the share sheet gets
+  // this very file, on Android share_plus copies it into its own cache folder
+  // first. The folder is emptied before every share instead, so at most one
+  // image stays in the cache.
   Future<void> shareQr({required String data, required String name}) async {
     final png = await _render(data);
 
@@ -40,15 +44,23 @@ class QrShareService {
 
     final file = File('${dir.path}/${safeFileName(name)}.png');
     await file.writeAsBytes(png);
-    await _send(file.path);
+    await _send(file.path, buildShareText(data));
   }
 }
 
-Future<void> _sharePng(String path) async {
+Future<void> _sharePng(String path, String text) async {
   await SharePlus.instance.share(
-    ShareParams(files: [XFile(path, mimeType: 'image/png')]),
+    ShareParams(text: text, files: [XFile(path, mimeType: 'image/png')]),
   );
 }
+
+// The text that goes with the image: the link first, so it can be copied as
+// is, then where it was sent from and where to get the app.
+String buildShareText(String url) =>
+    '$url\n'
+    '\n'
+    'Sent with the Slipstream VPN client\n'
+    '$_releasePage';
 
 // A file name from free text: no characters file systems reject, no hidden
 // or relative names, at most 50 characters, never empty.

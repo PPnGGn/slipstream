@@ -50,9 +50,27 @@ void main() {
     });
   });
 
+  group('buildShareText', () {
+    test('puts the link first, then the signature and the release page', () {
+      expect(
+        buildShareText('https://x/sub?token=1'),
+        'https://x/sub?token=1\n'
+        '\n'
+        'Sent with the Slipstream VPN client\n'
+        'https://github.com/PPnGGn/slipstream/releases/latest',
+      );
+    });
+
+    test('keeps the link untouched', () {
+      const url = 'vless://id@host:443?type=tcp&sni=a.b#Мой%20VPN';
+
+      expect(buildShareText(url), startsWith('$url\n'));
+    });
+  });
+
   group('QrShareService.shareQr', () {
     late Directory temp;
-    late List<String> sent;
+    late List<({String path, String text})> sent;
 
     // Runs before EVERY test below: a fresh temp folder and an empty list of
     // shared files, so the tests cannot affect each other.
@@ -65,12 +83,13 @@ void main() {
 
     QrShareService service({
       Future<Uint8List> Function(String data)? render,
-      Future<void> Function(String path)? send,
+      Future<void> Function(String path, String text)? send,
     }) {
       return QrShareService.custom(
         render: render ?? (data) async => utf8.encode('png:$data'),
         tempDir: () async => temp,
-        send: send ?? (path) async => sent.add(path),
+        send:
+            send ?? (path, text) async => sent.add((path: path, text: text)),
       );
     }
 
@@ -79,17 +98,23 @@ void main() {
     test('writes the rendered image to a png named after the subscription', () async {
       await service().shareQr(data: 'https://x/sub', name: 'Nebula Premium');
 
-      final file = File(sent.single);
+      final file = File(sent.single.path);
       expect(file.parent.path, shareDir().path);
       expect(file.uri.pathSegments.last, 'Nebula_Premium.png');
       expect(utf8.decode(file.readAsBytesSync()), 'png:https://x/sub');
+    });
+
+    test('sends the share text along with the image', () async {
+      await service().shareQr(data: 'https://x/sub', name: 'n');
+
+      expect(sent.single.text, buildShareText('https://x/sub'));
     });
 
     test('shares the file only after it is written', () async {
       var existedWhenSent = false;
 
       await service(
-        send: (path) async => existedWhenSent = File(path).existsSync(),
+        send: (path, _) async => existedWhenSent = File(path).existsSync(),
       ).shareQr(data: 'd', name: 'n');
 
       expect(existedWhenSent, isTrue);
@@ -114,7 +139,7 @@ void main() {
     });
 
     test('passes sending errors on to the caller', () async {
-      final failing = service(send: (_) async => throw StateError('boom'));
+      final failing = service(send: (_, _) async => throw StateError('boom'));
 
       await expectLater(
         failing.shareQr(data: 'd', name: 'n'),
