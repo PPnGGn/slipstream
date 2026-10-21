@@ -14,16 +14,25 @@ import 'package:slipstream/features/qr/data/qr_image_import.dart';
 import 'package:slipstream/features/qr/data/qr_scan.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
 
-Future<void> showAddSubscriptionSheet(BuildContext context) {
+/// What the sheet does as soon as it opens (the compact layout's Paste and
+/// Scan QR buttons): the result and any error show up inside the sheet.
+enum AddSheetAction { paste, scan }
+
+Future<void> showAddSubscriptionSheet(
+  BuildContext context, {
+  AddSheetAction? initialAction,
+}) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    builder: (context) => const _AddSubscriptionSheet(),
+    builder: (context) => _AddSubscriptionSheet(initialAction: initialAction),
   );
 }
 
 class _AddSubscriptionSheet extends StatefulWidget {
-  const _AddSubscriptionSheet();
+  const _AddSubscriptionSheet({this.initialAction});
+
+  final AddSheetAction? initialAction;
 
   @override
   State<_AddSubscriptionSheet> createState() => _AddSubscriptionSheetState();
@@ -36,6 +45,23 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
 
   bool _busy = false;
   String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    final action = widget.initialAction;
+    if (action == null) return;
+    // After the first frame: the scanner route is pushed from this sheet.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      switch (action) {
+        case AddSheetAction.paste:
+          _paste();
+        case AddSheetAction.scan:
+          _scanQr();
+      }
+    });
+  }
 
   @override
   void dispose() {

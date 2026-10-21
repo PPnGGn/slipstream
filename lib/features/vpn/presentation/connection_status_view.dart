@@ -5,6 +5,14 @@ import 'package:slipstream/features/subscriptions/data/vpn_server_display.dart';
 /// Picks the accent: off — muted, busy — warn, on — ok, error — danger.
 enum ConnectionPhase { off, busy, on, error }
 
+ConnectionPhase connectionPhaseOf(VpnState state) => state.when(
+  disconnected: () => ConnectionPhase.off,
+  connecting: () => ConnectionPhase.busy,
+  connected: (_, _, _, _) => ConnectionPhase.on,
+  disconnecting: () => ConnectionPhase.busy,
+  error: (_) => ConnectionPhase.error,
+);
+
 /// What both home layouts say about the connection. The classic card and
 /// the compact bar only render this, so the two never disagree.
 class ConnectionStatusView {

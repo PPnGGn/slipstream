@@ -32,23 +32,6 @@ void main() {
     expect(store.loadMode(), AppThemeMode.dark);
   });
 
-  test('toggleTheme cycles light → dark → phosphor → light', () async {
-    final store = await storeWith({});
-    final cubit = AppThemeCubit(themeStore: store);
-
-    final seen = <AppThemeMode>[];
-    for (var i = 0; i < 3; i++) {
-      cubit.toggleTheme();
-      seen.add(cubit.mode);
-    }
-
-    expect(seen, [
-      AppThemeMode.dark,
-      AppThemeMode.phosphor,
-      AppThemeMode.light,
-    ]);
-  });
-
   test('phosphor counts as a dark theme', () {
     const state = AppThemeState(mode: AppThemeMode.phosphor);
     expect(state.isDark, isTrue);

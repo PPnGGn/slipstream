@@ -20,11 +20,4 @@ class AppThemeCubit extends Cubit<AppThemeState> {
     emit(AppThemeState(mode: mode));
     _themeStore.saveMode(mode);
   }
-
-  /// Home header button: light → dark → phosphor → light.
-  void toggleTheme() {
-    final next =
-        AppThemeMode.values[(mode.index + 1) % AppThemeMode.values.length];
-    setMode(next);
-  }
 }

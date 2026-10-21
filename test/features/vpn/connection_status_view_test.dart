@@ -29,6 +29,28 @@ void main() {
     selectedServer: selected,
   );
 
+  test('connectionPhaseOf maps every VPN state', () {
+    expect(
+      connectionPhaseOf(const VpnState.disconnected()),
+      ConnectionPhase.off,
+    );
+    expect(
+      connectionPhaseOf(const VpnState.connecting()),
+      ConnectionPhase.busy,
+    );
+    expect(
+      connectionPhaseOf(const VpnState.disconnecting()),
+      ConnectionPhase.busy,
+    );
+    expect(
+      connectionPhaseOf(
+        VpnState.connected(amsterdam, connectedAt: DateTime(0)),
+      ),
+      ConnectionPhase.on,
+    );
+    expect(connectionPhaseOf(const VpnState.error('x')), ConnectionPhase.error);
+  });
+
   group('disconnected', () {
     test('without subscriptions asks to add one', () {
       final v = view(const VpnState.disconnected(), hasSubscriptions: false);
