@@ -21,6 +21,8 @@ import '../../core/service/vpn_service/vpn_service_cubit.dart' as _i202;
 import '../../core/theme/app_colors.dart' as _i962;
 import '../../core/theme/cubit/theme_cubit.dart' as _i11;
 import '../../core/theme/data/theme_store.dart' as _i802;
+import '../../features/client_identity/data/client_identity_store.dart'
+    as _i407;
 import '../../features/diagnostics/cubit/memory_monitor_cubit.dart' as _i628;
 import '../../features/diagnostics/cubit/memory_usage_cubit.dart' as _i190;
 import '../../features/diagnostics/data/memory_monitor_store.dart' as _i193;
@@ -131,6 +133,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i139.HostResolver>(() => const _i371.DnsHostResolver());
     gh.lazySingleton<_i802.ThemeStore>(
       () => _i802.ThemeStore(gh<_i460.SharedPreferences>()),
+    );
+    gh.lazySingleton<_i407.ClientIdentityStore>(
+      () => _i407.ClientIdentityStore(gh<_i460.SharedPreferences>()),
     );
     gh.lazySingleton<_i193.MemoryMonitorStore>(
       () => _i193.MemoryMonitorStore(gh<_i460.SharedPreferences>()),
