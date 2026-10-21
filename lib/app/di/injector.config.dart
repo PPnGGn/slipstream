@@ -40,6 +40,8 @@ import '../../features/ping/domain/usecases/measure_ping_use_case.dart'
     as _i283;
 import '../../features/ping/presentation/ping_auto_runner.dart' as _i918;
 import '../../features/ping/presentation/ping_cubit.dart' as _i629;
+import '../../features/qr/data/qr_image_import.dart' as _i543;
+import '../../features/qr/data/qr_share_service.dart' as _i698;
 import '../../features/routing/cubit/ad_block_cubit.dart' as _i863;
 import '../../features/routing/cubit/ru_bypass_cubit.dart' as _i1048;
 import '../../features/routing/data/ad_block_store.dart' as _i117;
@@ -95,6 +97,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i142.PingTargetResolver>(
       () => const _i142.PingTargetResolver(),
     );
+    gh.lazySingleton<_i543.QrImageImporter>(() => _i543.QrImageImporter());
+    gh.lazySingleton<_i698.QrShareService>(() => _i698.QrShareService());
     gh.lazySingleton<_i179.SubscriptionFactory>(
       () => _i179.SubscriptionFactory(),
     );

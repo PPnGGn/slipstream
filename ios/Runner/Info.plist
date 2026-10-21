@@ -30,6 +30,8 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Slipstream uses the camera to scan QR codes with subscription links.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Slipstream reads a QR code with a subscription link from a photo you choose.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

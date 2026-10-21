@@ -7,6 +7,8 @@ import 'package:slipstream/app/di/injector.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
 import 'package:slipstream/core/ui/clipboard.dart';
+import 'package:slipstream/features/qr/data/qr_share_service.dart';
+import 'package:talker_flutter/talker_flutter.dart';
 
 // Shows [data] as a QR code another phone can scan.
 Future<void> showQrShareSheet(
@@ -21,11 +23,40 @@ Future<void> showQrShareSheet(
   );
 }
 
-class _QrShareSheet extends StatelessWidget {
+class _QrShareSheet extends StatefulWidget {
   const _QrShareSheet({required this.title, required this.data});
 
   final String title;
   final String data;
+
+  @override
+  State<_QrShareSheet> createState() => _QrShareSheetState();
+}
+
+class _QrShareSheetState extends State<_QrShareSheet> {
+  bool _sharing = false;
+
+  String get title => widget.title;
+  String get data => widget.data;
+
+  // The sheet stays open afterwards, so the code can be shared again.
+  Future<void> _share() async {
+    setState(() => _sharing = true);
+    try {
+      await getIt<QrShareService>().shareQr(data: data, name: title);
+    } on Object catch (e, st) {
+      getIt<Talker>().handle(e, st, 'QR: share failed');
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(content: Text('Could not share the QR code')),
+          );
+      }
+    } finally {
+      if (mounted) setState(() => _sharing = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,6 +113,20 @@ class _QrShareSheet extends StatelessWidget {
                   style: textTheme.labelSmall,
                 ),
                 const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: _sharing ? null : _share,
+                  icon: SvgPicture.asset(
+                    AppAssets.share,
+                    width: 15,
+                    height: 15,
+                    colorFilter: .mode(
+                      Theme.of(context).colorScheme.onPrimary,
+                      .srcIn,
+                    ),
+                  ),
+                  label: const Text('Share'),
+                ),
+                const SizedBox(height: 8),
                 OutlinedButton.icon(
                   onPressed: () {
                     copyToClipboard(context, data, 'URL copied');

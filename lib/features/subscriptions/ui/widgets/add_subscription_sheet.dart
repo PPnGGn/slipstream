@@ -10,6 +10,7 @@ import 'package:slipstream/app/app_assets.dart';
 import 'package:slipstream/app/di/injector.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
+import 'package:slipstream/features/qr/data/qr_image_import.dart';
 import 'package:slipstream/features/qr/data/qr_scan.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
 
@@ -90,7 +91,21 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
     await _addFromText(text);
   }
 
-  // Shared by Paste and Scan QR: the text goes into the field and is
+  Future<void> _importFromImage() async {
+    setState(() => _error = null);
+    final result = await getIt<QrImageImporter>().import();
+    if (!mounted) return;
+    switch (result) {
+      case QrImportCancelled():
+        return;
+      case QrImportNotFound():
+        setState(() => _error = 'No QR code found in this image');
+      case QrImportFound(:final text):
+        await _addFromText(text);
+    }
+  }
+
+  // Shared by Paste, Scan QR and Image: the text goes into the field and is
   // added right away, so a bad value shows up in the field and in the error.
   Future<void> _addFromText(String text) async {
     _input.text = text;
@@ -185,6 +200,19 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
                               colorFilter: .mode(colors.textPrimary, .srcIn),
                             ),
                             label: const Text('Scan QR'),
+                          ),
+                        ),
+                      if (isQrScanSupported(defaultTargetPlatform))
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: _busy ? null : _importFromImage,
+                            icon: SvgPicture.asset(
+                              AppAssets.doc,
+                              width: 15,
+                              height: 15,
+                              colorFilter: .mode(colors.textPrimary, .srcIn),
+                            ),
+                            label: const Text('Image'),
                           ),
                         ),
                       Expanded(

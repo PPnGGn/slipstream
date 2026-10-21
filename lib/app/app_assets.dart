@@ -14,6 +14,8 @@ class AppAssets {
   static const String refresh = 'assets/svg/refresh.svg';
   static const String trash = 'assets/svg/trash.svg';
   static const String copy = 'assets/svg/copy.svg';
+  static const String share = 'assets/svg/share.svg';
+  static const String doc = 'assets/svg/doc.svg';
   static const String cloudOff = 'assets/svg/cloud_off.svg';
   static const String ping = 'assets/svg/ping.svg';
 }
