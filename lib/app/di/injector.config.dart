@@ -19,8 +19,10 @@ import 'package:talker_flutter/talker_flutter.dart' as _i207;
 import '../../core/service/update_service/update_service_cubit.dart' as _i1021;
 import '../../core/service/vpn_service/vpn_service_cubit.dart' as _i202;
 import '../../core/theme/app_colors.dart' as _i962;
-import '../../core/theme/cubit/theme_cubit.dart' as _i11;
+import '../../core/theme/cubit/theme_cubit.dart' as _i12;
 import '../../core/theme/data/theme_store.dart' as _i802;
+import '../../features/appearance/cubit/home_layout_cubit.dart' as _i304;
+import '../../features/appearance/data/home_layout_store.dart' as _i979;
 import '../../features/client_identity/data/client_identity_repository.dart'
     as _i568;
 import '../../features/client_identity/data/client_identity_store.dart'
@@ -50,7 +52,7 @@ import '../../features/qr/data/qr_share_service.dart' as _i698;
 import '../../features/routing/cubit/ad_block_cubit.dart' as _i863;
 import '../../features/routing/cubit/ru_bypass_cubit.dart' as _i1048;
 import '../../features/routing/data/ad_block_store.dart' as _i117;
-import '../../features/routing/data/local_proxy_client.dart' as _i863;
+import '../../features/routing/data/local_proxy_client.dart' as _i864;
 import '../../features/routing/data/routing_policy_gate.dart' as _i194;
 import '../../features/routing/data/ru_bypass_store.dart' as _i310;
 import '../../features/subscriptions/cubit/subscriptions_cubit.dart' as _i83;
@@ -74,7 +76,7 @@ import '../../features/vpn/data/xray_log_store.dart' as _i490;
 import 'device_module.dart' as _i782;
 import 'logger_module.dart' as _i987;
 import 'prefs_module.dart' as _i891;
-import 'storage_module.dart' as _i371;
+import 'storage_module.dart' as _i372;
 import 'updater_module.dart' as _i884;
 import 'vpn_module.dart' as _i731;
 
@@ -143,6 +145,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i802.ThemeStore>(
       () => _i802.ThemeStore(gh<_i460.SharedPreferences>()),
     );
+    gh.lazySingleton<_i979.HomeLayoutStore>(
+      () => _i979.HomeLayoutStore(gh<_i460.SharedPreferences>()),
+    );
     gh.lazySingleton<_i407.ClientIdentityStore>(
       () => _i407.ClientIdentityStore(gh<_i460.SharedPreferences>()),
     );
@@ -173,8 +178,8 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i262.GeoPaths>(
       () => _i262.GeoPaths(gh<_i482.VpnConnection>(), gh<_i207.Talker>()),
     );
-    gh.lazySingleton<_i863.LocalProxyProvider>(
-      () => _i863.LocalProxyProvider(
+    gh.lazySingleton<_i864.LocalProxyProvider>(
+      () => _i864.LocalProxyProvider(
         gh<_i482.VpnConnection>(),
         gh<_i207.Talker>(),
       ),
@@ -197,8 +202,11 @@ extension GetItInjectableX on _i174.GetIt {
       ),
       dispose: (i) => i.dispose(),
     );
-    gh.lazySingleton<_i11.AppThemeCubit>(
-      () => _i11.AppThemeCubit(themeStore: gh<_i802.ThemeStore>()),
+    gh.lazySingleton<_i12.AppThemeCubit>(
+      () => _i12.AppThemeCubit(themeStore: gh<_i802.ThemeStore>()),
+    );
+    gh.lazySingleton<_i304.HomeLayoutCubit>(
+      () => _i304.HomeLayoutCubit(store: gh<_i979.HomeLayoutStore>()),
     );
     gh.lazySingleton<_i1021.UpdateServiceCubit>(
       () => _i1021.UpdateServiceCubit(
@@ -217,7 +225,7 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i236.GeoRepository(
         gh<_i262.GeoPaths>(),
         gh<_i207.Talker>(),
-        gh<_i863.LocalProxyProvider>(),
+        gh<_i864.LocalProxyProvider>(),
       ),
       dispose: (i) => i.dispose(),
     );
@@ -232,7 +240,7 @@ extension GetItInjectableX on _i174.GetIt {
       ),
     );
     gh.lazySingleton<_i962.AppColors>(
-      () => _i962.AppColors(themeCubit: gh<_i11.AppThemeCubit>()),
+      () => _i962.AppColors(themeCubit: gh<_i12.AppThemeCubit>()),
     );
     gh.lazySingleton<_i746.SubscriptionFetcher>(
       () => _i746.SubscriptionFetcher(gh<_i568.ClientIdentityRepository>()),
@@ -313,4 +321,4 @@ class _$UpdaterModule extends _i884.UpdaterModule {}
 
 class _$VpnModule extends _i731.VpnModule {}
 
-class _$StorageModule extends _i371.StorageModule {}
+class _$StorageModule extends _i372.StorageModule {}
