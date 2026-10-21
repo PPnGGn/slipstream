@@ -20,6 +20,8 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
 import androidx.core.content.pm.PackageInfoCompat
 import com.slipstream.android.Android
+import com.slipstream.device.DeviceInfoApi
+import com.slipstream.device.DeviceInfoApiImpl
 import com.slipstream.updater.AppVersionMessage
 import com.slipstream.updater.InstallResult
 import com.slipstream.updater.UpdateInstaller
@@ -57,6 +59,10 @@ class MainActivity : FlutterActivity(), VpnConnection, UpdateInstaller {
         super.configureFlutterEngine(flutterEngine)
         VpnConnection.setUp(flutterEngine.dartExecutor.binaryMessenger, this)
         UpdateInstaller.setUp(flutterEngine.dartExecutor.binaryMessenger, this)
+        DeviceInfoApi.setUp(
+                flutterEngine.dartExecutor.binaryMessenger,
+                DeviceInfoApiImpl(applicationContext),
+        )
         VpnEventBridge.receiver = VpnEventReceiver(flutterEngine.dartExecutor.binaryMessenger)
     }
 
