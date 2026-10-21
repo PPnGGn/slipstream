@@ -155,6 +155,24 @@ void main() {
       expect(parsed.dataLimitBytes, equals(100));
     });
 
+    test('shows the device limit message to the user', () async {
+      final client = MockClient(
+        (_) async => http.Response(
+          '',
+          403,
+          headers: {'x-hwid-max-devices-reached': 'true'},
+        ),
+      );
+      final service = await serviceOn(client);
+
+      final result = await service.parseFromInput('https://sub.example.com');
+
+      expect(
+        (result as Failure<ParsedSubscription>).message,
+        contains('device limit'),
+      );
+    });
+
     test('fails instead of throwing when the fetch fails', () async {
       final client = MockClient((_) async => http.Response('nope', 500));
       final service = await serviceOn(client);

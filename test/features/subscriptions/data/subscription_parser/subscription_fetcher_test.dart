@@ -105,6 +105,81 @@ void main() {
     });
   });
 
+  group('SubscriptionFetcher panel device-limit replies', () {
+    Future<SubscriptionResponse> fetchReplying(
+      int status,
+      Map<String, String> headers,
+    ) async {
+      final client = MockClient(
+        (_) async => http.Response('', status, headers: headers),
+      );
+      final fetcher = await fetcherOn(client);
+      return fetcher.fetch('https://sub.example.com');
+    }
+
+    test('maps x-hwid-max-devices-reached to a device limit error', () {
+      expect(
+        fetchReplying(403, {'x-hwid-max-devices-reached': 'true'}),
+        throwsA(isA<DeviceLimitReachedException>()),
+      );
+    });
+
+    test('checks the limit header on a 200 response too', () {
+      expect(
+        fetchReplying(200, {'x-hwid-max-devices-reached': 'true'}),
+        throwsA(isA<DeviceLimitReachedException>()),
+      );
+    });
+
+    test('maps 404 with x-hwid-not-supported to an HWID required error', () {
+      expect(
+        fetchReplying(404, {'x-hwid-not-supported': 'true'}),
+        throwsA(isA<HwidRequiredException>()),
+      );
+    });
+
+    test('reads the header value case-insensitively', () {
+      expect(
+        fetchReplying(404, {'x-hwid-not-supported': 'True'}),
+        throwsA(isA<HwidRequiredException>()),
+      );
+    });
+
+    test('ignores x-hwid-not-supported on a non-404 status', () {
+      expect(
+        fetchReplying(500, {'x-hwid-not-supported': 'true'}),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e,
+            'type',
+            isNot(isA<HwidRequiredException>()),
+          ),
+        ),
+      );
+    });
+
+    test('a plain 404 stays a generic HTTP error', () {
+      expect(
+        fetchReplying(404, {}),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('HTTP error: 404'),
+          ),
+        ),
+      );
+    });
+
+    test('the messages tell the user what to do', () {
+      expect(
+        DeviceLimitReachedException().toString(),
+        allOf(contains('device limit'), contains('remove')),
+      );
+      expect(HwidRequiredException().toString(), contains('HWID'));
+    });
+  });
+
   group('SubscriptionFetcher client identity', () {
     Future<Map<String, String>> sentHeaders(FakeDeviceInfoApi api) async {
       late Map<String, String> sent;
