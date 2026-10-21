@@ -20,5 +20,6 @@ import UIKit
         let conn = VpnConnectionImpl(binaryMessenger: messenger)
         vpnConnection = conn
         VpnConnectionSetup.setUp(binaryMessenger: messenger, api: conn)
+        DeviceInfoApiSetup.setUp(binaryMessenger: messenger, api: DeviceInfoApiImpl())
     }
 }

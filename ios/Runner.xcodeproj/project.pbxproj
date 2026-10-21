@@ -12,6 +12,8 @@
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		394961BB3010EFDD00CC5567 /* VpnConnectionImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 394961BA3010EFDD00CC5567 /* VpnConnectionImpl.swift */; };
 		394961BD3010F06E00CC5567 /* VpnApi.g.swift in Sources */ = {isa = PBXBuildFile; fileRef = 394961BC3010F06E00CC5567 /* VpnApi.g.swift */; };
+		3949620C3010F1A000CC5567 /* DeviceInfoApiImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3949620A3010F1A000CC5567 /* DeviceInfoApiImpl.swift */; };
+		3949620D3010F1A000CC5567 /* DeviceInfoApi.g.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3949620B3010F1A000CC5567 /* DeviceInfoApi.g.swift */; };
 		39B70EDF3010A21A005BFD4E /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 39B70EDE3010A219005BFD4E /* NetworkExtension.framework */; };
 		39B70EE73010A21A005BFD4E /* PacketTunnel.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 39B70EDD3010A219005BFD4E /* PacketTunnel.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		3AE95C81BCC023E11CB79A11 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CD34F797088A71CA806C48E /* Pods_RunnerTests.framework */; };
@@ -74,6 +76,8 @@
 		331C8081294A63A400263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		394961BA3010EFDD00CC5567 /* VpnConnectionImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VpnConnectionImpl.swift; sourceTree = "<group>"; };
 		394961BC3010F06E00CC5567 /* VpnApi.g.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VpnApi.g.swift; sourceTree = "<group>"; };
+		3949620A3010F1A000CC5567 /* DeviceInfoApiImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceInfoApiImpl.swift; sourceTree = "<group>"; };
+		3949620B3010F1A000CC5567 /* DeviceInfoApi.g.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceInfoApi.g.swift; sourceTree = "<group>"; };
 		39B70EDD3010A219005BFD4E /* PacketTunnel.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PacketTunnel.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		39B70EDE3010A219005BFD4E /* NetworkExtension.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = NetworkExtension.framework; path = System/Library/Frameworks/NetworkExtension.framework; sourceTree = SDKROOT; };
 		39B70EEE3010A36F005BFD4E /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
@@ -215,6 +219,8 @@
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 				394961BA3010EFDD00CC5567 /* VpnConnectionImpl.swift */,
 				394961BC3010F06E00CC5567 /* VpnApi.g.swift */,
+				3949620A3010F1A000CC5567 /* DeviceInfoApiImpl.swift */,
+				3949620B3010F1A000CC5567 /* DeviceInfoApi.g.swift */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -474,6 +480,8 @@
 				394961BB3010EFDD00CC5567 /* VpnConnectionImpl.swift in Sources */,
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				394961BD3010F06E00CC5567 /* VpnApi.g.swift in Sources */,
+				3949620C3010F1A000CC5567 /* DeviceInfoApiImpl.swift in Sources */,
+				3949620D3010F1A000CC5567 /* DeviceInfoApi.g.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 				7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */,
 			);
