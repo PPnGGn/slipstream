@@ -32,6 +32,24 @@ clean-updater-api:
 	rm -f android/app/src/main/kotlin/com/slipstream/updater/UpdaterApi.g.kt
 
 
+# Pigeon device info bridge. Own Kotlin package for the same FlutterError reason
+# as above; the Swift output skips PigeonError (declared in VpnApi.g.swift).
+generate-device-info-api:
+	dart run pigeon \
+	--input pigeons/device_info_api.dart \
+	--copyright_header pigeons/copyright_header.txt \
+	--dart_out lib/features/client_identity/data/device_info_api.g.dart \
+	--kotlin_out android/app/src/main/kotlin/com/slipstream/device/DeviceInfoApi.g.kt \
+	--kotlin_package "com.slipstream.device" \
+	--swift_out ios/Runner/DeviceInfoApi.g.swift
+
+# Remove generated Pigeon outputs
+clean-device-info-api:
+	rm -f lib/features/client_identity/data/device_info_api.g.dart
+	rm -f android/app/src/main/kotlin/com/slipstream/device/DeviceInfoApi.g.kt
+	rm -f ios/Runner/DeviceInfoApi.g.swift
+
+
 build-core-android:
 	$(MAKE) -C ../slipstream-core bind-android
 

@@ -23,6 +23,7 @@ import '../../core/theme/cubit/theme_cubit.dart' as _i11;
 import '../../core/theme/data/theme_store.dart' as _i802;
 import '../../features/client_identity/data/client_identity_store.dart'
     as _i407;
+import '../../features/client_identity/data/device_info_api.g.dart' as _i1033;
 import '../../features/diagnostics/cubit/memory_monitor_cubit.dart' as _i628;
 import '../../features/diagnostics/cubit/memory_usage_cubit.dart' as _i190;
 import '../../features/diagnostics/data/memory_monitor_store.dart' as _i193;
@@ -64,6 +65,7 @@ import '../../features/vpn/data/vpn_event_receiver.dart' as _i924;
 import '../../features/vpn/data/vpn_repository.dart' as _i1056;
 import '../../features/vpn/data/vpn_session_store.dart' as _i871;
 import '../../features/vpn/data/xray_log_store.dart' as _i490;
+import 'device_module.dart' as _i782;
 import 'logger_module.dart' as _i987;
 import 'prefs_module.dart' as _i891;
 import 'storage_module.dart' as _i371;
@@ -78,6 +80,7 @@ extension GetItInjectableX on _i174.GetIt {
   }) async {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     final prefsModule = _$PrefsModule();
+    final deviceModule = _$DeviceModule();
     final loggerModule = _$LoggerModule();
     final updaterModule = _$UpdaterModule();
     final vpnModule = _$VpnModule();
@@ -86,6 +89,7 @@ extension GetItInjectableX on _i174.GetIt {
       () => prefsModule.prefs,
       preResolve: true,
     );
+    gh.lazySingleton<_i1033.DeviceInfoApi>(() => deviceModule.deviceInfoApi);
     gh.lazySingleton<_i207.Talker>(() => loggerModule.talker);
     gh.lazySingleton<_i942.UpdateInstaller>(
       () => updaterModule.updateInstaller,
@@ -279,6 +283,8 @@ extension GetItInjectableX on _i174.GetIt {
 }
 
 class _$PrefsModule extends _i891.PrefsModule {}
+
+class _$DeviceModule extends _i782.DeviceModule {}
 
 class _$LoggerModule extends _i987.LoggerModule {}
 
