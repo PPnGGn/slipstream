@@ -13,6 +13,8 @@ concurrency:
 
 env:
   FLUTTER_VERSION: "3.44.8"
+  # Must match flutter.ndkVersion of FLUTTER_VERSION (android/app/build.gradle.kts).
+  ANDROID_NDK_VERSION: "28.2.13676358"
 
 jobs:
   version-check:
@@ -174,6 +176,20 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+
+      - name: Install Android NDK (with retries)
+        run: |
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          for attempt in 1 2 3; do
+            if "$SDKMANAGER" "ndk;$ANDROID_NDK_VERSION"; then
+              exit 0
+            fi
+            echo "::warning::NDK install failed (attempt $attempt/3), retrying"
+            rm -rf "$ANDROID_HOME/.temp" "$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION"
+            sleep 10
+          done
+          echo "::error::Could not install NDK $ANDROID_NDK_VERSION"
+          exit 1
 
       - uses: subosito/flutter-action@v2
         with:
