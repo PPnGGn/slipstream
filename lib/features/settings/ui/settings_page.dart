@@ -243,9 +243,16 @@ class _SettingsPageState extends State<SettingsPage> {
                               showChevron: true,
                               enabled: false,
                             ),
+                            _VersionRow(colors: colors),
+                            // The in-app updater installs APKs: Android only.
                             if (Platform.isAndroid)
-                              _VersionRow(
-                                colors: colors,
+                              SettingsRow(
+                                iconPath: AppAssets.refresh,
+                                hue: TileHue.green,
+                                title: 'Check for updates',
+                                subtitle:
+                                    'Download and install the latest release',
+                                showChevron: true,
                                 onTap: _checkForUpdates,
                               ),
                           ],
@@ -351,13 +358,12 @@ class _AiBadge extends StatelessWidget {
   }
 }
 
-/// App version on the right, Xray version under the title; tap checks for
-/// updates. Android only: the versions come from Android platform APIs.
+/// Xray core version under the title, app version on the right. The app
+/// version comes from the Android updater API, so iOS shows only Xray.
 class _VersionRow extends StatefulWidget {
-  const _VersionRow({required this.colors, required this.onTap});
+  const _VersionRow({required this.colors});
 
   final AppColors colors;
-  final VoidCallback onTap;
 
   @override
   State<_VersionRow> createState() => _VersionRowState();
@@ -365,35 +371,40 @@ class _VersionRow extends StatefulWidget {
 
 class _VersionRowState extends State<_VersionRow> {
   // Loaded once, not on every rebuild of the settings page.
-  late final Future<(AppVersionMessage, String)> _versions = () async {
-    final app = await getIt<UpdateInstaller>().getAppVersion();
+  late final Future<(String?, String)> _versions = () async {
+    final app = Platform.isAndroid
+        ? await getIt<UpdateInstaller>().getAppVersion()
+        : null;
     final xray = await getIt<VpnConnection>().xrayCoreVersion();
-    return (app, xray);
+    return (app == null ? null : '${app.version} (${app.buildNumber})', xray);
   }();
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<(AppVersionMessage, String)>(
+    return FutureBuilder<(String?, String)>(
       future: _versions,
       builder: (context, snapshot) {
-        final versions = snapshot.data;
+        final (appVersion, xrayVersion) = snapshot.data ?? (null, null);
         return SettingsRow(
           iconPath: AppAssets.version,
           hue: TileHue.version,
           title: 'Version',
-          subtitle: versions == null ? '…' : 'Xray ${versions.$2}',
-          trailing: Text(
-            versions == null
-                ? ''
-                : '${versions.$1.version} (${versions.$1.buildNumber})',
-            style: TextStyle(
-              fontFamily: 'monospace',
-              fontSize: 12,
-              fontWeight: .w600,
-              color: widget.colors.accentIcon,
-            ),
-          ),
-          onTap: widget.onTap,
+          subtitle: snapshot.hasError
+              ? 'Unavailable'
+              : xrayVersion == null
+              ? '…'
+              : 'Xray $xrayVersion',
+          trailing: appVersion == null
+              ? null
+              : Text(
+                  appVersion,
+                  style: TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 12,
+                    fontWeight: .w600,
+                    color: widget.colors.accentIcon,
+                  ),
+                ),
         );
       },
     );

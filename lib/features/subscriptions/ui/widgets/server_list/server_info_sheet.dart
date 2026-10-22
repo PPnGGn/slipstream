@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:slipstream/app/app_assets.dart';
 import 'package:slipstream/app/di/injector.dart';
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
 import 'package:slipstream/core/ui/clipboard.dart';
-import 'package:slipstream/core/ui/widgets/accent_button.dart';
 import 'package:slipstream/core/ui/widgets/close_circle_button.dart';
 import 'package:slipstream/core/ui/widgets/sheet_parts.dart';
 import 'package:slipstream/core/utils/formatters.dart';
@@ -103,16 +103,29 @@ class _ServerInfoSheet extends StatelessWidget {
                   ),
                 ],
                 Padding(
-                  padding: const .fromLTRB(2, 14, 2, 6),
-                  child: Text(
-                    'XRAY CONFIG',
-                    style: TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 9.5,
-                      fontWeight: .w700,
-                      letterSpacing: 1.3,
-                      color: colors.textMuted,
-                    ),
+                  padding: const .fromLTRB(2, 10, 0, 6),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'XRAY CONFIG',
+                          style: TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 9.5,
+                            fontWeight: .w700,
+                            letterSpacing: 1.3,
+                            color: colors.textMuted,
+                          ),
+                        ),
+                      ),
+                      _CopyButton(
+                        colors: colors,
+                        onTap: () {
+                          copyToClipboard(context, pretty, 'Config copied');
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
                   ),
                 ),
                 Flexible(
@@ -136,30 +149,6 @@ class _ServerInfoSheet extends StatelessWidget {
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 14),
-                Row(
-                  spacing: 10,
-                  children: [
-                    Expanded(
-                      child: AccentButton(
-                        label: 'Copy config',
-                        iconPath: AppAssets.copy,
-                        height: 46,
-                        radius: 14,
-                        fontSize: 13.5,
-                        onPressed: () {
-                          copyToClipboard(context, pretty, 'Config copied');
-                          Navigator.of(context).pop();
-                        },
-                      ),
-                    ),
-                    _OutlineButton(
-                      colors: colors,
-                      label: 'Close',
-                      onTap: () => Navigator.of(context).pop(),
-                    ),
-                  ],
                 ),
               ],
             ),
@@ -197,39 +186,31 @@ class _Fact extends StatelessWidget {
   }
 }
 
-class _OutlineButton extends StatelessWidget {
-  const _OutlineButton({
-    required this.colors,
-    required this.label,
-    required this.onTap,
-  });
+/// Copies the config (and closes the sheet so the "Config copied" toast is
+/// visible). Sits on the "XRAY CONFIG" label row, right above the config.
+class _CopyButton extends StatelessWidget {
+  const _CopyButton({required this.colors, required this.onTap});
 
   final AppColors colors;
-  final String label;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: .opaque,
-      child: Container(
-        height: 46,
-        padding: const .symmetric(horizontal: 20),
-        alignment: .center,
-        decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: .circular(14),
-          border: .all(color: colors.border),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13.5,
-            fontWeight: .w600,
-            color: colors.textPrimary,
-          ),
-        ),
+    return IconButton(
+      onPressed: onTap,
+      tooltip: 'Copy config',
+      style: IconButton.styleFrom(
+        backgroundColor: colors.chip,
+        fixedSize: const Size.square(32),
+        minimumSize: const Size.square(32),
+        padding: .zero,
+        shape: RoundedRectangleBorder(borderRadius: .circular(10)),
+      ),
+      icon: SvgPicture.asset(
+        AppAssets.copy,
+        width: 14,
+        height: 14,
+        colorFilter: .mode(colors.textSecondary, .srcIn),
       ),
     );
   }
