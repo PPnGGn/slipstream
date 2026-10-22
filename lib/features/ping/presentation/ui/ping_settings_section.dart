@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:slipstream/app/app_assets.dart';
 import 'package:slipstream/app/di/injector.dart';
+import 'package:slipstream/core/theme/app_colors.dart';
+import 'package:slipstream/core/ui/widgets/segmented_pill.dart';
 import 'package:slipstream/features/ping/data/ping_settings_store.dart';
 import 'package:slipstream/features/ping/presentation/ping_cubit.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_card.dart';
+import 'package:slipstream/features/settings/ui/widgets/settings_row.dart';
 
 /// Ping feature settings (spec's last checklist item): display mode,
 /// the app-start trigger toggle and the sort-by-latency toggle.
@@ -21,39 +25,39 @@ class _PingSettingsSectionState extends State<PingSettingsSection> {
   Widget build(BuildContext context) {
     return BlocBuilder<PingCubit, PingViewState>(
       bloc: getIt<PingCubit>(),
-      builder: (context, view) => SettingsCard(
+      builder: (context, view) => SettingsGroup(
         children: [
-          SwitchListTile(
-            title: const Text('Ping on launch'),
-            subtitle: const Text('Measure all servers when the app starts'),
-            value: _pingOnAppStart,
-            onChanged: (enabled) {
+          SettingsRow(
+            iconPath: AppAssets.bolt,
+            hue: TileHue.speed,
+            title: 'Ping on launch',
+            subtitle: 'Measure all servers when the app starts',
+            switchValue: _pingOnAppStart,
+            onSwitch: (enabled) {
               setState(() => _pingOnAppStart = enabled);
               getIt<PingSettingsStore>().savePingOnAppStart(enabled);
             },
           ),
-          SwitchListTile(
-            title: const Text('Sort servers by latency'),
-            subtitle: const Text('Reorders the list after measuring finishes'),
-            value: view.sortByPing,
-            onChanged: getIt<PingCubit>().setSortByPing,
+          SettingsRow(
+            iconPath: AppAssets.arrowDown,
+            hue: TileHue.violet,
+            title: 'Sort servers by latency',
+            subtitle: 'Reorders the list after measuring finishes',
+            switchValue: view.sortByPing,
+            onSwitch: getIt<PingCubit>().setSortByPing,
           ),
-          ListTile(
-            title: const Text('Latency display'),
-            subtitle: const Text('Colored dot or value in the server list'),
-            trailing: SegmentedButton<PingDisplayMode>(
-              showSelectedIcon: false,
-              style: const ButtonStyle(visualDensity: VisualDensity.compact),
-              segments: const [
-                ButtonSegment(
-                  value: PingDisplayMode.numbers,
-                  label: Text('Numbers'),
-                ),
-                ButtonSegment(value: PingDisplayMode.dots, label: Text('Dots')),
+          SettingsRow(
+            iconPath: AppAssets.ping,
+            hue: TileHue.teal,
+            title: 'Latency display',
+            subtitle: 'Colored dot or value in the server list',
+            footer: SegmentedPill<PingDisplayMode>(
+              options: const [
+                (PingDisplayMode.numbers, 'Numbers'),
+                (PingDisplayMode.dots, 'Dots'),
               ],
-              selected: {view.displayMode},
-              onSelectionChanged: (selection) =>
-                  getIt<PingCubit>().setDisplayMode(selection.first),
+              selected: view.displayMode,
+              onChanged: getIt<PingCubit>().setDisplayMode,
             ),
           ),
         ],

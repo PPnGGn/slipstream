@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
+import 'package:slipstream/features/appearance/ui/appearance_page.dart';
 import 'package:slipstream/features/qr/ui/qr_scan_page.dart';
 import 'package:slipstream/features/settings/ui/ping_settings_page.dart';
 import 'package:slipstream/features/settings/ui/routing_settings_page.dart';
@@ -32,6 +33,10 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: 'ping',
           builder: (context, state) => const PingSettingsPage(),
+        ),
+        GoRoute(
+          path: 'appearance',
+          builder: (context, state) => const AppearancePage(),
         ),
       ],
     ),

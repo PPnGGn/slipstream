@@ -52,37 +52,39 @@ class CompactConnectionBar extends StatelessWidget {
                   top: false,
                   child: Padding(
                     padding: const .fromLTRB(16, 8, 16, 20),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      padding: const .symmetric(horizontal: 14, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: colors.surface,
-                        borderRadius: .circular(20),
-                        border: .all(color: borderColor),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Color(0x1F141420),
-                            blurRadius: 24,
-                            offset: Offset(0, -6),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        spacing: 14,
-                        children: [
-                          _ConnectSwitch(
-                            colors: colors,
-                            phase: view.phase,
-                            onTap: () => cubit.toggle(selectedServer),
-                          ),
-                          Expanded(
-                            child: _Details(
-                              colors: colors,
-                              state: state,
-                              view: view,
+                    // The whole bar toggles the tunnel, like the classic
+                    // card; the switch only shows the state.
+                    child: GestureDetector(
+                      onTap: () => cubit.toggle(selectedServer),
+                      behavior: .opaque,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        padding: const .symmetric(horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: colors.surface,
+                          borderRadius: .circular(20),
+                          border: .all(color: borderColor),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0x1F141420),
+                              blurRadius: 24,
+                              offset: Offset(0, -6),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
+                        child: Row(
+                          spacing: 14,
+                          children: [
+                            _ConnectSwitch(colors: colors, phase: view.phase),
+                            Expanded(
+                              child: _Details(
+                                colors: colors,
+                                state: state,
+                                view: view,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -97,17 +99,12 @@ class CompactConnectionBar extends StatelessWidget {
 }
 
 /// 76×40 track; the knob with the power icon slides right while the
-/// tunnel is up or changing.
+/// tunnel is up or changing. Display only: taps go to the whole bar.
 class _ConnectSwitch extends StatelessWidget {
-  const _ConnectSwitch({
-    required this.colors,
-    required this.phase,
-    required this.onTap,
-  });
+  const _ConnectSwitch({required this.colors, required this.phase});
 
   final AppColors colors;
   final ConnectionPhase phase;
-  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -116,55 +113,51 @@ class _ConnectSwitch extends StatelessWidget {
     const duration = Duration(milliseconds: 300);
     const curve = Cubic(0.2, 0.9, 0.3, 1);
 
-    return GestureDetector(
-      onTap: onTap,
-      behavior: .opaque,
-      child: AnimatedContainer(
+    return AnimatedContainer(
+      duration: duration,
+      width: 76,
+      height: 40,
+      padding: const .all(4),
+      decoration: BoxDecoration(
+        color: on
+            ? colors.connectedFill
+            : busy
+            ? colors.warn.withValues(alpha: 0.24)
+            : colors.chip,
+        borderRadius: .circular(100),
+        border: .all(color: colors.border),
+      ),
+      child: AnimatedAlign(
         duration: duration,
-        width: 76,
-        height: 40,
-        padding: const .all(4),
-        decoration: BoxDecoration(
-          color: on
-              ? colors.connectedFill
-              : busy
-              ? colors.warn.withValues(alpha: 0.24)
-              : colors.chip,
-          borderRadius: .circular(100),
-          border: .all(color: colors.border),
-        ),
-        child: AnimatedAlign(
+        curve: curve,
+        alignment: on || busy ? .centerRight : .centerLeft,
+        child: AnimatedContainer(
           duration: duration,
-          curve: curve,
-          alignment: on || busy ? .centerRight : .centerLeft,
-          child: AnimatedContainer(
-            duration: duration,
-            width: 32,
-            height: 32,
-            alignment: .center,
-            decoration: BoxDecoration(
-              shape: .circle,
-              color: on
-                  ? colors.ok
-                  : busy
-                  ? colors.warn
-                  : colors.segment,
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x4D141420),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: SvgPicture.asset(
-              AppAssets.power,
-              width: 16,
-              height: 16,
-              colorFilter: .mode(
-                on || busy ? const Color(0xFF22222E) : colors.textSecondary,
-                .srcIn,
+          width: 32,
+          height: 32,
+          alignment: .center,
+          decoration: BoxDecoration(
+            shape: .circle,
+            color: on
+                ? colors.ok
+                : busy
+                ? colors.warn
+                : colors.segment,
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x4D141420),
+                blurRadius: 8,
+                offset: Offset(0, 2),
               ),
+            ],
+          ),
+          child: SvgPicture.asset(
+            AppAssets.power,
+            width: 16,
+            height: 16,
+            colorFilter: .mode(
+              on || busy ? const Color(0xFF22222E) : colors.textSecondary,
+              .srcIn,
             ),
           ),
         ),

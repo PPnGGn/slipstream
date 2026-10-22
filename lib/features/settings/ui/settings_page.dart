@@ -2,11 +2,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:slipstream/app/app_assets.dart';
 import 'package:slipstream/app/di/injector.dart';
 import 'package:slipstream/core/service/update_service/update_service_cubit.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
-import 'package:slipstream/core/theme/app_theme.dart';
 import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
+import 'package:slipstream/core/ui/widgets/page_header.dart';
+import 'package:slipstream/features/appearance/cubit/home_layout_cubit.dart';
+import 'package:slipstream/features/appearance/data/home_layout.dart';
+import 'package:slipstream/features/appearance/ui/appearance_labels.dart';
 import 'package:slipstream/features/diagnostics/cubit/memory_monitor_cubit.dart';
 import 'package:slipstream/features/diagnostics/data/memory_monitor_mode.dart';
 import 'package:slipstream/features/geo/cubit/geo_cubit.dart';
@@ -17,6 +21,7 @@ import 'package:slipstream/features/routing/cubit/ru_bypass_cubit.dart';
 import 'package:slipstream/features/routing/data/ad_block_mode.dart';
 import 'package:slipstream/features/routing/data/ru_bypass_mode.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_card.dart';
+import 'package:slipstream/features/settings/ui/widgets/settings_row.dart';
 import 'package:slipstream/features/update/data/updater_api.g.dart';
 import 'package:slipstream/features/update/ui/widgets/update_dialog.dart';
 import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
@@ -72,198 +77,222 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final themeCubit = getIt<AppThemeCubit>();
-
     return BlocBuilder<AppThemeCubit, AppThemeState>(
-      bloc: themeCubit,
-      builder: (context, themeState) {
-        final colors = getIt<AppColors>();
-        final textTheme = Theme.of(context).textTheme;
+      bloc: getIt<AppThemeCubit>(),
+      builder: (context, themeState) => BlocBuilder<HomeLayoutCubit, HomeLayout>(
+        bloc: getIt<HomeLayoutCubit>(),
+        builder: (context, layout) {
+          final colors = AppColors.of(context);
 
-        return Scaffold(
-          appBar: AppBar(title: const Text('Settings')),
-          body: ListView(
-            padding: const EdgeInsets.fromLTRB(
-              AppDims.horizontalPadding,
-              AppDims.gapS,
-              AppDims.horizontalPadding,
-              AppDims.gapXxl,
-            ),
-            children: [
-              const SectionHeader('Appearance'),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: _ThemeModeSwitch(
-                    mode: themeState.mode,
-                    colors: colors,
-                    onChanged: themeCubit.setMode,
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppDims.gapXxl),
-              const SectionHeader('Connection'),
-              const SizedBox(height: AppDims.gapS),
-              SettingsCard(
+          return Scaffold(
+            body: SafeArea(
+              child: Column(
                 children: [
-                  const SwitchListTile(
-                    title: Text('Auto-connect on launch'),
-                    subtitle: Text('Restore last session at startup'),
-                    value: true,
-                    onChanged: null,
-                  ),
-                  BlocBuilder<RuBypassCubit, RuBypassMode>(
-                    bloc: getIt<RuBypassCubit>(),
-                    builder: (context, ruBypass) =>
-                        BlocBuilder<AdBlockCubit, AdBlockMode>(
-                          bloc: getIt<AdBlockCubit>(),
-                          builder: (context, adBlock) =>
-                              BlocBuilder<GeoCubit, GeoState>(
-                                bloc: getIt<GeoCubit>(),
-                                builder: (context, geo) => _NavRow(
-                                  title: 'Routing',
-                                  subtitle: _routingSubtitle(
-                                    ruBypass,
-                                    adBlock,
-                                    geo,
-                                  ),
-                                  onTap: () =>
-                                      context.push('/settings/routing'),
+                  const PageHeader(),
+                  Expanded(
+                    child: ListView(
+                      padding: const .fromLTRB(16, 0, 16, 32),
+                      children: [
+                        Padding(
+                          padding: const .fromLTRB(4, 2, 4, 16),
+                          child: Text(
+                            'Settings',
+                            style: TextStyle(
+                              fontSize: 30,
+                              fontWeight: .w700,
+                              letterSpacing: -0.6,
+                              color: colors.textPrimary,
+                            ),
+                          ),
+                        ),
+                        SettingsGroup(
+                          children: [
+                            SettingsRow(
+                              iconPath: AppAssets.palette,
+                              hue: TileHue.appearance,
+                              title: 'Appearance',
+                              subtitle: '${layout.label} layout · English',
+                              value: themeState.mode.label,
+                              showChevron: true,
+                              onTap: () => context.push('/settings/appearance'),
+                            ),
+                          ],
+                        ),
+                        const SectionHeader('Connection'),
+                        SettingsGroup(
+                          children: [
+                            const SettingsRow(
+                              iconPath: AppAssets.bolt,
+                              hue: TileHue.auto,
+                              title: 'Auto-connect on launch',
+                              subtitle: 'Restore last session at startup',
+                              switchValue: false,
+                              enabled: false,
+                            ),
+                            const _RoutingRow(),
+                            BlocBuilder<PingCubit, PingViewState>(
+                              bloc: getIt<PingCubit>(),
+                              builder: (context, ping) => SettingsRow(
+                                iconPath: AppAssets.ping,
+                                hue: TileHue.speed,
+                                title: 'Ping',
+                                subtitle: _pingSubtitle(
+                                  getIt<PingSettingsStore>()
+                                      .loadPingOnAppStart(),
+                                  ping,
                                 ),
+                                showChevron: true,
+                                onTap: () => context.push('/settings/ping'),
                               ),
+                            ),
+                            const SettingsRow(
+                              iconPath: AppAssets.split,
+                              hue: TileHue.split,
+                              title: 'Split tunneling',
+                              subtitle: 'Choose which apps use the tunnel',
+                              showChevron: true,
+                              enabled: false,
+                            ),
+                            const SettingsRow(
+                              iconPath: AppAssets.shield,
+                              hue: TileHue.security,
+                              title: 'Security & tunnel',
+                              subtitle:
+                                  'Kill switch, Always-On VPN, LAN access',
+                              showChevron: true,
+                              enabled: false,
+                            ),
+                            const SettingsRow(
+                              iconPath: AppAssets.globe,
+                              hue: TileHue.dns,
+                              title: 'DNS',
+                              subtitle: 'Queries resolved through the tunnel',
+                              showChevron: true,
+                              enabled: false,
+                            ),
+                          ],
                         ),
-                  ),
-                  BlocBuilder<PingCubit, PingViewState>(
-                    bloc: getIt<PingCubit>(),
-                    builder: (context, ping) => _NavRow(
-                      title: 'Ping',
-                      subtitle: _pingSubtitle(
-                        getIt<PingSettingsStore>().loadPingOnAppStart(),
-                        ping,
-                      ),
-                      onTap: () => context.push('/settings/ping'),
-                    ),
-                  ),
-                  const ListTile(
-                    enabled: false,
-                    title: Text('Split tunneling'),
-                    subtitle: Text('Choose which apps use the tunnel'),
-                    trailing: Icon(Icons.chevron_right),
-                  ),
-                  const ListTile(
-                    enabled: false,
-                    title: Text('Security & tunnel'),
-                    subtitle: Text('Kill switch, Always-On VPN, LAN access'),
-                    trailing: Icon(Icons.chevron_right),
-                  ),
-                  const ListTile(
-                    enabled: false,
-                    title: Text('Speed test'),
-                    subtitle: Text('URL-test all servers, pick the fastest'),
-                    trailing: Icon(Icons.chevron_right),
-                  ),
-                  ListTile(
-                    enabled: false,
-                    title: const Text('DNS'),
-                    subtitle: const Text('Queries resolved through the tunnel'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'DoH · CF',
-                          style: textTheme.labelMedium?.copyWith(
-                            color: colors.textMuted,
-                          ),
+                        const SectionHeader('General'),
+                        const SettingsGroup(
+                          children: [
+                            SettingsRow(
+                              iconPath: AppAssets.backup,
+                              hue: TileHue.backup,
+                              title: 'Backup & restore',
+                              subtitle: 'Encrypted file, QR or deep link',
+                              showChevron: true,
+                              enabled: false,
+                            ),
+                            SettingsRow(
+                              iconPath: AppAssets.bell,
+                              hue: TileHue.notif,
+                              title: 'Notifications',
+                              subtitle:
+                                  'Connection drops & subscription updates',
+                              switchValue: false,
+                              enabled: false,
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: AppDims.gapXs),
-                        const Icon(Icons.chevron_right),
+                        const SectionHeader('Diagnostics'),
+                        SettingsGroup(
+                          children: [
+                            BlocBuilder<MemoryMonitorCubit, MemoryMonitorMode>(
+                              bloc: getIt<MemoryMonitorCubit>(),
+                              builder: (context, mode) => SettingsRow(
+                                iconPath: AppAssets.memory,
+                                hue: TileHue.amber,
+                                title: 'Memory monitor',
+                                subtitle: Platform.isIOS
+                                    ? 'Tunnel footprint on the home screen · '
+                                          '50 MB limit'
+                                    : 'Xray-core memory on the home screen',
+                                switchValue: mode.enabled,
+                                onSwitch: (enabled) =>
+                                    getIt<MemoryMonitorCubit>().setEnabled(
+                                      enabled: enabled,
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SectionHeader('Help'),
+                        SettingsGroup(
+                          children: [
+                            SettingsRow(
+                              iconPath: AppAssets.sparkle,
+                              hue: TileHue.assistant,
+                              title: 'Assistant',
+                              subtitle: 'Ask anything about VPN & the app',
+                              trailing: _AiBadge(colors: colors),
+                              showChevron: true,
+                              enabled: false,
+                            ),
+                          ],
+                        ),
+                        const SectionHeader('About'),
+                        SettingsGroup(
+                          children: [
+                            // Turned on in 1.2.6 together with release logs
+                            // (releases.md); the /logs page already exists.
+                            const SettingsRow(
+                              iconPath: AppAssets.logs,
+                              hue: TileHue.logs,
+                              title: 'Xray core logs',
+                              subtitle: 'Live tunnel output',
+                              showChevron: true,
+                              enabled: false,
+                            ),
+                            if (Platform.isAndroid)
+                              _VersionRow(
+                                colors: colors,
+                                onTap: _checkForUpdates,
+                              ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: AppDims.gapXxl),
-              const SectionHeader('General'),
-              const SizedBox(height: AppDims.gapS),
-              SettingsCard(
-                children: [
-                  ListTile(
-                    enabled: false,
-                    title: const Text('Language'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'English',
-                          style: textTheme.labelMedium?.copyWith(
-                            color: colors.textMuted,
-                          ),
-                        ),
-                        const SizedBox(width: AppDims.gapXs),
-                        const Icon(Icons.chevron_right),
-                      ],
-                    ),
-                  ),
-                  const ListTile(
-                    enabled: false,
-                    title: Text('Backup & restore'),
-                    subtitle: Text('Encrypted file, QR or deep link'),
-                    trailing: Icon(Icons.chevron_right),
-                  ),
-                  const SwitchListTile(
-                    title: Text('Notifications'),
-                    subtitle: Text('Connection drops & subscription updates'),
-                    value: true,
-                    onChanged: null,
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppDims.gapXxl),
-              const SectionHeader('Diagnostics'),
-              const SizedBox(height: AppDims.gapS),
-              SettingsCard(
-                children: [
-                  BlocBuilder<MemoryMonitorCubit, MemoryMonitorMode>(
-                    bloc: getIt<MemoryMonitorCubit>(),
-                    builder: (context, mode) => SwitchListTile(
-                      title: const Text('Memory monitor'),
-                      subtitle: Text(
-                        Platform.isIOS
-                            ? 'Tunnel footprint on the home screen · 50 MB limit'
-                            : 'Xray-core memory on the home screen',
-                      ),
-                      value: mode.enabled,
-                      onChanged: (enabled) => getIt<MemoryMonitorCubit>()
-                          .setEnabled(enabled: enabled),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppDims.gapXxl),
-              const SectionHeader('About'),
-              const SizedBox(height: AppDims.gapS),
-              SettingsCard(
-                children: [
-                  const ListTile(
-                    enabled: false,
-                    title: Text('Xray core logs'),
-                    trailing: Icon(Icons.chevron_right),
-                  ),
-                  if (Platform.isAndroid)
-                    ListTile(
-                      title: const Text('Version'),
-                      trailing: _AppVersionText(
-                        colors: colors,
-                        textTheme: textTheme,
-                      ),
-                      onTap: _checkForUpdates,
-                    ),
-                ],
-              ),
-            ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  static String _pingSubtitle(bool pingOnAppStart, PingViewState ping) {
+    final parts = [
+      pingOnAppStart ? 'on launch' : 'manual only',
+      ping.sortByPing ? 'sorted' : 'unsorted',
+      ping.displayMode == PingDisplayMode.dots ? 'dots' : 'numbers',
+    ];
+    return parts.join(' · ');
+  }
+}
+
+class _RoutingRow extends StatelessWidget {
+  const _RoutingRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<RuBypassCubit, RuBypassMode>(
+      bloc: getIt<RuBypassCubit>(),
+      builder: (context, ruBypass) => BlocBuilder<AdBlockCubit, AdBlockMode>(
+        bloc: getIt<AdBlockCubit>(),
+        builder: (context, adBlock) => BlocBuilder<GeoCubit, GeoState>(
+          bloc: getIt<GeoCubit>(),
+          builder: (context, geo) => SettingsRow(
+            iconPath: AppAssets.routing,
+            hue: TileHue.routing,
+            title: 'Routing',
+            subtitle: _routingSubtitle(ruBypass, adBlock, geo),
+            showChevron: true,
+            onTap: () => context.push('/settings/routing'),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -284,15 +313,6 @@ class _SettingsPageState extends State<SettingsPage> {
     return parts.join(' · ');
   }
 
-  static String _pingSubtitle(bool pingOnAppStart, PingViewState ping) {
-    final parts = [
-      pingOnAppStart ? 'on launch' : 'manual only',
-      ping.sortByPing ? 'sorted' : 'unsorted',
-      ping.displayMode == PingDisplayMode.dots ? 'dots' : 'numbers',
-    ];
-    return parts.join(' · ');
-  }
-
   static String _geoSubtitle(GeoState state) => switch (state) {
     GeoAbsent() => 'гео-базы не загружены',
     GeoChecking() => 'проверка гео-баз…',
@@ -304,128 +324,76 @@ class _SettingsPageState extends State<SettingsPage> {
   };
 }
 
-class _ThemeModeSwitch extends StatelessWidget {
-  const _ThemeModeSwitch({
-    required this.mode,
-    required this.colors,
-    required this.onChanged,
-  });
+class _AiBadge extends StatelessWidget {
+  const _AiBadge({required this.colors});
 
-  final AppThemeMode mode;
   final AppColors colors;
-  final ValueChanged<AppThemeMode> onChanged;
-
-  static const _options = [
-    (AppThemeMode.light, 'Light'),
-    (AppThemeMode.dark, 'Dark'),
-    (AppThemeMode.phosphor, 'Phosphor'),
-  ];
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = colors.segment;
-
     return Container(
-      padding: const EdgeInsets.all(4),
+      padding: const .symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: colors.chip,
-        borderRadius: BorderRadius.circular(12),
+        color: colors.primarySoft,
+        borderRadius: .circular(6),
       ),
-      child: Row(
-        spacing: 6,
-        children: [
-          for (final (value, label) in _options)
-            Expanded(
-              child: InkWell(
-                borderRadius: BorderRadius.circular(9),
-                onTap: () => onChanged(value),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  height: 34,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: mode == value ? activeColor : Colors.transparent,
-                    borderRadius: BorderRadius.circular(9),
-                    boxShadow: mode == value
-                        ? [
-                            BoxShadow(
-                              color: const Color.fromRGBO(20, 20, 32, 0.2),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ]
-                        : null,
-                  ),
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12.5,
-                      color: mode == value
-                          ? colors.textPrimary
-                          : colors.textSecondary,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
+      child: Text(
+        'AI',
+        style: TextStyle(
+          fontFamily: 'monospace',
+          fontSize: 8.5,
+          fontWeight: .w700,
+          letterSpacing: 0.7,
+          color: colors.accentIcon,
+        ),
       ),
     );
   }
 }
 
-class _NavRow extends StatelessWidget {
-  const _NavRow({
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
+/// App version on the right, Xray version under the title; tap checks for
+/// updates. Android only: the versions come from Android platform APIs.
+class _VersionRow extends StatefulWidget {
+  const _VersionRow({required this.colors, required this.onTap});
 
-  final String title;
-  final String subtitle;
+  final AppColors colors;
   final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context) {
-    final colors = getIt<AppColors>();
-    final textTheme = Theme.of(context).textTheme;
-
-    return ListTile(
-      title: Text(title),
-      subtitle: Text(
-        subtitle,
-        style: textTheme.labelMedium?.copyWith(color: colors.textSecondary),
-      ),
-      trailing: Icon(Icons.chevron_right, color: colors.textMuted),
-      onTap: onTap,
-    );
-  }
+  State<_VersionRow> createState() => _VersionRowState();
 }
 
-class _AppVersionText extends StatelessWidget {
-  const _AppVersionText({required this.colors, required this.textTheme});
-
-  final AppColors colors;
-  final TextTheme textTheme;
-
-  Future<String> _load() async {
-    final appVersion = await getIt<UpdateInstaller>().getAppVersion();
-    final xrayVersion = await getIt<VpnConnection>().xrayCoreVersion();
-    return '${appVersion.version} · Xray $xrayVersion';
-  }
+class _VersionRowState extends State<_VersionRow> {
+  // Loaded once, not on every rebuild of the settings page.
+  late final Future<(AppVersionMessage, String)> _versions = () async {
+    final app = await getIt<UpdateInstaller>().getAppVersion();
+    final xray = await getIt<VpnConnection>().xrayCoreVersion();
+    return (app, xray);
+  }();
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<String>(
-      future: _load(),
+    return FutureBuilder<(AppVersionMessage, String)>(
+      future: _versions,
       builder: (context, snapshot) {
-        return Text(
-          snapshot.data ?? '…',
-          style: textTheme.labelMedium?.copyWith(
-            fontFamily: 'monospace',
-            color: colors.textMuted,
+        final versions = snapshot.data;
+        return SettingsRow(
+          iconPath: AppAssets.version,
+          hue: TileHue.version,
+          title: 'Version',
+          subtitle: versions == null ? '…' : 'Xray ${versions.$2}',
+          trailing: Text(
+            versions == null
+                ? ''
+                : '${versions.$1.version} (${versions.$1.buildNumber})',
+            style: TextStyle(
+              fontFamily: 'monospace',
+              fontSize: 12,
+              fontWeight: .w600,
+              color: widget.colors.accentIcon,
+            ),
           ),
+          onTap: widget.onTap,
         );
       },
     );

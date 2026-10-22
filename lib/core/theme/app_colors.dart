@@ -1,17 +1,26 @@
-import 'dart:ui';
-
+import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
+import 'package:slipstream/app/di/injector.dart';
 import 'package:slipstream/core/theme/app_palette.dart';
 import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
 
 export 'package:slipstream/core/theme/app_palette.dart' show TileHue;
 
 /// The current theme's colors for custom widgets. Reads the palette on every
-/// call, so a widget picks up a theme change only when it rebuilds — wrap it
-/// in `BlocBuilder<AppThemeCubit, AppThemeState>`.
+/// call, so a widget picks up a theme change only when it rebuilds: either
+/// wrap it in `BlocBuilder<AppThemeCubit, AppThemeState>` or get the colors
+/// through [AppColors.of].
 @LazySingleton()
 class AppColors {
   AppColors({required AppThemeCubit themeCubit}) : _themeCubit = themeCubit;
+
+  /// For use in `build`: also subscribes the widget to the app's [Theme], so
+  /// it rebuilds on a theme change even when its parent created it as a
+  /// `const` widget (Flutter skips rebuilding identical const instances).
+  static AppColors of(BuildContext context) {
+    Theme.of(context);
+    return getIt<AppColors>();
+  }
 
   final AppThemeCubit _themeCubit;
 

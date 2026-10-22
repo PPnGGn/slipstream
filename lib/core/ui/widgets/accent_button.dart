@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:slipstream/app/di/injector.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 
 /// The design's main button: brand gradient (solid green in Phosphor) with
@@ -27,7 +26,7 @@ class AccentButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = getIt<AppColors>();
+    final colors = AppColors.of(context);
     final enabled = onPressed != null && !loading;
 
     return GestureDetector(
