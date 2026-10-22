@@ -114,7 +114,10 @@ class _CloseButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const .all(8),
-      child: CloseCircleButton(onPressed: () => context.pop()),
+      child: CloseCircleButton(
+        overCamera: true,
+        onPressed: () => context.pop(),
+      ),
     );
   }
 }

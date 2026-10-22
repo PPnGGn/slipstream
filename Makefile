@@ -66,6 +66,10 @@ clean-sync-api:
 	rm -f android/app/src/main/kotlin/com/slipstream/sync/SyncApi.g.kt
 
 
+# All Pigeon bridges at once (needed after a fresh clone: *.g.dart is gitignored)
+generate-pigeon: generate-vpn-api generate-updater-api generate-device-info-api generate-sync-api
+
+
 build-core-android:
 	$(MAKE) -C ../slipstream-core bind-android
 
