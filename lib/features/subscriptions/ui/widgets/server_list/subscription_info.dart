@@ -3,20 +3,19 @@ import 'package:slipstream/core/utils/formatters.dart';
 import 'package:slipstream/core/models/subscription/subscription.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 
-/// Always-visible block under the section header: days left, traffic, announce,
-/// update timestamp. Does not collapse with the servers.
+/// Always-visible block under the section header: days left, traffic and
+/// the provider's announce. Does not collapse with the servers. The update
+/// time and server count live in the header's meta line.
 class SubscriptionInfo extends StatelessWidget {
   const SubscriptionInfo({
     super.key,
     required this.colors,
     required this.subscription,
-    required this.serverCount,
     required this.showDescription,
   });
 
   final AppColors colors;
   final Subscription subscription;
-  final int serverCount;
   final bool showDescription;
 
   @override
@@ -36,6 +35,9 @@ class SubscriptionInfo extends StatelessWidget {
     );
 
     final daysLeft = expiresAt?.difference(DateTime.now()).inDays;
+    if (used == null && daysLeft == null && !hasAnnounce) {
+      return const SizedBox.shrink();
+    }
 
     return Padding(
       padding: const .fromLTRB(14, 0, 14, 12),
@@ -64,7 +66,7 @@ class SubscriptionInfo extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 10),
+            if (hasAnnounce) const SizedBox(height: 10),
           ],
           if (hasAnnounce)
             Text(
@@ -75,14 +77,6 @@ class SubscriptionInfo extends StatelessWidget {
                 color: colors.textSecondary,
               ),
             ),
-          const SizedBox(height: 10),
-          Align(
-            alignment: .centerRight,
-            child: Text(
-              '${formatUpdatedAt(subscription.lastUpdatedAt)}  ·  $serverCount',
-              style: metaStyle,
-            ),
-          ),
         ],
       ),
     );

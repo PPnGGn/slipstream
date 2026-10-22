@@ -6,13 +6,13 @@ import 'package:slipstream/app/di/injector.dart';
 import 'package:slipstream/core/models/stored_subscription/stored_subscription.dart';
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
-import 'package:slipstream/core/theme/app_theme.dart';
 import 'package:slipstream/features/ping/presentation/ping_cubit.dart';
 import 'package:slipstream/features/ping/presentation/ui/ping_sorting.dart';
 import 'package:slipstream/features/qr/ui/qr_share_sheet.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
 import 'package:slipstream/features/subscriptions/data/search.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_description_store.dart';
+import 'package:slipstream/features/subscriptions/data/subscription_display.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/server_tile.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/subscription_info.dart';
 
@@ -115,7 +115,7 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
       clipBehavior: .antiAlias,
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: .circular(AppDims.radiusCard),
+        borderRadius: .circular(20),
         border: .all(color: colors.border),
       ),
       child: Column(
@@ -125,9 +125,13 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
           _Header(
             colors: colors,
             name: sub.name,
-            updateIntervalHours: sub.updateIntervalHours,
-            isUrl: sub.url != null,
+            meta: subscriptionMetaLine(
+              sub,
+              serverCount: widget.stored.servers.length,
+              refreshing: widget.refreshing,
+            ),
             refreshing: widget.refreshing,
+            isUrl: sub.url != null,
             expanded: _effectiveExpanded,
             descriptionShown: _descriptionShown,
             onTap: _toggle,
@@ -136,7 +140,6 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
           SubscriptionInfo(
             colors: colors,
             subscription: sub,
-            serverCount: widget.stored.servers.length,
             showDescription: _descriptionShown,
           ),
           Expansible(
@@ -173,7 +176,7 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
                             selected: server.id == widget.selectedServerId,
                             onTap: () => widget.onSelect(server),
                           ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 5),
                       ],
                     );
                   },
@@ -189,9 +192,9 @@ class _Header extends StatelessWidget {
   const _Header({
     required this.colors,
     required this.name,
-    required this.updateIntervalHours,
-    required this.isUrl,
+    required this.meta,
     required this.refreshing,
+    required this.isUrl,
     required this.expanded,
     required this.descriptionShown,
     required this.onTap,
@@ -200,9 +203,9 @@ class _Header extends StatelessWidget {
 
   final AppColors colors;
   final String name;
-  final int? updateIntervalHours;
-  final bool isUrl;
+  final String meta;
   final bool refreshing;
+  final bool isUrl;
   final bool expanded;
   final bool descriptionShown;
   final VoidCallback onTap;
@@ -210,13 +213,11 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
     return GestureDetector(
       onTap: onTap,
       behavior: .opaque,
       child: Padding(
-        padding: const .fromLTRB(12, 12, 10, 8),
+        padding: const .fromLTRB(10, 13, 8, 12),
         child: Row(
           spacing: 8,
           children: [
@@ -231,28 +232,34 @@ class _Header extends StatelessWidget {
               ),
             ),
             Expanded(
-              child: Text(
-                name,
-                style: textTheme.titleSmall,
-                maxLines: 1,
-                overflow: .ellipsis,
+              child: Column(
+                crossAxisAlignment: .start,
+                mainAxisSize: .min,
+                spacing: 3,
+                children: [
+                  Text(
+                    name,
+                    maxLines: 1,
+                    overflow: .ellipsis,
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: .w700,
+                      color: colors.textPrimary,
+                    ),
+                  ),
+                  Text(
+                    meta,
+                    maxLines: 1,
+                    overflow: .ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 10.5,
+                      fontWeight: .w500,
+                      color: refreshing ? colors.warn : colors.textMuted,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            if (updateIntervalHours != null)
-              _Badge(colors: colors, label: '${updateIntervalHours}h')
-            else if (!isUrl)
-              _Badge(colors: colors, label: 'MANUAL'),
-            if (isUrl)
-              _CircleButton(
-                colors: colors,
-                icon: AppAssets.refresh,
-                spinning: refreshing,
-                onTap: () => onAction(_SectionAction.refresh),
-              ),
-            _CircleButton(
-              colors: colors,
-              icon: AppAssets.ping,
-              onTap: () => onAction(_SectionAction.pingAll),
             ),
             _SectionMenu(
               colors: colors,
@@ -267,75 +274,7 @@ class _Header extends StatelessWidget {
   }
 }
 
-class _Badge extends StatelessWidget {
-  const _Badge({required this.colors, required this.label});
-
-  final AppColors colors;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const .symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(color: colors.chip, borderRadius: .circular(6)),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontFamily: 'monospace',
-          fontSize: 9,
-          fontWeight: .w700,
-          letterSpacing: 0.5,
-          color: colors.textMuted,
-        ),
-      ),
-    );
-  }
-}
-
-class _CircleButton extends StatelessWidget {
-  const _CircleButton({
-    required this.colors,
-    required this.icon,
-    required this.onTap,
-    this.spinning = false,
-  });
-
-  final AppColors colors;
-  final String icon;
-  final VoidCallback onTap;
-  final bool spinning;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: .opaque,
-      child: Container(
-        width: 32,
-        height: 32,
-        decoration: BoxDecoration(shape: .circle, color: colors.chip),
-        child: Center(
-          child: spinning
-              ? SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 1.8,
-                    valueColor: AlwaysStoppedAnimation(colors.textSecondary),
-                  ),
-                )
-              : SvgPicture.asset(
-                  icon,
-                  width: 20,
-                  height: 20,
-                  colorFilter: .mode(colors.textSecondary, .srcIn),
-                ),
-        ),
-      ),
-    );
-  }
-}
-
+/// The "⋯" menu: every per-subscription action lives here.
 class _SectionMenu extends StatelessWidget {
   const _SectionMenu({
     required this.colors,
@@ -364,17 +303,26 @@ class _SectionMenu extends StatelessWidget {
       Offset.zero & overlay.size,
     );
 
-    Widget item(String label, String icon, {Color? color}) => Row(
-      spacing: 9,
-      children: [
-        SvgPicture.asset(
-          icon,
-          width: 15,
-          height: 15,
-          colorFilter: .mode(color ?? colors.textPrimary, .srcIn),
-        ),
-        Text(label, style: TextStyle(color: color)),
-      ],
+    PopupMenuItem<_SectionAction> item(
+      _SectionAction action,
+      String label,
+      String icon, {
+      Color? color,
+    }) => PopupMenuItem(
+      value: action,
+      height: 40,
+      child: Row(
+        spacing: 9,
+        children: [
+          SvgPicture.asset(
+            icon,
+            width: 14,
+            height: 14,
+            colorFilter: .mode(color ?? colors.textPrimary, .srcIn),
+          ),
+          Text(label, style: TextStyle(color: color)),
+        ],
+      ),
     );
 
     final selected = await showMenu<_SectionAction>(
@@ -382,24 +330,25 @@ class _SectionMenu extends StatelessWidget {
       position: position,
       items: [
         if (isUrl)
-          PopupMenuItem(
-            value: _SectionAction.share,
-            child: item('Share', AppAssets.scanQr),
+          item(
+            _SectionAction.refresh,
+            'Refresh subscription',
+            AppAssets.refresh,
           ),
-        PopupMenuItem(
-          value: _SectionAction.toggleDescription,
-          child: item(
-            descriptionShown ? 'Hide description' : 'Show description',
-            AppAssets.info,
-          ),
+        item(_SectionAction.pingAll, 'Ping servers', AppAssets.ping),
+        if (isUrl)
+          item(_SectionAction.share, 'Share subscription', AppAssets.share),
+        item(
+          _SectionAction.toggleDescription,
+          descriptionShown ? 'Hide description' : 'Show description',
+          AppAssets.info,
         ),
-        PopupMenuItem(
-          value: _SectionAction.delete,
-          child: item(
-            'Delete subscription',
-            AppAssets.trash,
-            color: colors.danger,
-          ),
+        const PopupMenuDivider(height: 9),
+        item(
+          _SectionAction.delete,
+          'Delete subscription',
+          AppAssets.trash,
+          color: colors.danger,
         ),
       ],
     );
@@ -411,10 +360,8 @@ class _SectionMenu extends StatelessWidget {
     return GestureDetector(
       onTap: () => _open(context),
       behavior: .opaque,
-      child: Container(
-        width: 32,
-        height: 32,
-        decoration: BoxDecoration(shape: .circle, color: colors.chip),
+      child: SizedBox.square(
+        dimension: 32,
         child: Center(
           child: SvgPicture.asset(
             AppAssets.dotsVertical,
