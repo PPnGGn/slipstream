@@ -8,6 +8,7 @@ import 'package:slipstream/features/settings/ui/dns_page.dart';
 import 'package:slipstream/features/settings/ui/ping_settings_page.dart';
 import 'package:slipstream/features/settings/ui/security_page.dart';
 import 'package:slipstream/features/settings/ui/split_tunneling_page.dart';
+import 'package:slipstream/features/settings/ui/subscription_settings_page.dart';
 import 'package:slipstream/features/settings/ui/routing_settings_page.dart';
 import 'package:slipstream/features/settings/ui/settings_page.dart';
 import 'package:talker_flutter/talker_flutter.dart';
@@ -38,6 +39,10 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: 'ping',
           builder: (context, state) => const PingSettingsPage(),
+        ),
+        GoRoute(
+          path: 'subscriptions',
+          builder: (context, state) => const SubscriptionSettingsPage(),
         ),
         GoRoute(
           path: 'appearance',

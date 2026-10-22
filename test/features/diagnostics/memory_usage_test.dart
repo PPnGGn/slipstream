@@ -32,7 +32,10 @@ void main() {
 
     test('danger does not fall back to warn just below its own threshold', () {
       // 0.83 is below 0.85 but within the 0.03 hysteresis band.
-      expect(computeMemoryHealth(0.83, MemoryHealth.danger), MemoryHealth.danger);
+      expect(
+        computeMemoryHealth(0.83, MemoryHealth.danger),
+        MemoryHealth.danger,
+      );
     });
 
     test('danger falls back to warn once clearly below the threshold', () {
@@ -51,15 +54,21 @@ void main() {
       expect(memoryBudgetBytesFor(ios: true), 50 * mb);
     });
 
-    test('Android: measured peaks stay green, 90 MB warns, 128 MB is danger', () {
-      final budget = memoryBudgetBytesFor(ios: false);
-      MemoryHealth at(int megabytes) =>
-          computeMemoryHealth(megabytes * mb / budget, MemoryHealth.ok);
+    test(
+      'Android: measured peaks stay green, 90 MB warns, 128 MB is danger',
+      () {
+        final budget = memoryBudgetBytesFor(ios: false);
+        MemoryHealth at(int megabytes) =>
+            computeMemoryHealth(megabytes * mb / budget, MemoryHealth.ok);
 
-      expect(at(46), MemoryHealth.ok); // plain config, video peak
-      expect(at(82), MemoryHealth.ok); // RU geo rules, video peak
-      expect(at(90), MemoryHealth.warn);
-      expect(at(128), MemoryHealth.danger); // the level before the memory fixes
-    });
+        expect(at(46), MemoryHealth.ok); // plain config, video peak
+        expect(at(82), MemoryHealth.ok); // RU geo rules, video peak
+        expect(at(90), MemoryHealth.warn);
+        expect(
+          at(128),
+          MemoryHealth.danger,
+        ); // the level before the memory fixes
+      },
+    );
   });
 }

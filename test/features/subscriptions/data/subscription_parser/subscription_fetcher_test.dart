@@ -1,12 +1,31 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:slipstream/features/client_identity/data/hwid.dart';
+import 'package:slipstream/features/routing/data/local_proxy_client.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_fetcher.dart';
+import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
 
 import '../../../client_identity/fakes.dart';
+
+/// The tunnel's local proxy: [message] null means no tunnel is up.
+class _FakeProxy implements LocalProxyProvider {
+  _FakeProxy(this.message);
+
+  final LocalProxyMessage? message;
+  int calls = 0;
+
+  @override
+  Future<LocalProxyMessage?> current() async {
+    calls++;
+    return message;
+  }
+}
+
+final _tunnel = LocalProxyMessage(port: 10808, user: 'u', pass: 'p');
 
 void main() {
   Future<SubscriptionFetcher> fetcherOn(
@@ -14,7 +33,8 @@ void main() {
     FakeDeviceInfoApi? api,
   }) async => SubscriptionFetcher(
     await identityRepositoryWith(api ?? FakeDeviceInfoApi(deviceId: 'abc')),
-    client: client,
+    _FakeProxy(null),
+    clientFactory: (_) => client,
   );
 
   Future<SubscriptionResponse> fetchWith(Map<String, String> headers) async {
@@ -239,5 +259,124 @@ void main() {
         expect(headers.containsKey('x-device-model'), isFalse);
       },
     );
+  });
+
+  group('SubscriptionFetcher tunnel fallback', () {
+    const body = 'vless://uuid@host.example.com:443';
+
+    /// Answers direct requests with [direct] and proxied ones with a 200,
+    /// recording which proxy each client was built for.
+    Future<(SubscriptionFetcher, List<LocalProxyMessage?>)> fetcherWith({
+      required Future<http.Response> Function() direct,
+      LocalProxyMessage? tunnel,
+      _FakeProxy? proxy,
+    }) async {
+      final built = <LocalProxyMessage?>[];
+      final fetcher = SubscriptionFetcher(
+        await identityRepositoryWith(FakeDeviceInfoApi(deviceId: 'abc')),
+        proxy ?? _FakeProxy(tunnel),
+        clientFactory: (message) {
+          built.add(message);
+          return MockClient(
+            (_) => message == null
+                ? direct()
+                : Future.value(http.Response(body, 200)),
+          );
+        },
+      );
+      return (fetcher, built);
+    }
+
+    test('a working direct request never asks for the tunnel', () async {
+      final proxy = _FakeProxy(_tunnel);
+      final (fetcher, built) = await fetcherWith(
+        direct: () async => http.Response(body, 200),
+        proxy: proxy,
+      );
+
+      final response = await fetcher.fetch('https://sub.example.com');
+
+      expect(response.body, body);
+      expect(built, [null]);
+      expect(proxy.calls, 0);
+    });
+
+    test('a blocked direct request is retried through the tunnel', () async {
+      final (fetcher, built) = await fetcherWith(
+        direct: () => throw const SocketException('Connection reset by peer'),
+        tunnel: _tunnel,
+      );
+
+      final response = await fetcher.fetch('https://sub.example.com');
+
+      expect(response.body, body);
+      expect(built, [null, _tunnel]);
+    });
+
+    test('a TLS failure (DPI reset) is retried through the tunnel', () async {
+      final (fetcher, built) = await fetcherWith(
+        direct: () => throw const HandshakeException('Connection terminated'),
+        tunnel: _tunnel,
+      );
+
+      await fetcher.fetch('https://sub.example.com');
+
+      expect(built, [null, _tunnel]);
+    });
+
+    test('an http client error is retried through the tunnel', () async {
+      final (fetcher, built) = await fetcherWith(
+        direct: () => throw http.ClientException('Connection closed'),
+        tunnel: _tunnel,
+      );
+
+      await fetcher.fetch('https://sub.example.com');
+
+      expect(built, [null, _tunnel]);
+    });
+
+    test('without a tunnel the network error surfaces', () async {
+      final (fetcher, built) = await fetcherWith(
+        direct: () => throw const SocketException('Network is unreachable'),
+      );
+
+      await expectLater(
+        fetcher.fetch('https://sub.example.com'),
+        throwsA(isA<SocketException>()),
+      );
+      expect(built, [null]);
+    });
+
+    test('an HTTP error status is the panel answering: no retry', () async {
+      final proxy = _FakeProxy(_tunnel);
+      final (fetcher, built) = await fetcherWith(
+        direct: () async => http.Response('nope', 500),
+        proxy: proxy,
+      );
+
+      await expectLater(
+        fetcher.fetch('https://sub.example.com'),
+        throwsException,
+      );
+      expect(built, [null]);
+      expect(proxy.calls, 0);
+    });
+
+    test('a device limit reply is not retried through the tunnel', () async {
+      final (fetcher, built) = await fetcherWith(
+        direct: () async => http.Response(
+          '',
+          403,
+          headers: {'x-hwid-max-devices-reached': 'true'},
+        ),
+        tunnel: _tunnel,
+      );
+
+      await expectLater(
+        fetcher.fetch('https://sub.example.com'),
+        throwsA(isA<DeviceLimitReachedException>()),
+      );
+      expect(built, [null]);
+    });
   });
 }

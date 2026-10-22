@@ -38,7 +38,8 @@ class GeoReleaseApi {
           jsonDecode(await _get(client, _source.releaseInfoUrl))
               as Map<String, dynamic>;
       final tag = info['tag'] as String;
-      final sizes = (info['sizes'] as Map?)?.cast<String, dynamic>() ?? const {};
+      final sizes =
+          (info['sizes'] as Map?)?.cast<String, dynamic>() ?? const {};
 
       final assets = <String, GeoAsset>{
         for (final name in const [

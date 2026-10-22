@@ -26,7 +26,9 @@ class GeoPaths {
     try {
       path = await _connection.geoAssetDir();
     } catch (e) {
-      _talker.warning('GeoPaths: native geoAssetDir() failed, using fallback: $e');
+      _talker.warning(
+        'GeoPaths: native geoAssetDir() failed, using fallback: $e',
+      );
     }
     path ??=
         '${(await getApplicationSupportDirectory()).path}${Platform.pathSeparator}geo';

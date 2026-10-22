@@ -22,6 +22,9 @@ import 'package:slipstream/features/routing/data/ad_block_mode.dart';
 import 'package:slipstream/features/routing/data/ru_bypass_mode.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_card.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_row.dart';
+import 'package:slipstream/features/subscriptions/cubit/subscription_auto_update_cubit.dart';
+import 'package:slipstream/features/subscriptions/data/auto_update/auto_update_interval.dart';
+import 'package:slipstream/features/subscriptions/ui/auto_update_labels.dart';
 import 'package:slipstream/features/update/data/updater_api.g.dart';
 import 'package:slipstream/features/update/ui/widgets/update_dialog.dart';
 import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
@@ -143,6 +146,22 @@ class _SettingsPageState extends State<SettingsPage> {
                                 ),
                                 showChevron: true,
                                 onTap: () => context.push('/settings/ping'),
+                              ),
+                            ),
+                            BlocBuilder<
+                              SubscriptionAutoUpdateCubit,
+                              AutoUpdateInterval
+                            >(
+                              bloc: getIt<SubscriptionAutoUpdateCubit>(),
+                              builder: (context, autoUpdate) => SettingsRow(
+                                iconPath: AppAssets.refresh,
+                                hue: TileHue.teal,
+                                title: 'Subscriptions',
+                                subtitle: 'Auto-update of subscription links',
+                                value: autoUpdate.label,
+                                showChevron: true,
+                                onTap: () =>
+                                    context.push('/settings/subscriptions'),
                               ),
                             ),
                             SettingsRow(

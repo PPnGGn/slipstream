@@ -63,6 +63,10 @@ class FileSubscriptionStorage implements SubscriptionStorage {
     }
   }
 
+  @override
+  Future<bool> exists(String subscriptionId) =>
+      _fileFor(subscriptionId).exists();
+
   Future<StoredSubscription?> _tryRead(File file) async {
     try {
       final envelope = jsonDecode(await file.readAsString());

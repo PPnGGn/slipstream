@@ -45,6 +45,8 @@ class PingSettingsPage extends StatelessWidget {
               'TCP connection to the server; UDP (QUIC) for '
               'Hysteria2. Up to 3 attempts, the result is the '
               'median.\n'
+              'Measured directly from the device, bypassing the VPN — '
+              'also while connected.\n'
               'Checks only that the server is reachable, not that '
               'the VPN works.',
         ),
@@ -63,7 +65,9 @@ class PingSettingsPage extends StatelessWidget {
         HelpEntry(
           title: 'Ping on launch',
           body:
-              'Measures all servers at startup. Manually: the button '
+              'Measures all servers at startup, and again when you come '
+              'back to the app after 10 minutes or more. A refreshed '
+              'subscription is always measured. Manually: the button '
               'on a subscription, or pull down on the list.',
         ),
         HelpEntry(

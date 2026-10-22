@@ -15,7 +15,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Subscription {
 
- String get id; String? get url; String get name; DateTime get lastUpdatedAt; String? get announce; DateTime? get expiresAt; int? get updateIntervalHours; int? get usedBytes; int? get dataLimitBytes;
+ String get id; String? get url; String get name; DateTime get lastUpdatedAt; String? get announce; DateTime? get expiresAt; int? get updateIntervalHours; int? get usedBytes; int? get dataLimitBytes;/// When the last refresh attempt finished, successful or not.
+ DateTime? get lastAttemptAt;/// Why the last refresh attempt failed; null after a successful one.
+ String? get lastError;
 /// Create a copy of Subscription
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +30,16 @@ $SubscriptionCopyWith<Subscription> get copyWith => _$SubscriptionCopyWithImpl<S
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Subscription&&(identical(other.id, id) || other.id == id)&&(identical(other.url, url) || other.url == url)&&(identical(other.name, name) || other.name == name)&&(identical(other.lastUpdatedAt, lastUpdatedAt) || other.lastUpdatedAt == lastUpdatedAt)&&(identical(other.announce, announce) || other.announce == announce)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.updateIntervalHours, updateIntervalHours) || other.updateIntervalHours == updateIntervalHours)&&(identical(other.usedBytes, usedBytes) || other.usedBytes == usedBytes)&&(identical(other.dataLimitBytes, dataLimitBytes) || other.dataLimitBytes == dataLimitBytes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Subscription&&(identical(other.id, id) || other.id == id)&&(identical(other.url, url) || other.url == url)&&(identical(other.name, name) || other.name == name)&&(identical(other.lastUpdatedAt, lastUpdatedAt) || other.lastUpdatedAt == lastUpdatedAt)&&(identical(other.announce, announce) || other.announce == announce)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.updateIntervalHours, updateIntervalHours) || other.updateIntervalHours == updateIntervalHours)&&(identical(other.usedBytes, usedBytes) || other.usedBytes == usedBytes)&&(identical(other.dataLimitBytes, dataLimitBytes) || other.dataLimitBytes == dataLimitBytes)&&(identical(other.lastAttemptAt, lastAttemptAt) || other.lastAttemptAt == lastAttemptAt)&&(identical(other.lastError, lastError) || other.lastError == lastError));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,url,name,lastUpdatedAt,announce,expiresAt,updateIntervalHours,usedBytes,dataLimitBytes);
+int get hashCode => Object.hash(runtimeType,id,url,name,lastUpdatedAt,announce,expiresAt,updateIntervalHours,usedBytes,dataLimitBytes,lastAttemptAt,lastError);
 
 @override
 String toString() {
-  return 'Subscription(id: $id, url: $url, name: $name, lastUpdatedAt: $lastUpdatedAt, announce: $announce, expiresAt: $expiresAt, updateIntervalHours: $updateIntervalHours, usedBytes: $usedBytes, dataLimitBytes: $dataLimitBytes)';
+  return 'Subscription(id: $id, url: $url, name: $name, lastUpdatedAt: $lastUpdatedAt, announce: $announce, expiresAt: $expiresAt, updateIntervalHours: $updateIntervalHours, usedBytes: $usedBytes, dataLimitBytes: $dataLimitBytes, lastAttemptAt: $lastAttemptAt, lastError: $lastError)';
 }
 
 
@@ -48,7 +50,7 @@ abstract mixin class $SubscriptionCopyWith<$Res>  {
   factory $SubscriptionCopyWith(Subscription value, $Res Function(Subscription) _then) = _$SubscriptionCopyWithImpl;
 @useResult
 $Res call({
- String id, String? url, String name, DateTime lastUpdatedAt, String? announce, DateTime? expiresAt, int? updateIntervalHours, int? usedBytes, int? dataLimitBytes
+ String id, String? url, String name, DateTime lastUpdatedAt, String? announce, DateTime? expiresAt, int? updateIntervalHours, int? usedBytes, int? dataLimitBytes, DateTime? lastAttemptAt, String? lastError
 });
 
 
@@ -65,7 +67,7 @@ class _$SubscriptionCopyWithImpl<$Res>
 
 /// Create a copy of Subscription
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? url = freezed,Object? name = null,Object? lastUpdatedAt = null,Object? announce = freezed,Object? expiresAt = freezed,Object? updateIntervalHours = freezed,Object? usedBytes = freezed,Object? dataLimitBytes = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? url = freezed,Object? name = null,Object? lastUpdatedAt = null,Object? announce = freezed,Object? expiresAt = freezed,Object? updateIntervalHours = freezed,Object? usedBytes = freezed,Object? dataLimitBytes = freezed,Object? lastAttemptAt = freezed,Object? lastError = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,url: freezed == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
@@ -76,7 +78,9 @@ as String?,expiresAt: freezed == expiresAt ? _self.expiresAt : expiresAt // igno
 as DateTime?,updateIntervalHours: freezed == updateIntervalHours ? _self.updateIntervalHours : updateIntervalHours // ignore: cast_nullable_to_non_nullable
 as int?,usedBytes: freezed == usedBytes ? _self.usedBytes : usedBytes // ignore: cast_nullable_to_non_nullable
 as int?,dataLimitBytes: freezed == dataLimitBytes ? _self.dataLimitBytes : dataLimitBytes // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,lastAttemptAt: freezed == lastAttemptAt ? _self.lastAttemptAt : lastAttemptAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,lastError: freezed == lastError ? _self.lastError : lastError // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -161,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? url,  String name,  DateTime lastUpdatedAt,  String? announce,  DateTime? expiresAt,  int? updateIntervalHours,  int? usedBytes,  int? dataLimitBytes)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? url,  String name,  DateTime lastUpdatedAt,  String? announce,  DateTime? expiresAt,  int? updateIntervalHours,  int? usedBytes,  int? dataLimitBytes,  DateTime? lastAttemptAt,  String? lastError)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Subscription() when $default != null:
-return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt,_that.announce,_that.expiresAt,_that.updateIntervalHours,_that.usedBytes,_that.dataLimitBytes);case _:
+return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt,_that.announce,_that.expiresAt,_that.updateIntervalHours,_that.usedBytes,_that.dataLimitBytes,_that.lastAttemptAt,_that.lastError);case _:
   return orElse();
 
 }
@@ -182,10 +186,10 @@ return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt,_that.announce
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? url,  String name,  DateTime lastUpdatedAt,  String? announce,  DateTime? expiresAt,  int? updateIntervalHours,  int? usedBytes,  int? dataLimitBytes)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? url,  String name,  DateTime lastUpdatedAt,  String? announce,  DateTime? expiresAt,  int? updateIntervalHours,  int? usedBytes,  int? dataLimitBytes,  DateTime? lastAttemptAt,  String? lastError)  $default,) {final _that = this;
 switch (_that) {
 case _Subscription():
-return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt,_that.announce,_that.expiresAt,_that.updateIntervalHours,_that.usedBytes,_that.dataLimitBytes);case _:
+return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt,_that.announce,_that.expiresAt,_that.updateIntervalHours,_that.usedBytes,_that.dataLimitBytes,_that.lastAttemptAt,_that.lastError);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +206,10 @@ return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt,_that.announce
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? url,  String name,  DateTime lastUpdatedAt,  String? announce,  DateTime? expiresAt,  int? updateIntervalHours,  int? usedBytes,  int? dataLimitBytes)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? url,  String name,  DateTime lastUpdatedAt,  String? announce,  DateTime? expiresAt,  int? updateIntervalHours,  int? usedBytes,  int? dataLimitBytes,  DateTime? lastAttemptAt,  String? lastError)?  $default,) {final _that = this;
 switch (_that) {
 case _Subscription() when $default != null:
-return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt,_that.announce,_that.expiresAt,_that.updateIntervalHours,_that.usedBytes,_that.dataLimitBytes);case _:
+return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt,_that.announce,_that.expiresAt,_that.updateIntervalHours,_that.usedBytes,_that.dataLimitBytes,_that.lastAttemptAt,_that.lastError);case _:
   return null;
 
 }
@@ -217,7 +221,7 @@ return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt,_that.announce
 @JsonSerializable()
 
 class _Subscription implements Subscription {
-  const _Subscription({required this.id, required this.url, required this.name, required this.lastUpdatedAt, this.announce, this.expiresAt, this.updateIntervalHours, this.usedBytes, this.dataLimitBytes});
+  const _Subscription({required this.id, required this.url, required this.name, required this.lastUpdatedAt, this.announce, this.expiresAt, this.updateIntervalHours, this.usedBytes, this.dataLimitBytes, this.lastAttemptAt, this.lastError});
   factory _Subscription.fromJson(Map<String, dynamic> json) => _$SubscriptionFromJson(json);
 
 @override final  String id;
@@ -229,6 +233,10 @@ class _Subscription implements Subscription {
 @override final  int? updateIntervalHours;
 @override final  int? usedBytes;
 @override final  int? dataLimitBytes;
+/// When the last refresh attempt finished, successful or not.
+@override final  DateTime? lastAttemptAt;
+/// Why the last refresh attempt failed; null after a successful one.
+@override final  String? lastError;
 
 /// Create a copy of Subscription
 /// with the given fields replaced by the non-null parameter values.
@@ -243,16 +251,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Subscription&&(identical(other.id, id) || other.id == id)&&(identical(other.url, url) || other.url == url)&&(identical(other.name, name) || other.name == name)&&(identical(other.lastUpdatedAt, lastUpdatedAt) || other.lastUpdatedAt == lastUpdatedAt)&&(identical(other.announce, announce) || other.announce == announce)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.updateIntervalHours, updateIntervalHours) || other.updateIntervalHours == updateIntervalHours)&&(identical(other.usedBytes, usedBytes) || other.usedBytes == usedBytes)&&(identical(other.dataLimitBytes, dataLimitBytes) || other.dataLimitBytes == dataLimitBytes));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Subscription&&(identical(other.id, id) || other.id == id)&&(identical(other.url, url) || other.url == url)&&(identical(other.name, name) || other.name == name)&&(identical(other.lastUpdatedAt, lastUpdatedAt) || other.lastUpdatedAt == lastUpdatedAt)&&(identical(other.announce, announce) || other.announce == announce)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.updateIntervalHours, updateIntervalHours) || other.updateIntervalHours == updateIntervalHours)&&(identical(other.usedBytes, usedBytes) || other.usedBytes == usedBytes)&&(identical(other.dataLimitBytes, dataLimitBytes) || other.dataLimitBytes == dataLimitBytes)&&(identical(other.lastAttemptAt, lastAttemptAt) || other.lastAttemptAt == lastAttemptAt)&&(identical(other.lastError, lastError) || other.lastError == lastError));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,url,name,lastUpdatedAt,announce,expiresAt,updateIntervalHours,usedBytes,dataLimitBytes);
+int get hashCode => Object.hash(runtimeType,id,url,name,lastUpdatedAt,announce,expiresAt,updateIntervalHours,usedBytes,dataLimitBytes,lastAttemptAt,lastError);
 
 @override
 String toString() {
-  return 'Subscription(id: $id, url: $url, name: $name, lastUpdatedAt: $lastUpdatedAt, announce: $announce, expiresAt: $expiresAt, updateIntervalHours: $updateIntervalHours, usedBytes: $usedBytes, dataLimitBytes: $dataLimitBytes)';
+  return 'Subscription(id: $id, url: $url, name: $name, lastUpdatedAt: $lastUpdatedAt, announce: $announce, expiresAt: $expiresAt, updateIntervalHours: $updateIntervalHours, usedBytes: $usedBytes, dataLimitBytes: $dataLimitBytes, lastAttemptAt: $lastAttemptAt, lastError: $lastError)';
 }
 
 
@@ -263,7 +271,7 @@ abstract mixin class _$SubscriptionCopyWith<$Res> implements $SubscriptionCopyWi
   factory _$SubscriptionCopyWith(_Subscription value, $Res Function(_Subscription) _then) = __$SubscriptionCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String? url, String name, DateTime lastUpdatedAt, String? announce, DateTime? expiresAt, int? updateIntervalHours, int? usedBytes, int? dataLimitBytes
+ String id, String? url, String name, DateTime lastUpdatedAt, String? announce, DateTime? expiresAt, int? updateIntervalHours, int? usedBytes, int? dataLimitBytes, DateTime? lastAttemptAt, String? lastError
 });
 
 
@@ -280,7 +288,7 @@ class __$SubscriptionCopyWithImpl<$Res>
 
 /// Create a copy of Subscription
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? url = freezed,Object? name = null,Object? lastUpdatedAt = null,Object? announce = freezed,Object? expiresAt = freezed,Object? updateIntervalHours = freezed,Object? usedBytes = freezed,Object? dataLimitBytes = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? url = freezed,Object? name = null,Object? lastUpdatedAt = null,Object? announce = freezed,Object? expiresAt = freezed,Object? updateIntervalHours = freezed,Object? usedBytes = freezed,Object? dataLimitBytes = freezed,Object? lastAttemptAt = freezed,Object? lastError = freezed,}) {
   return _then(_Subscription(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,url: freezed == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
@@ -291,7 +299,9 @@ as String?,expiresAt: freezed == expiresAt ? _self.expiresAt : expiresAt // igno
 as DateTime?,updateIntervalHours: freezed == updateIntervalHours ? _self.updateIntervalHours : updateIntervalHours // ignore: cast_nullable_to_non_nullable
 as int?,usedBytes: freezed == usedBytes ? _self.usedBytes : usedBytes // ignore: cast_nullable_to_non_nullable
 as int?,dataLimitBytes: freezed == dataLimitBytes ? _self.dataLimitBytes : dataLimitBytes // ignore: cast_nullable_to_non_nullable
-as int?,
+as int?,lastAttemptAt: freezed == lastAttemptAt ? _self.lastAttemptAt : lastAttemptAt // ignore: cast_nullable_to_non_nullable
+as DateTime?,lastError: freezed == lastError ? _self.lastError : lastError // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

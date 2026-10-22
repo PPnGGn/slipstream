@@ -34,26 +34,29 @@ void main() {
     expect(jsonEncode(dns), contains('geosite:category-ru'));
   });
 
-  test('gate with no geo installed strips every geo ref, output still valid', () {
-    final gated = gate.prepare(parsedConfig, const GeoState.absent());
-    final config = jsonDecode(gated) as Map<String, dynamic>; // parses
+  test(
+    'gate with no geo installed strips every geo ref, output still valid',
+    () {
+      final gated = gate.prepare(parsedConfig, const GeoState.absent());
+      final config = jsonDecode(gated) as Map<String, dynamic>; // parses
 
-    expect(gated, isNot(contains('geosite:')));
-    expect(gated, isNot(contains('geoip:')));
+      expect(gated, isNot(contains('geosite:')));
+      expect(gated, isNot(contains('geoip:')));
 
-    // proxy outbound + a routing section still there
-    final outbounds = (config['outbounds'] as List).cast<Map>();
-    expect(outbounds.first['tag'], 'proxy');
-    expect(config['routing'], isNotNull);
+      // proxy outbound + a routing section still there
+      final outbounds = (config['outbounds'] as List).cast<Map>();
+      expect(outbounds.first['tag'], 'proxy');
+      expect(config['routing'], isNotNull);
 
-    // no routing rule left with only meta keys
-    for (final rule in (config['routing']['rules'] as List).cast<Map>()) {
-      final matchers = rule.keys.where(
-        (k) => !{'type', 'outboundTag', 'balancerTag', 'ruleTag'}.contains(k),
-      );
-      expect(matchers, isNotEmpty, reason: 'dangling rule: $rule');
-    }
-  });
+      // no routing rule left with only meta keys
+      for (final rule in (config['routing']['rules'] as List).cast<Map>()) {
+        final matchers = rule.keys.where(
+          (k) => !{'type', 'outboundTag', 'balancerTag', 'ruleTag'}.contains(k),
+        );
+        expect(matchers, isNotEmpty, reason: 'dangling rule: $rule');
+      }
+    },
+  );
 
   test('gate with a matching catalog keeps exactly the known categories', () {
     final catalog = GeoCatalog.fromJson({

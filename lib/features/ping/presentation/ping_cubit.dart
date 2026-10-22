@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math' show min;
 
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -43,8 +44,13 @@ class PingViewState {
 }
 
 /// One cubit for the whole server list screen (spec: not per-card).
-/// Runs a fixed-size worker pool over all resolved targets and drops
-/// results from superseded runs via a generation counter.
+/// Runs a fixed-size worker pool over all resolved targets.
+///
+/// Runs may overlap (app-start ping, pull-to-refresh, a refreshed
+/// subscription). Each server belongs to the latest run that includes it:
+/// an older run drops its results for that server and skips it if it has
+/// not started it yet, but keeps measuring the rest of its own servers —
+/// nothing is left stuck as a pulsing placeholder.
 @lazySingleton
 class PingCubit extends Cubit<PingViewState> {
   PingCubit(this._measure, this._resolver, this._settings)
@@ -66,13 +72,16 @@ class PingCubit extends Cubit<PingViewState> {
   final PingTargetResolver _resolver;
   final PingSettingsStore _settings;
 
-  var _generation = 0;
+  var _lastRunId = 0;
+  var _activeRuns = 0;
 
-  /// The single pipeline for all three triggers; callers only differ
-  /// in which server list they pass (spec: one method, param = ids).
+  /// Server id -> the run whose results its entry takes.
+  final _owners = <String, int>{};
+
+  /// The single pipeline for every trigger; callers only differ in which
+  /// server list they pass (spec: one method, param = ids).
   Future<void> runForServers(List<VpnServer> servers) async {
-    _generation++;
-    final generation = _generation;
+    final runId = ++_lastRunId;
 
     final targets = <MapEntry<VpnServer, PingTarget>>[];
     for (final server in servers) {
@@ -81,6 +90,10 @@ class PingCubit extends Cubit<PingViewState> {
     }
     if (targets.isEmpty) return;
 
+    for (final t in targets) {
+      _owners[t.key.id] = runId;
+    }
+    _activeRuns++;
     emit(
       state.copyWith(
         isRunning: true,
@@ -105,33 +118,41 @@ class PingCubit extends Cubit<PingViewState> {
     // pulling from a shared cursor — nothing to coordinate, so there's
     // no race to get wrong.
     final workerCount = min(maxConcurrentPings, queue.length);
+    final dnsCache = <String, Future<List<InternetAddress>>>{};
 
     Future<void> worker(int start) async {
       var index = start;
       while (index < queue.length) {
-        if (generation != _generation || isClosed) return;
-        await _runRound(generation, queue[index]);
+        if (isClosed) return;
+        final target = queue[index];
+        if (_owners[target.key.id] == runId) {
+          await _runRound(runId, target, dnsCache);
+        }
         index += workerCount;
       }
     }
 
-    await Future.wait(List.generate(workerCount, worker));
-
-    if (generation == _generation && !isClosed) {
-      emit(state.copyWith(isRunning: false));
+    try {
+      await Future.wait(List.generate(workerCount, worker));
+    } finally {
+      _activeRuns--;
+      _owners.removeWhere((_, owner) => owner == runId);
     }
+
+    if (!isClosed) emit(state.copyWith(isRunning: _activeRuns > 0));
   }
 
   Future<void> _runRound(
-    int generation,
+    int runId,
     MapEntry<VpnServer, PingTarget> target,
+    Map<String, Future<List<InternetAddress>>> dnsCache,
   ) async {
     final server = target.key;
-    _patchEntry(generation, server.id, const PingEntry.measuring());
+    _patchEntry(runId, server.id, const PingEntry.measuring());
 
-    final result = await _measure.measure(target.value);
+    final result = await _measure.measure(target.value, dnsCache: dnsCache);
     _patchEntry(
-      generation,
+      runId,
       server.id,
       PingEntry(
         status: result.status == PingRoundStatus.unreachable
@@ -145,8 +166,8 @@ class PingCubit extends Cubit<PingViewState> {
     );
   }
 
-  void _patchEntry(int generation, String serverId, PingEntry entry) {
-    if (generation != _generation || isClosed) return;
+  void _patchEntry(int runId, String serverId, PingEntry entry) {
+    if (_owners[serverId] != runId || isClosed) return;
     emit(state.copyWith(entries: {...state.entries, serverId: entry}));
   }
 

@@ -88,21 +88,23 @@ void main() {
       return QrShareService.custom(
         render: render ?? (data) async => utf8.encode('png:$data'),
         tempDir: () async => temp,
-        send:
-            send ?? (path, text) async => sent.add((path: path, text: text)),
+        send: send ?? (path, text) async => sent.add((path: path, text: text)),
       );
     }
 
     Directory shareDir() => Directory('${temp.path}/qr_share');
 
-    test('writes the rendered image to a png named after the subscription', () async {
-      await service().shareQr(data: 'https://x/sub', name: 'Nebula Premium');
+    test(
+      'writes the rendered image to a png named after the subscription',
+      () async {
+        await service().shareQr(data: 'https://x/sub', name: 'Nebula Premium');
 
-      final file = File(sent.single.path);
-      expect(file.parent.path, shareDir().path);
-      expect(file.uri.pathSegments.last, 'Nebula_Premium.png');
-      expect(utf8.decode(file.readAsBytesSync()), 'png:https://x/sub');
-    });
+        final file = File(sent.single.path);
+        expect(file.parent.path, shareDir().path);
+        expect(file.uri.pathSegments.last, 'Nebula_Premium.png');
+        expect(utf8.decode(file.readAsBytesSync()), 'png:https://x/sub');
+      },
+    );
 
     test('sends the share text along with the image', () async {
       await service().shareQr(data: 'https://x/sub', name: 'n');

@@ -11,7 +11,8 @@ class MemoryMonitorStore {
   MemoryMonitorStore(this._prefs);
 
   /// Off by default on a fresh install.
-  MemoryMonitorMode load() => MemoryMonitorMode.fromName(_prefs.getString(_key));
+  MemoryMonitorMode load() =>
+      MemoryMonitorMode.fromName(_prefs.getString(_key));
 
   Future<void> save(MemoryMonitorMode mode) =>
       _prefs.setString(_key, mode.name);

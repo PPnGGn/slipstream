@@ -46,7 +46,11 @@ class _EmptyResolver implements HostResolver {
 final _addr1 = InternetAddress('10.0.0.1');
 final _addr2 = InternetAddress('10.0.0.2');
 
-const _target = PingTarget(host: 'example.com', port: 443, probe: PingProbe.tcp);
+const _target = PingTarget(
+  host: 'example.com',
+  port: 443,
+  probe: PingProbe.tcp,
+);
 
 void main() {
   group('MeasurePingUseCase', () {
@@ -139,7 +143,11 @@ void main() {
 
     test('DNS failure is reported without any probe attempt', () async {
       final pinger = _FakePinger((_) => const PingAttemptSuccess(1));
-      final useCase = MeasurePingUseCase(pinger, pinger, const _EmptyResolver());
+      final useCase = MeasurePingUseCase(
+        pinger,
+        pinger,
+        const _EmptyResolver(),
+      );
 
       final result = await useCase.measure(_target);
 

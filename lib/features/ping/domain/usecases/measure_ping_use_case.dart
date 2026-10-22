@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:injectable/injectable.dart';
 import 'package:slipstream/features/ping/domain/contracts/host_resolver.dart';
 import 'package:slipstream/features/ping/domain/contracts/server_pinger.dart';
@@ -28,8 +30,19 @@ class MeasurePingUseCase {
   final ServerPinger _quicPinger;
   final HostResolver _resolver;
 
-  Future<PingRoundResult> measure(PingTarget target) async {
-    final addresses = await _resolver.resolve(target.host);
+  /// [dnsCache], when given, is shared by every round of one run: servers
+  /// on the same host (one box, several ports or protocols) resolve it once
+  /// instead of each firing its own lookup at the same moment.
+  Future<PingRoundResult> measure(
+    PingTarget target, {
+    Map<String, Future<List<InternetAddress>>>? dnsCache,
+  }) async {
+    final addresses = await (dnsCache == null
+        ? _resolver.resolve(target.host)
+        : dnsCache.putIfAbsent(
+            target.host,
+            () => _resolver.resolve(target.host),
+          ));
     if (addresses.isEmpty) {
       return const PingRoundResult(
         status: PingRoundStatus.unreachable,

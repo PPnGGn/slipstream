@@ -65,6 +65,9 @@ void main() {
     digest.doFinal(out, 0);
 
     final hex = out.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
-    expect(hex, 'bddd813c634239723171ef3fee98579b94964e3bb1cb3e427262c8c068d52319');
+    expect(
+      hex,
+      'bddd813c634239723171ef3fee98579b94964e3bb1cb3e427262c8c068d52319',
+    );
   });
 }

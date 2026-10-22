@@ -139,4 +139,20 @@ void main() {
       await expectLater(storage.delete('missing'), completes);
     });
   });
+
+  group('exists', () {
+    test('is true for a saved subscription', () async {
+      await storage.save(buildSubscription('sub'));
+
+      expect(await storage.exists('sub'), isTrue);
+    });
+
+    test('is false after delete and for an unknown id', () async {
+      await storage.save(buildSubscription('sub'));
+      await storage.delete('sub');
+
+      expect(await storage.exists('sub'), isFalse);
+      expect(await storage.exists('never'), isFalse);
+    });
+  });
 }

@@ -16,9 +16,8 @@ void main() {
     Map<String, dynamic> config, {
     RuBypassMode split = RuBypassMode.bypassRu,
     AdBlockMode adBlock = AdBlockMode.off,
-  }) => gate
-      .apply(jsonEncode(config), split: split, adBlock: adBlock)
-      .configJson;
+  }) =>
+      gate.apply(jsonEncode(config), split: split, adBlock: adBlock).configJson;
 
   /// For the "left untouched" cases: same string back, DNS not hijacked.
   void expectUntouched(String src, PolicyResult result) {
@@ -165,7 +164,10 @@ void main() {
     expect(ad['domain'], ['geosite:category-ads-all']);
     expect(ad['outboundTag'], 'block');
     expect(tags.indexOf('ad-block'), tags.indexOf('block-doh') + 1);
-    expect(tags.indexOf('ad-block'), lessThan(tags.indexOf('ru-bypass-domain')));
+    expect(
+      tags.indexOf('ad-block'),
+      lessThan(tags.indexOf('ru-bypass-domain')),
+    );
   });
 
   test('adBlock basic injects category-ads, not category-ads-all', () {
@@ -229,16 +231,19 @@ void main() {
     }
   });
 
-  test('strict Private DNS — own configs still hijack (no hosts blackholes)', () {
-    final result = gate.apply(
-      jsonEncode(scaffold()),
-      split: RuBypassMode.bypassRu,
-      adBlock: AdBlockMode.off,
-      privateDnsStrict: true,
-    );
-    expect(result.hijacksDns, isTrue);
-    expect(tagsOf(decode(result.configJson)), contains('dns-hijack'));
-  });
+  test(
+    'strict Private DNS — own configs still hijack (no hosts blackholes)',
+    () {
+      final result = gate.apply(
+        jsonEncode(scaffold()),
+        split: RuBypassMode.bypassRu,
+        adBlock: AdBlockMode.off,
+        privateDnsStrict: true,
+      );
+      expect(result.hijacksDns, isTrue);
+      expect(tagsOf(decode(result.configJson)), contains('dns-hijack'));
+    },
+  );
 
   test('provider config with its own domain rule — untouched', () {
     final provider = {
@@ -288,10 +293,7 @@ void main() {
             'domain': ['geosite:category-ru'],
             'outboundTag': 'direct',
           },
-          {
-            'network': 'tcp,udp',
-            'outboundTag': 'proxy',
-          },
+          {'network': 'tcp,udp', 'outboundTag': 'proxy'},
         ],
       },
     };
@@ -351,13 +353,20 @@ void main() {
       expect(dnsOutbounds, hasLength(1));
     });
 
-    test('no dns block — untouched (xray would resolve outside the tunnel)', () {
-      final src = jsonEncode(provider(dns: null));
-      expectUntouched(
-        src,
-        gate.apply(src, split: RuBypassMode.bypassRu, adBlock: AdBlockMode.off),
-      );
-    });
+    test(
+      'no dns block — untouched (xray would resolve outside the tunnel)',
+      () {
+        final src = jsonEncode(provider(dns: null));
+        expectUntouched(
+          src,
+          gate.apply(
+            src,
+            split: RuBypassMode.bypassRu,
+            adBlock: AdBlockMode.off,
+          ),
+        );
+      },
+    );
 
     test('only local resolvers — untouched', () {
       for (final servers in [
@@ -370,7 +379,11 @@ void main() {
         final src = jsonEncode(provider(dns: {'servers': servers}));
         expectUntouched(
           src,
-          gate.apply(src, split: RuBypassMode.bypassRu, adBlock: AdBlockMode.off),
+          gate.apply(
+            src,
+            split: RuBypassMode.bypassRu,
+            adBlock: AdBlockMode.off,
+          ),
         );
       }
     });

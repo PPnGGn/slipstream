@@ -9,6 +9,10 @@ abstract class SubscriptionsState with _$SubscriptionsState {
     @Default(false) bool isAdding,
     @Default(<String>{}) Set<String> refreshingIds,
     String? errorMessage,
+
+    /// False until the first read from storage lands: an empty list before
+    /// that means "not known yet", not "no subscriptions".
+    @Default(false) bool isLoaded,
   }) = _SubscriptionsState;
 
   const SubscriptionsState._();

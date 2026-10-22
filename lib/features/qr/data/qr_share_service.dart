@@ -50,7 +50,10 @@ class QrShareService {
 
 Future<void> _sharePng(String path, String text) async {
   await SharePlus.instance.share(
-    ShareParams(text: text, files: [XFile(path, mimeType: 'image/png')]),
+    ShareParams(
+      text: text,
+      files: [XFile(path, mimeType: 'image/png')],
+    ),
   );
 }
 

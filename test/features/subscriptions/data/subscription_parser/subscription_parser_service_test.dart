@@ -5,10 +5,17 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:slipstream/core/models/result.dart';
+import 'package:slipstream/features/routing/data/local_proxy_client.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_fetcher.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_parser_service.dart';
+import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
 
 import '../../../client_identity/fakes.dart';
+
+class _NoTunnel implements LocalProxyProvider {
+  @override
+  Future<LocalProxyMessage?> current() async => null;
+}
 
 void main() {
   const vlessLink =
@@ -19,7 +26,7 @@ void main() {
     final identity = await identityRepositoryWith(FakeDeviceInfoApi());
     return SubscriptionParserService(
       Talker(),
-      SubscriptionFetcher(identity, client: client),
+      SubscriptionFetcher(identity, _NoTunnel(), clientFactory: (_) => client),
     );
   }
 

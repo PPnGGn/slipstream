@@ -50,10 +50,22 @@ void main() {
         },
         'routing': {
           'rules': [
-            {'outboundTag': 'direct', 'domain': ['geosite:category-ru', 'domain:a.com']},
-            {'outboundTag': 'direct', 'ip': ['geoip:cn', '10.0.0.0/8']},
-            {'outboundTag': 'block', 'domain': ['geosite:category-ads']},
-            {'outboundTag': 'direct', 'protocol': ['bittorrent']},
+            {
+              'outboundTag': 'direct',
+              'domain': ['geosite:category-ru', 'domain:a.com'],
+            },
+            {
+              'outboundTag': 'direct',
+              'ip': ['geoip:cn', '10.0.0.0/8'],
+            },
+            {
+              'outboundTag': 'block',
+              'domain': ['geosite:category-ads'],
+            },
+            {
+              'outboundTag': 'direct',
+              'protocol': ['bittorrent'],
+            },
           ],
         },
       }, absent);
@@ -82,7 +94,10 @@ void main() {
         ...proxyOnly,
         'dns': {
           'servers': [
-            {'address': '77.88.8.8', 'domains': ['geosite:category-ru']},
+            {
+              'address': '77.88.8.8',
+              'domains': ['geosite:category-ru'],
+            },
           ],
         },
       }, absent);
@@ -126,7 +141,10 @@ void main() {
           ...proxyOnly,
           'routing': {
             'rules': [
-              {'outboundTag': 'direct', 'source': ['geoip:ru', '10.0.0.0/8']},
+              {
+                'outboundTag': 'direct',
+                'source': ['geoip:ru', '10.0.0.0/8'],
+              },
             ],
           },
         }, absent);
@@ -140,7 +158,10 @@ void main() {
           ...proxyOnly,
           'routing': {
             'rules': [
-              {'outboundTag': 'direct', 'sourceIP': ['geoip:ru', '10.0.0.0/8']},
+              {
+                'outboundTag': 'direct',
+                'sourceIP': ['geoip:ru', '10.0.0.0/8'],
+              },
             ],
           },
         }, absent);
@@ -154,7 +175,10 @@ void main() {
           ...proxyOnly,
           'routing': {
             'rules': [
-              {'outboundTag': 'direct', 'localIP': ['geoip:private', '127.0.0.1']},
+              {
+                'outboundTag': 'direct',
+                'localIP': ['geoip:private', '127.0.0.1'],
+              },
             ],
           },
         }, absent);
@@ -163,21 +187,30 @@ void main() {
         expect(rule['localIP'], ['127.0.0.1']);
       });
 
-      test('routing rule left with only a now-empty source/sourceIP/localIP is dropped', () {
-        final result = run({
-          ...proxyOnly,
-          'routing': {
-            'rules': [
-              {'outboundTag': 'direct', 'sourceIP': ['geoip:ru']},
-              {'outboundTag': 'direct', 'domain': ['domain:keep.com']},
-            ],
-          },
-        }, absent);
+      test(
+        'routing rule left with only a now-empty source/sourceIP/localIP is dropped',
+        () {
+          final result = run({
+            ...proxyOnly,
+            'routing': {
+              'rules': [
+                {
+                  'outboundTag': 'direct',
+                  'sourceIP': ['geoip:ru'],
+                },
+                {
+                  'outboundTag': 'direct',
+                  'domain': ['domain:keep.com'],
+                },
+              ],
+            },
+          }, absent);
 
-        final rules = (result['routing']['rules'] as List).cast<Map>();
-        expect(rules, hasLength(1));
-        expect(rules.single['domain'], ['domain:keep.com']);
-      });
+          final rules = (result['routing']['rules'] as List).cast<Map>();
+          expect(rules, hasLength(1));
+          expect(rules.single['domain'], ['domain:keep.com']);
+        },
+      );
 
       test('inbounds[].sniffing.domainsExcluded / ipsExcluded', () {
         final result = run({
@@ -204,24 +237,28 @@ void main() {
         expect(sniffing['enabled'], true);
       });
 
-      test('sniffing block with only geo exclusions keeps the block, empties the lists', () {
-        final result = run({
-          ...proxyOnly,
-          'inbounds': [
-            {
-              'tag': 'socks',
-              'sniffing': {
-                'enabled': true,
-                'domainsExcluded': ['geosite:category-ru'],
+      test(
+        'sniffing block with only geo exclusions keeps the block, empties the lists',
+        () {
+          final result = run({
+            ...proxyOnly,
+            'inbounds': [
+              {
+                'tag': 'socks',
+                'sniffing': {
+                  'enabled': true,
+                  'domainsExcluded': ['geosite:category-ru'],
+                },
               },
-            },
-          ],
-        }, absent);
+            ],
+          }, absent);
 
-        final sniffing = (result['inbounds'] as List).first['sniffing'] as Map;
-        expect(sniffing.containsKey('domainsExcluded'), isFalse);
-        expect(sniffing['enabled'], true);
-      });
+          final sniffing =
+              (result['inbounds'] as List).first['sniffing'] as Map;
+          expect(sniffing.containsKey('domainsExcluded'), isFalse);
+          expect(sniffing['enabled'], true);
+        },
+      );
 
       test('dns.servers[].unexpectedIPs', () {
         final result = run({
@@ -240,61 +277,71 @@ void main() {
         expect(server['unexpectedIPs'], ['10.0.0.0/8']);
       });
 
-      test('kitchen sink — all six fields at once leave zero geo tokens behind', () {
-        final result = run({
-          ...proxyOnly,
-          'inbounds': [
-            {
-              'tag': 'socks',
-              'sniffing': {
-                'enabled': true,
-                'domainsExcluded': ['geosite:category-ru'],
-                'ipsExcluded': ['geoip:ru'],
+      test(
+        'kitchen sink — all six fields at once leave zero geo tokens behind',
+        () {
+          final result = run({
+            ...proxyOnly,
+            'inbounds': [
+              {
+                'tag': 'socks',
+                'sniffing': {
+                  'enabled': true,
+                  'domainsExcluded': ['geosite:category-ru'],
+                  'ipsExcluded': ['geoip:ru'],
+                },
               },
+            ],
+            'dns': {
+              'servers': [
+                {
+                  'address': '1.1.1.1',
+                  'unexpectedIPs': ['geoip:ru'],
+                },
+              ],
             },
-          ],
-          'dns': {
-            'servers': [
-              {
-                'address': '1.1.1.1',
-                'unexpectedIPs': ['geoip:ru'],
-              },
-            ],
-          },
-          'routing': {
-            'rules': [
-              {
-                'outboundTag': 'direct',
-                'domains': ['geosite:category-ru'],
-                'source': ['geoip:ru'],
-                'sourceIP': ['geoip:private'],
-                'localIP': ['geoip:private'],
-              },
-              {'outboundTag': 'direct', 'domain': ['domain:keep.example.com']},
-            ],
-          },
-        }, absent);
+            'routing': {
+              'rules': [
+                {
+                  'outboundTag': 'direct',
+                  'domains': ['geosite:category-ru'],
+                  'source': ['geoip:ru'],
+                  'sourceIP': ['geoip:private'],
+                  'localIP': ['geoip:private'],
+                },
+                {
+                  'outboundTag': 'direct',
+                  'domain': ['domain:keep.example.com'],
+                },
+              ],
+            },
+          }, absent);
 
-        final json = jsonEncode(result);
-        expect(json, isNot(contains('geosite:')));
-        expect(json, isNot(contains('geoip:')));
-        // the rule that had ONLY geo matchers is gone; the one with a
-        // non-geo matcher survives.
-        final rules = (result['routing']['rules'] as List).cast<Map>();
-        expect(rules, hasLength(1));
-        expect(rules.single['domain'], ['domain:keep.example.com']);
-      });
+          final json = jsonEncode(result);
+          expect(json, isNot(contains('geosite:')));
+          expect(json, isNot(contains('geoip:')));
+          // the rule that had ONLY geo matchers is gone; the one with a
+          // non-geo matcher survives.
+          final rules = (result['routing']['rules'] as List).cast<Map>();
+          expect(rules, hasLength(1));
+          expect(rules.single['domain'], ['domain:keep.example.com']);
+        },
+      );
     });
 
-    test('dns.servers[].geoip is left alone (not a real NameServerConfig field)', () {
-      // Regression guard: earlier versions of this gate special-cased a
-      // `geoip` field on dns.servers[] that doesn't exist in this xray-core's
-      // NameServerConfig (infra/conf/dns.go) — dead code, removed. Anything
-      // literally named `geoip` on a server is just passed through untouched.
-      const src = '{"outbounds":[{"tag":"proxy"}],'
-          '"dns":{"servers":[{"address":"1.1.1.1","geoip":"whatever"}]}}';
-      expect(gate.prepare(src, absent), same(src));
-    });
+    test(
+      'dns.servers[].geoip is left alone (not a real NameServerConfig field)',
+      () {
+        // Regression guard: earlier versions of this gate special-cased a
+        // `geoip` field on dns.servers[] that doesn't exist in this xray-core's
+        // NameServerConfig (infra/conf/dns.go) — dead code, removed. Anything
+        // literally named `geoip` on a server is just passed through untouched.
+        const src =
+            '{"outbounds":[{"tag":"proxy"}],'
+            '"dns":{"servers":[{"address":"1.1.1.1","geoip":"whatever"}]}}';
+        expect(gate.prepare(src, absent), same(src));
+      },
+    );
   });
 
   group('GeoConfigGate — geo installed', () {
@@ -305,9 +352,16 @@ void main() {
           'rules': [
             {
               'outboundTag': 'direct',
-              'domain': ['geosite:category-ru', 'geosite:unknown', 'domain:a.com'],
+              'domain': [
+                'geosite:category-ru',
+                'geosite:unknown',
+                'domain:a.com',
+              ],
             },
-            {'outboundTag': 'direct', 'ip': ['geoip:ru', 'geoip:cn']},
+            {
+              'outboundTag': 'direct',
+              'ip': ['geoip:ru', 'geoip:cn'],
+            },
           ],
         },
       }, ready({'geosite:category-ru'}, {'geoip:ru'}));
@@ -337,9 +391,13 @@ void main() {
     });
 
     test('untouched config returns the same string instance', () {
-      const src = '{"outbounds":[{"tag":"proxy"}],"routing":{"rules":['
+      const src =
+          '{"outbounds":[{"tag":"proxy"}],"routing":{"rules":['
           '{"outboundTag":"direct","domain":["geosite:category-ru"]}]}}';
-      expect(gate.prepare(src, ready({'geosite:category-ru'}, const {})), same(src));
+      expect(
+        gate.prepare(src, ready({'geosite:category-ru'}, const {})),
+        same(src),
+      );
     });
   });
 }

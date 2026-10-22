@@ -7,7 +7,6 @@ import android.content.Intent
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.pm.Signature
-import android.net.ConnectivityManager
 import android.net.Uri
 import android.net.VpnService
 import android.os.Build
@@ -22,6 +21,9 @@ import androidx.core.content.pm.PackageInfoCompat
 import com.slipstream.android.Android
 import com.slipstream.device.DeviceInfoApi
 import com.slipstream.device.DeviceInfoApiImpl
+import com.slipstream.sync.MainEngine
+import com.slipstream.sync.SubscriptionSyncScheduler
+import com.slipstream.sync.SubscriptionSyncSchedulerImpl
 import com.slipstream.updater.AppVersionMessage
 import com.slipstream.updater.InstallResult
 import com.slipstream.updater.UpdateInstaller
@@ -63,10 +65,16 @@ class MainActivity : FlutterActivity(), VpnConnection, UpdateInstaller {
                 flutterEngine.dartExecutor.binaryMessenger,
                 DeviceInfoApiImpl(applicationContext),
         )
+        SubscriptionSyncScheduler.setUp(
+                flutterEngine.dartExecutor.binaryMessenger,
+                SubscriptionSyncSchedulerImpl(applicationContext),
+        )
         VpnEventBridge.receiver = VpnEventReceiver(flutterEngine.dartExecutor.binaryMessenger)
+        MainEngine.attached = true
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        MainEngine.attached = false
         VpnEventBridge.receiver = null
         super.cleanUpFlutterEngine(flutterEngine)
     }
@@ -75,28 +83,16 @@ class MainActivity : FlutterActivity(), VpnConnection, UpdateInstaller {
         callback(Result.success(VpnEventBridge.currentStatus()))
     }
 
-    private fun geoDir(): String =
-            File(filesDir, "geo").apply { mkdirs() }.absolutePath
+    private fun geoDir(): String = VpnQueries.geoDir(this)
 
     override fun geoAssetDir(): String = geoDir()
 
     override fun xrayCoreVersion(): String = Android.version()
 
-    // Same process as V2RayVpnService, so the Go core's session state is right here.
     // Carries the proxy password: never log the result.
-    override fun localProxy(): LocalProxyMessage? {
-        val proxy = Android.localHTTPProxy() ?: return null
-        return LocalProxyMessage(port = proxy.port, user = proxy.user, pass = proxy.pass)
-    }
+    override fun localProxy(): LocalProxyMessage? = VpnQueries.localProxy()
 
-    // Private DNS is a global setting, so any network's LinkProperties carry it:
-    // a server name is set only in strict ("hostname") mode.
-    override fun privateDnsStrict(): Boolean {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return false
-        val cm = getSystemService(ConnectivityManager::class.java) ?: return false
-        val network = cm.activeNetwork ?: return false
-        return cm.getLinkProperties(network)?.privateDnsServerName != null
-    }
+    override fun privateDnsStrict(): Boolean = VpnQueries.privateDnsStrict(this)
 
     override fun start(config: VpnConfigMessage, callback: (Result<VpnResult>) -> Unit) {
         Log.d("VPN_BRIDGE", "Requesting VPN start with dynamic config...")

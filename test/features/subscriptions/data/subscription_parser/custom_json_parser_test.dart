@@ -334,8 +334,10 @@ void main() {
         // routing rules keep their geo tokens
         final rules = (config['routing']['rules'] as List)
             .cast<Map<String, dynamic>>();
-        expect(rules[0]['domain'],
-            equals(['geosite:category-ru', 'domain:example.com']));
+        expect(
+          rules[0]['domain'],
+          equals(['geosite:category-ru', 'domain:example.com']),
+        );
         expect(rules[1]['ip'], equals(['geoip:ru', '10.0.0.0/8']));
       },
     );

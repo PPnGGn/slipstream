@@ -9,7 +9,9 @@ import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/features/ping/presentation/ping_cubit.dart';
 import 'package:slipstream/features/ping/presentation/ui/ping_sorting.dart';
 import 'package:slipstream/features/qr/ui/qr_share_sheet.dart';
+import 'package:slipstream/features/subscriptions/cubit/subscription_auto_update_cubit.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
+import 'package:slipstream/features/subscriptions/data/auto_update/auto_update_interval.dart';
 import 'package:slipstream/features/subscriptions/data/search.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_description_store.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_display.dart';
@@ -122,20 +124,24 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
         mainAxisSize: .min,
         crossAxisAlignment: .stretch,
         children: [
-          _Header(
-            colors: colors,
-            name: sub.name,
-            meta: subscriptionMetaLine(
-              sub,
-              serverCount: widget.stored.servers.length,
+          BlocBuilder<SubscriptionAutoUpdateCubit, AutoUpdateInterval>(
+            bloc: getIt<SubscriptionAutoUpdateCubit>(),
+            builder: (context, autoUpdate) => _Header(
+              colors: colors,
+              name: sub.name,
+              meta: subscriptionMetaLine(
+                sub,
+                serverCount: widget.stored.servers.length,
+                refreshing: widget.refreshing,
+                autoUpdate: autoUpdate,
+              ),
               refreshing: widget.refreshing,
+              isUrl: sub.url != null,
+              expanded: _effectiveExpanded,
+              descriptionShown: _descriptionShown,
+              onTap: _toggle,
+              onAction: _runAction,
             ),
-            refreshing: widget.refreshing,
-            isUrl: sub.url != null,
-            expanded: _effectiveExpanded,
-            descriptionShown: _descriptionShown,
-            onTap: _toggle,
-            onAction: _runAction,
           ),
           SubscriptionInfo(
             colors: colors,

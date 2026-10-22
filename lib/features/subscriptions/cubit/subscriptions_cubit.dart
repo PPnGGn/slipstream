@@ -8,8 +8,10 @@ import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/core/models/result.dart';
 import 'package:slipstream/core/service/vpn_service/vpn_service_cubit.dart';
 import 'package:slipstream/features/subscriptions/data/selected_server_store.dart';
+import 'package:slipstream/features/subscriptions/data/server_identity.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_factory.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_parser_service.dart';
+import 'package:slipstream/features/subscriptions/data/subscription_refresher.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_storage/subscription_storage.dart';
 
 part 'subscriptions_state.dart';
@@ -22,12 +24,14 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
     required SubscriptionStorage storage,
     required SelectedServerStore selectedServerStore,
     required SubscriptionFactory factory,
+    required SubscriptionRefresher refresher,
     required VpnServiceCubit vpnServiceCubit,
     required Talker talker,
   }) : _parser = parser,
        _storage = storage,
        _selectedServerStore = selectedServerStore,
        _factory = factory,
+       _refresher = refresher,
        _vpnServiceCubit = vpnServiceCubit,
        _talker = talker,
        super(const SubscriptionsState()) {
@@ -38,6 +42,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
   final SubscriptionStorage _storage;
   final SelectedServerStore _selectedServerStore;
   final SubscriptionFactory _factory;
+  final SubscriptionRefresher _refresher;
   final VpnServiceCubit _vpnServiceCubit;
   final Talker _talker;
 
@@ -49,6 +54,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
         subscriptions: subs,
         selectedSubscriptionId: selected?.$1,
         selectedServerId: selected?.$2,
+        isLoaded: true,
       ),
     );
   }
@@ -154,44 +160,89 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
   }
 
   /// Re-fetches a URL-based subscription and replaces its server list.
+  ///
+  /// Used by the ⋯ menu and by auto-update alike. A failure keeps the old
+  /// servers and lands in the subscription's `lastError` (shown in its meta
+  /// line), never in [SubscriptionsState.errorMessage], which belongs to the
+  /// add sheet. A refresh already running for [subscriptionId] wins: a
+  /// second call returns at once.
   Future<void> refreshSubscription(String subscriptionId) async {
-    final index = state.subscriptions.indexWhere(
-      (s) => s.subscription.id == subscriptionId,
-    );
-    if (index == -1) return;
-    final stored = state.subscriptions[index];
-    final url = stored.subscription.url;
-    if (url == null) return;
+    if (state.refreshingIds.contains(subscriptionId)) return;
+    final stored = _findSubscription(subscriptionId);
+    if (stored == null || stored.subscription.url == null) return;
 
     emit(
       state.copyWith(refreshingIds: {...state.refreshingIds, subscriptionId}),
     );
-    final result = await _parser.parseFromInput(url);
+    final updated = await _refresher.refresh(stored);
+    final refreshing = {...state.refreshingIds}..remove(subscriptionId);
 
-    switch (result) {
-      case Success(:final data):
-        final updated = _factory.refresh(stored, data);
-        await _storage.save(updated);
-        _talker.info(
-          'Subscriptions: refreshed ${updated.servers.length} server(s) (${updated.subscription.name})',
-        );
-        final subscriptions = [...state.subscriptions];
-        subscriptions[index] = updated;
-        emit(
-          state.copyWith(
-            subscriptions: subscriptions,
-            refreshingIds: {...state.refreshingIds}..remove(subscriptionId),
-          ),
-        );
-      case Failure(:final message):
-        _talker.warning('Subscriptions: failed to refresh -> $message');
-        emit(
-          state.copyWith(
-            refreshingIds: {...state.refreshingIds}..remove(subscriptionId),
-            errorMessage: message,
-          ),
-        );
+    // Looked up again by id: the list may have changed during the fetch,
+    // and a subscription deleted meanwhile must not come back.
+    final index = state.subscriptions.indexWhere(
+      (s) => s.subscription.id == subscriptionId,
+    );
+    if (index == -1) {
+      _talker.debug('Subscriptions: $subscriptionId deleted mid-refresh');
+      emit(state.copyWith(refreshingIds: refreshing));
+      return;
     }
+
+    await _storage.save(updated);
+    final error = updated.subscription.lastError;
+    if (error == null) {
+      _talker.info(
+        'Subscriptions: refreshed ${updated.servers.length} server(s) (${updated.subscription.name})',
+      );
+    } else {
+      _talker.warning('Subscriptions: failed to refresh -> $error');
+    }
+
+    final subscriptions = [...state.subscriptions];
+    subscriptions[index] = updated;
+    emit(
+      state.copyWith(subscriptions: subscriptions, refreshingIds: refreshing),
+    );
+    await _followSelectedServer();
+  }
+
+  /// Re-reads every subscription from disk, for when the background job
+  /// refreshed them while the UI was away. Known subscriptions keep their
+  /// place in the list; new ones go to the end.
+  Future<void> reloadFromStorage() async {
+    final loaded = {
+      for (final s in await _storage.loadAll()) s.subscription.id: s,
+    };
+    final subscriptions = [
+      for (final s in state.subscriptions) ?loaded.remove(s.subscription.id),
+      ...loaded.values,
+    ];
+    emit(state.copyWith(subscriptions: subscriptions));
+    await _followSelectedServer();
+  }
+
+  /// Keeps the selection on the same server when a refresh shifted its id
+  /// (see [remapServerId]). A server that is really gone stays selected by
+  /// its old id — nothing is picked silently in its place.
+  Future<void> _followSelectedServer() async {
+    final subscriptionId = state.selectedSubscriptionId;
+    final serverId = state.selectedServerId;
+    if (subscriptionId == null || serverId == null) return;
+    final stored = _findSubscription(subscriptionId);
+    if (stored == null) return;
+
+    final remapped = remapServerId(serverId, stored.servers);
+    if (remapped == null || remapped == serverId) return;
+    _talker.debug('Subscriptions: selected server moved -> $remapped');
+    await _selectedServerStore.save(subscriptionId, remapped);
+    emit(state.copyWith(selectedServerId: remapped));
+  }
+
+  StoredSubscription? _findSubscription(String subscriptionId) {
+    for (final stored in state.subscriptions) {
+      if (stored.subscription.id == subscriptionId) return stored;
+    }
+    return null;
   }
 
   void clearError() => emit(state.copyWith(errorMessage: null));

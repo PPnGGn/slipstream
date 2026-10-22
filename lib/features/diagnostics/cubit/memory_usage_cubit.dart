@@ -40,7 +40,8 @@ class MemoryUsage {
 MemoryHealth computeMemoryHealth(double fraction, MemoryHealth previous) {
   switch (previous) {
     case MemoryHealth.danger:
-      if (fraction >= _dangerAtFraction - _hysteresis) return MemoryHealth.danger;
+      if (fraction >= _dangerAtFraction - _hysteresis)
+        return MemoryHealth.danger;
       return fraction >= _warnAtFraction ? MemoryHealth.warn : MemoryHealth.ok;
     case MemoryHealth.warn:
       if (fraction >= _dangerAtFraction) return MemoryHealth.danger;
@@ -79,7 +80,12 @@ class MemoryUsageCubit extends Cubit<MemoryUsage> {
     final bytes = message.memoryBytes;
     if (bytes == null) return;
     final fraction = bytes / memoryBudgetBytes;
-    emit(MemoryUsage(bytes: bytes, health: computeMemoryHealth(fraction, state.health)));
+    emit(
+      MemoryUsage(
+        bytes: bytes,
+        health: computeMemoryHealth(fraction, state.health),
+      ),
+    );
   }
 
   @override

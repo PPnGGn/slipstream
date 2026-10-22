@@ -59,7 +59,11 @@ class PingPill extends StatelessWidget {
         spacing: 5,
         children: [
           style.marker,
-          _PillLabel(text: style.label, color: style.foreground, live: style.live),
+          _PillLabel(
+            text: style.label,
+            color: style.foreground,
+            live: style.live,
+          ),
         ],
       ),
     );
@@ -67,7 +71,11 @@ class PingPill extends StatelessWidget {
 }
 
 class _PillLabel extends StatelessWidget {
-  const _PillLabel({required this.text, required this.color, required this.live});
+  const _PillLabel({
+    required this.text,
+    required this.color,
+    required this.live,
+  });
 
   final String text;
   final Color color;
@@ -228,7 +236,8 @@ class _Pulsing extends StatefulWidget {
   State<_Pulsing> createState() => _PulsingState();
 }
 
-class _PulsingState extends State<_Pulsing> with SingleTickerProviderStateMixin {
+class _PulsingState extends State<_Pulsing>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 900),

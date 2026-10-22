@@ -1,6 +1,11 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:http/http.dart' as http;
 import 'package:injectable/injectable.dart';
 import 'package:slipstream/features/client_identity/data/client_identity_repository.dart';
+import 'package:slipstream/features/routing/data/local_proxy_client.dart';
+import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
 import 'base64_codec.dart';
 
 class SubscriptionResponse {
@@ -45,23 +50,40 @@ class HwidRequiredException implements Exception {
       'again later or contact the provider.';
 }
 
+/// Fetches a subscription URL: direct first, then through the tunnel.
+///
+/// The app is excluded from its own tunnel, so a plain request goes direct
+/// even while the VPN is on. When the provider's domain is blocked, that
+/// request dies at the network level; if a tunnel is up, it is retried once
+/// through the core's local proxy (the same route [GeoRepository] uses).
+/// Anything the panel itself answered — an error status, a device limit — is
+/// final and never retried.
 @lazySingleton
 class SubscriptionFetcher {
   final ClientIdentityRepository _identity;
-  final http.Client _client;
+  final LocalProxyProvider _proxy;
+  final http.Client Function(LocalProxyMessage?) _clientFactory;
 
-  SubscriptionFetcher(this._identity, {@ignoreParam http.Client? client})
-    : _client = client ?? http.Client();
+  SubscriptionFetcher(
+    this._identity,
+    this._proxy, {
+    @ignoreParam http.Client Function(LocalProxyMessage?)? clientFactory,
+  }) : _clientFactory = clientFactory ?? buildProxiedClient;
 
   Future<SubscriptionResponse> fetch(String url) async {
     final identity = await _identity.current();
-    final response = await _client
-        .get(Uri.parse(url), headers: identity.toHeaders())
-        .timeout(
-          const Duration(seconds: 10),
-          onTimeout: () =>
-              throw Exception('Timeout: server did not respond in 10 seconds'),
-        );
+    final requestHeaders = identity.toHeaders();
+
+    http.Response response;
+    try {
+      response = await _get(url, requestHeaders, null);
+    } catch (e) {
+      if (!_isNetworkError(e)) rethrow;
+      final proxy = await _proxy.current();
+      if (proxy == null) rethrow;
+      response = await _get(url, requestHeaders, proxy);
+    }
+
     // Before the status check: these replies come with an error status, and
     // a bare "HTTP error: 404" would hide the real reason from the user.
     _throwIfHwidRefused(response);
@@ -82,6 +104,36 @@ class SubscriptionFetcher {
       ),
     );
   }
+
+  /// One request on a fresh client: the proxy's port and password change
+  /// every session, so a client is never reused across attempts.
+  Future<http.Response> _get(
+    String url,
+    Map<String, String> headers,
+    LocalProxyMessage? proxy,
+  ) async {
+    final client = _clientFactory(proxy);
+    try {
+      return await client
+          .get(Uri.parse(url), headers: headers)
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () => throw TimeoutException(
+              'Timeout: server did not respond in 10 seconds',
+            ),
+          );
+    } finally {
+      client.close();
+    }
+  }
+
+  /// The request never reached the panel: refused, reset (DPI), TLS cut off
+  /// mid-handshake, or no answer in time.
+  static bool _isNetworkError(Object e) =>
+      e is SocketException ||
+      e is TlsException ||
+      e is http.ClientException ||
+      e is TimeoutException;
 
   // The exact reply of a full panel is not documented, so the limit header is
   // honored on any status.

@@ -31,7 +31,7 @@ class _PingSettingsSectionState extends State<PingSettingsSection> {
             iconPath: AppAssets.bolt,
             hue: TileHue.speed,
             title: 'Ping on launch',
-            subtitle: 'Measure all servers when the app starts',
+            subtitle: 'Measure all servers on start and on return',
             switchValue: _pingOnAppStart,
             onSwitch: (enabled) {
               setState(() => _pingOnAppStart = enabled);

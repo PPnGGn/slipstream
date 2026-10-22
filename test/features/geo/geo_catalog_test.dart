@@ -44,7 +44,9 @@ void main() {
     });
 
     test('tolerates missing keys', () {
-      final c = GeoCatalog.fromJson({'site': ['geosite:vk']});
+      final c = GeoCatalog.fromJson({
+        'site': ['geosite:vk'],
+      });
       expect(c.ip, isEmpty);
       expect(c.has('geosite:vk'), isTrue);
     });

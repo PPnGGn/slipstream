@@ -20,7 +20,11 @@ class TcpConnectPinger implements ServerPinger {
   }) async {
     final stopwatch = Stopwatch()..start();
     try {
-      final socket = await Socket.connect(address, target.port, timeout: timeout);
+      final socket = await Socket.connect(
+        address,
+        target.port,
+        timeout: timeout,
+      );
       stopwatch.stop();
       socket.destroy();
       return PingAttemptSuccess(stopwatch.elapsedMicroseconds / 1000);

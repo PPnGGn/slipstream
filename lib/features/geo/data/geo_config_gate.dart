@@ -22,7 +22,12 @@ class GeoConfigGate {
 
   final Talker _talker;
 
-  static const _ruleMetaKeys = {'type', 'outboundTag', 'balancerTag', 'ruleTag'};
+  static const _ruleMetaKeys = {
+    'type',
+    'outboundTag',
+    'balancerTag',
+    'ruleTag',
+  };
 
   // routing.rules[] fields xray-core routes through geodata.ParseDomainRules /
   // ParseIPRules (infra/conf/router.go): `domain`/`domains` for site tokens,

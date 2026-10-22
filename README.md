@@ -62,7 +62,7 @@ Generate code:
 
 ```bash
 dart run build_runner build --delete-conflicting-outputs
-make generate-vpn-api
+make generate-vpn-api generate-updater-api generate-device-info-api generate-sync-api
 ```
 
 Then run with Flutter as usual (`flutter run`).

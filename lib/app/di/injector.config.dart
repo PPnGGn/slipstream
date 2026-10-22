@@ -55,7 +55,17 @@ import '../../features/routing/data/ad_block_store.dart' as _i117;
 import '../../features/routing/data/local_proxy_client.dart' as _i864;
 import '../../features/routing/data/routing_policy_gate.dart' as _i194;
 import '../../features/routing/data/ru_bypass_store.dart' as _i310;
+import '../../features/subscriptions/cubit/subscription_auto_update_cubit.dart'
+    as _i3;
+import '../../features/subscriptions/cubit/subscription_auto_updater.dart'
+    as _i706;
 import '../../features/subscriptions/cubit/subscriptions_cubit.dart' as _i83;
+import '../../features/subscriptions/data/auto_update/background_sync_scheduler.dart'
+    as _i694;
+import '../../features/subscriptions/data/auto_update/subscription_sync_job.dart'
+    as _i474;
+import '../../features/subscriptions/data/auto_update/subscription_update_settings_store.dart'
+    as _i331;
 import '../../features/subscriptions/data/selected_server_store.dart' as _i830;
 import '../../features/subscriptions/data/subscription_description_store.dart'
     as _i811;
@@ -64,6 +74,7 @@ import '../../features/subscriptions/data/subscription_parser/subscription_fetch
     as _i746;
 import '../../features/subscriptions/data/subscription_parser/subscription_parser_service.dart'
     as _i302;
+import '../../features/subscriptions/data/subscription_refresher.dart' as _i944;
 import '../../features/subscriptions/data/subscription_storage/subscription_storage.dart'
     as _i505;
 import '../../features/update/data/update_repository.dart' as _i11;
@@ -126,6 +137,9 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i874.QuicProbePinger(),
       instanceName: 'quic',
     );
+    gh.lazySingleton<_i694.BackgroundSyncScheduler>(
+      () => _i694.PlatformBackgroundSyncScheduler(gh<_i207.Talker>()),
+    );
     gh.lazySingleton<_i951.GeoConfigGate>(
       () => _i951.GeoConfigGate(gh<_i207.Talker>()),
     );
@@ -162,6 +176,10 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i310.RuBypassStore>(
       () => _i310.RuBypassStore(gh<_i460.SharedPreferences>()),
+    );
+    gh.lazySingleton<_i331.SubscriptionUpdateSettingsStore>(
+      () =>
+          _i331.SubscriptionUpdateSettingsStore(gh<_i460.SharedPreferences>()),
     );
     gh.lazySingleton<_i830.SelectedServerStore>(
       () => _i830.SelectedServerStore(gh<_i460.SharedPreferences>()),
@@ -243,18 +261,21 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i962.AppColors(themeCubit: gh<_i12.AppThemeCubit>()),
     );
     gh.lazySingleton<_i746.SubscriptionFetcher>(
-      () => _i746.SubscriptionFetcher(gh<_i568.ClientIdentityRepository>()),
-    );
-    gh.lazySingleton<_i302.SubscriptionParserService>(
-      () => _i302.SubscriptionParserService(
-        gh<_i207.Talker>(),
-        gh<_i746.SubscriptionFetcher>(),
+      () => _i746.SubscriptionFetcher(
+        gh<_i568.ClientIdentityRepository>(),
+        gh<_i864.LocalProxyProvider>(),
       ),
     );
     gh.lazySingleton<_i818.GeoCubit>(
       () => _i818.GeoCubit(
         repository: gh<_i236.GeoRepository>(),
         talker: gh<_i207.Talker>(),
+      ),
+    );
+    gh.lazySingleton<_i302.SubscriptionParserService>(
+      () => _i302.SubscriptionParserService(
+        gh<_i207.Talker>(),
+        gh<_i746.SubscriptionFetcher>(),
       ),
     );
     gh.lazySingleton<_i1056.VpnRepository>(
@@ -275,10 +296,27 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i190.MemoryUsageCubit>(
       () => _i190.MemoryUsageCubit(repository: gh<_i1056.VpnRepository>()),
     );
+    gh.lazySingleton<_i944.SubscriptionRefresher>(
+      () => _i944.SubscriptionRefresher(
+        gh<_i302.SubscriptionParserService>(),
+        gh<_i179.SubscriptionFactory>(),
+      ),
+    );
     gh.lazySingleton<_i202.VpnServiceCubit>(
       () => _i202.VpnServiceCubit(
         repository: gh<_i1056.VpnRepository>(),
         sessionStore: gh<_i871.VpnSessionStore>(),
+        talker: gh<_i207.Talker>(),
+      ),
+    );
+    gh.lazySingleton<_i83.SubscriptionsCubit>(
+      () => _i83.SubscriptionsCubit(
+        parser: gh<_i302.SubscriptionParserService>(),
+        storage: gh<_i505.SubscriptionStorage>(),
+        selectedServerStore: gh<_i830.SelectedServerStore>(),
+        factory: gh<_i179.SubscriptionFactory>(),
+        refresher: gh<_i944.SubscriptionRefresher>(),
+        vpnServiceCubit: gh<_i202.VpnServiceCubit>(),
         talker: gh<_i207.Talker>(),
       ),
     );
@@ -290,14 +328,12 @@ extension GetItInjectableX on _i174.GetIt {
       ),
       dispose: (i) => i.dispose(),
     );
-    gh.lazySingleton<_i83.SubscriptionsCubit>(
-      () => _i83.SubscriptionsCubit(
-        parser: gh<_i302.SubscriptionParserService>(),
-        storage: gh<_i505.SubscriptionStorage>(),
-        selectedServerStore: gh<_i830.SelectedServerStore>(),
-        factory: gh<_i179.SubscriptionFactory>(),
-        vpnServiceCubit: gh<_i202.VpnServiceCubit>(),
-        talker: gh<_i207.Talker>(),
+    gh.lazySingleton<_i474.SubscriptionSyncJob>(
+      () => _i474.SubscriptionSyncJob(
+        gh<_i505.SubscriptionStorage>(),
+        gh<_i944.SubscriptionRefresher>(),
+        gh<_i331.SubscriptionUpdateSettingsStore>(),
+        gh<_i207.Talker>(),
       ),
     );
     gh.lazySingleton<_i918.PingAutoRunner>(
@@ -305,6 +341,22 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i629.PingCubit>(),
         gh<_i384.PingSettingsStore>(),
         gh<_i83.SubscriptionsCubit>(),
+      ),
+    );
+    gh.lazySingleton<_i706.SubscriptionAutoUpdater>(
+      () => _i706.SubscriptionAutoUpdater(
+        gh<_i83.SubscriptionsCubit>(),
+        gh<_i331.SubscriptionUpdateSettingsStore>(),
+        gh<_i202.VpnServiceCubit>(),
+        gh<_i694.BackgroundSyncScheduler>(),
+        gh<_i207.Talker>(),
+      ),
+      dispose: (i) => i.dispose(),
+    );
+    gh.lazySingleton<_i3.SubscriptionAutoUpdateCubit>(
+      () => _i3.SubscriptionAutoUpdateCubit(
+        gh<_i331.SubscriptionUpdateSettingsStore>(),
+        gh<_i706.SubscriptionAutoUpdater>(),
       ),
     );
     return this;

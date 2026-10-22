@@ -12,41 +12,44 @@ void main() {
     return AdBlockStore(await SharedPreferences.getInstance());
   }
 
-  group('full list not allowed (iOS: the tunnel extension has a 50 MB cap)', () {
-    test('a stored full mode loads as basic', () async {
-      final store = await storeWith({'ad_block_mode': 'full'});
-      final cubit = AdBlockCubit(store: store, fullAllowed: false);
-      expect(cubit.state, AdBlockMode.basic);
-    });
+  group(
+    'full list not allowed (iOS: the tunnel extension has a 50 MB cap)',
+    () {
+      test('a stored full mode loads as basic', () async {
+        final store = await storeWith({'ad_block_mode': 'full'});
+        final cubit = AdBlockCubit(store: store, fullAllowed: false);
+        expect(cubit.state, AdBlockMode.basic);
+      });
 
-    test('a legacy enabled flag loads as basic', () async {
-      final store = await storeWith({'ad_block_enabled': true});
-      final cubit = AdBlockCubit(store: store, fullAllowed: false);
-      expect(cubit.state, AdBlockMode.basic);
-    });
+      test('a legacy enabled flag loads as basic', () async {
+        final store = await storeWith({'ad_block_enabled': true});
+        final cubit = AdBlockCubit(store: store, fullAllowed: false);
+        expect(cubit.state, AdBlockMode.basic);
+      });
 
-    test('setMode(full) turns on basic and stores it', () async {
-      final store = await storeWith({});
-      final cubit = AdBlockCubit(store: store, fullAllowed: false);
-      await cubit.setMode(AdBlockMode.full);
-      expect(cubit.state, AdBlockMode.basic);
-      expect(store.load(), AdBlockMode.basic);
-    });
+      test('setMode(full) turns on basic and stores it', () async {
+        final store = await storeWith({});
+        final cubit = AdBlockCubit(store: store, fullAllowed: false);
+        await cubit.setMode(AdBlockMode.full);
+        expect(cubit.state, AdBlockMode.basic);
+        expect(store.load(), AdBlockMode.basic);
+      });
 
-    test('the switch turns on basic', () async {
-      final store = await storeWith({});
-      final cubit = AdBlockCubit(store: store, fullAllowed: false);
-      await cubit.setEnabled(enabled: true);
-      expect(cubit.state, AdBlockMode.basic);
-    });
+      test('the switch turns on basic', () async {
+        final store = await storeWith({});
+        final cubit = AdBlockCubit(store: store, fullAllowed: false);
+        await cubit.setEnabled(enabled: true);
+        expect(cubit.state, AdBlockMode.basic);
+      });
 
-    test('off stays off', () async {
-      final store = await storeWith({});
-      final cubit = AdBlockCubit(store: store, fullAllowed: false);
-      expect(cubit.state, AdBlockMode.off);
-      expect(cubit.fullAllowed, isFalse);
-    });
-  });
+      test('off stays off', () async {
+        final store = await storeWith({});
+        final cubit = AdBlockCubit(store: store, fullAllowed: false);
+        expect(cubit.state, AdBlockMode.off);
+        expect(cubit.fullAllowed, isFalse);
+      });
+    },
+  );
 
   group('full list allowed (Android)', () {
     test('a stored full mode stays full', () async {

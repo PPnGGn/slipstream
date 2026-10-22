@@ -8,9 +8,6 @@ enum MemoryMonitorMode {
 
   bool get enabled => this == MemoryMonitorMode.on;
 
-  static MemoryMonitorMode fromName(String? name) =>
-      MemoryMonitorMode.values.firstWhere(
-        (m) => m.name == name,
-        orElse: () => MemoryMonitorMode.off,
-      );
+  static MemoryMonitorMode fromName(String? name) => MemoryMonitorMode.values
+      .firstWhere((m) => m.name == name, orElse: () => MemoryMonitorMode.off);
 }

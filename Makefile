@@ -50,6 +50,22 @@ clean-device-info-api:
 	rm -f ios/Runner/DeviceInfoApi.g.swift
 
 
+# Pigeon subscription sync bridge (Android-only background job). Own Kotlin
+# package for the same FlutterError reason as above.
+generate-sync-api:
+	dart run pigeon \
+	--input pigeons/sync_api.dart \
+	--copyright_header pigeons/copyright_header.txt \
+	--dart_out lib/features/subscriptions/data/auto_update/sync_api.g.dart \
+	--kotlin_out android/app/src/main/kotlin/com/slipstream/sync/SyncApi.g.kt \
+	--kotlin_package "com.slipstream.sync"
+
+# Remove generated Pigeon outputs
+clean-sync-api:
+	rm -f lib/features/subscriptions/data/auto_update/sync_api.g.dart
+	rm -f android/app/src/main/kotlin/com/slipstream/sync/SyncApi.g.kt
+
+
 build-core-android:
 	$(MAKE) -C ../slipstream-core bind-android
 

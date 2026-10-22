@@ -15,6 +15,12 @@ abstract class Subscription with _$Subscription {
     int? updateIntervalHours,
     int? usedBytes,
     int? dataLimitBytes,
+
+    /// When the last refresh attempt finished, successful or not.
+    DateTime? lastAttemptAt,
+
+    /// Why the last refresh attempt failed; null after a successful one.
+    String? lastError,
   }) = _Subscription;
 
   factory Subscription.fromJson(Map<String, dynamic> json) =>

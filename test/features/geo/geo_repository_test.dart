@@ -90,7 +90,8 @@ void main() {
       if (url.endsWith('geosite.dat')) {
         return http.Response.bytes(geositeBytes, 200);
       }
-      if (url.endsWith('geoip.dat')) return http.Response.bytes(geoipBytes, 200);
+      if (url.endsWith('geoip.dat'))
+        return http.Response.bytes(geoipBytes, 200);
       return http.Response('not found', 404);
     });
 
@@ -105,46 +106,53 @@ void main() {
     expect(File('$geoDir/geoip.dat.tmp').existsSync(), isFalse);
   });
 
-  test('a checksum mismatch fails the stream and cleans up .tmp files', () async {
-    final client = MockClient((req) async {
-      final url = req.url.toString();
-      if (url.endsWith('sha256sums.txt')) return http.Response(sums(), 200);
-      if (url.endsWith('categories.json')) return http.Response(catalog, 200);
-      if (url.endsWith('geosite.dat')) {
-        return http.Response.bytes(utf8.encode('CORRUPTED'), 200);
-      }
-      if (url.endsWith('geoip.dat')) return http.Response.bytes(geoipBytes, 200);
-      return http.Response('not found', 404);
-    });
+  test(
+    'a checksum mismatch fails the stream and cleans up .tmp files',
+    () async {
+      final client = MockClient((req) async {
+        final url = req.url.toString();
+        if (url.endsWith('sha256sums.txt')) return http.Response(sums(), 200);
+        if (url.endsWith('categories.json')) return http.Response(catalog, 200);
+        if (url.endsWith('geosite.dat')) {
+          return http.Response.bytes(utf8.encode('CORRUPTED'), 200);
+        }
+        if (url.endsWith('geoip.dat'))
+          return http.Response.bytes(geoipBytes, 200);
+        return http.Response('not found', 404);
+      });
 
-    await expectLater(
-      repoWith(client).download(release()).toList(),
-      throwsA(isA<Exception>()),
-    );
+      await expectLater(
+        repoWith(client).download(release()).toList(),
+        throwsA(isA<Exception>()),
+      );
 
-    expect(File('$geoDir/geosite.dat').existsSync(), isFalse);
-    expect(File('$geoDir/geosite.dat.tmp').existsSync(), isFalse);
-    expect(File('$geoDir/geoip.dat.tmp').existsSync(), isFalse);
-    expect(File('$geoDir/${GeoSource.metaFile}').existsSync(), isFalse);
-  });
+      expect(File('$geoDir/geosite.dat').existsSync(), isFalse);
+      expect(File('$geoDir/geosite.dat.tmp').existsSync(), isFalse);
+      expect(File('$geoDir/geoip.dat.tmp').existsSync(), isFalse);
+      expect(File('$geoDir/${GeoSource.metaFile}').existsSync(), isFalse);
+    },
+  );
 
-  test('installed() confirms a good install and rejects checksum drift', () async {
-    final client = MockClient((req) async {
-      final url = req.url.toString();
-      if (url.endsWith('sha256sums.txt')) return http.Response(sums(), 200);
-      if (url.endsWith('categories.json')) return http.Response(catalog, 200);
-      if (url.endsWith('geosite.dat')) {
-        return http.Response.bytes(geositeBytes, 200);
-      }
-      return http.Response.bytes(geoipBytes, 200);
-    });
-    final repo = repoWith(client);
-    await repo.download(release()).toList();
+  test(
+    'installed() confirms a good install and rejects checksum drift',
+    () async {
+      final client = MockClient((req) async {
+        final url = req.url.toString();
+        if (url.endsWith('sha256sums.txt')) return http.Response(sums(), 200);
+        if (url.endsWith('categories.json')) return http.Response(catalog, 200);
+        if (url.endsWith('geosite.dat')) {
+          return http.Response.bytes(geositeBytes, 200);
+        }
+        return http.Response.bytes(geoipBytes, 200);
+      });
+      final repo = repoWith(client);
+      await repo.download(release()).toList();
 
-    expect(await repo.installed(), isA<GeoInstalledOk>());
+      expect(await repo.installed(), isA<GeoInstalledOk>());
 
-    // tamper with a file on disk
-    File('$geoDir/geoip.dat').writeAsBytesSync(utf8.encode('tampered'));
-    expect(await repo.installed(), isA<GeoNotInstalled>());
-  });
+      // tamper with a file on disk
+      File('$geoDir/geoip.dat').writeAsBytesSync(utf8.encode('tampered'));
+      expect(await repo.installed(), isA<GeoNotInstalled>());
+    },
+  );
 }

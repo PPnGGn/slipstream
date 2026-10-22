@@ -126,7 +126,9 @@ class RoutingPolicyGate {
 
     if (_hasOwnRouting(config)) {
       if (privateDnsStrict || !_hijackProviderDns(config)) {
-        _talker.debug('RoutingPolicy: config routes by destination, left as is');
+        _talker.debug(
+          'RoutingPolicy: config routes by destination, left as is',
+        );
         return untouched;
       }
       _talker.debug(

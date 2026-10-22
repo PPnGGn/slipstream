@@ -45,8 +45,11 @@ class PingTargetResolver {
   String? _salamanderPassword(String configJson) {
     try {
       final json = jsonDecode(configJson) as Map<String, dynamic>;
-      final outbounds = (json['outbounds'] as List).cast<Map<String, dynamic>>();
-      final proxy = outbounds.firstWhere((o) => (o['tag'] as String?) == 'proxy');
+      final outbounds = (json['outbounds'] as List)
+          .cast<Map<String, dynamic>>();
+      final proxy = outbounds.firstWhere(
+        (o) => (o['tag'] as String?) == 'proxy',
+      );
       final stream = proxy['streamSettings'] as Map<String, dynamic>?;
       final finalmask = stream?['finalmask'] as Map<String, dynamic>?;
       final udpMasks = finalmask?['udp'] as List?;

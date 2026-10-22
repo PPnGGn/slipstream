@@ -140,6 +140,10 @@ class V2RayVpnService : VpnService() {
                     builder
                             .addRoute("0.0.0.0", 0)
                             .addRoute("::", 0)
+                            // The app itself stays outside the tunnel: the core's own
+                            // connections must not loop back into it, server ping must
+                            // measure the direct path, and subscription/geo requests go
+                            // direct unless they ask for the core's local proxy. Do not drop.
                             .addDisallowedApplication(packageName)
                             .setSession("Slipstream")
                             .setMtu(1500)

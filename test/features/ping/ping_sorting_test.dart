@@ -18,12 +18,15 @@ void main() {
     final tieB = _server('tieB', 'B');
     final tieA = _server('tieA', 'A');
 
-    final result = sortServersByPing([slow, tieB, fast, tieA], {
-      'fast': const PingEntry(status: PingRunStatus.measured, latencyMs: 20),
-      'slow': const PingEntry(status: PingRunStatus.measured, latencyMs: 200),
-      'tieA': const PingEntry(status: PingRunStatus.measured, latencyMs: 50),
-      'tieB': const PingEntry(status: PingRunStatus.measured, latencyMs: 50),
-    });
+    final result = sortServersByPing(
+      [slow, tieB, fast, tieA],
+      {
+        'fast': const PingEntry(status: PingRunStatus.measured, latencyMs: 20),
+        'slow': const PingEntry(status: PingRunStatus.measured, latencyMs: 200),
+        'tieA': const PingEntry(status: PingRunStatus.measured, latencyMs: 50),
+        'tieB': const PingEntry(status: PingRunStatus.measured, latencyMs: 50),
+      },
+    );
 
     expect(result.map((s) => s.id), ['fast', 'tieA', 'tieB', 'slow']);
   });

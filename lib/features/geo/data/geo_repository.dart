@@ -162,7 +162,9 @@ class GeoRepository {
         if (f.existsSync()) {
           try {
             await f.delete();
-          } catch (_) {/* best effort */}
+          } catch (_) {
+            /* best effort */
+          }
         }
       }
     }
@@ -245,7 +247,9 @@ class GeoRepository {
   Map<String, String> _parseSums(String text) {
     final out = <String, String>{};
     for (final line in const LineSplitter().convert(text)) {
-      final m = RegExp(r'^([0-9a-fA-F]{64})\s+\*?(.+)$').firstMatch(line.trim());
+      final m = RegExp(
+        r'^([0-9a-fA-F]{64})\s+\*?(.+)$',
+      ).firstMatch(line.trim());
       if (m != null) out[m.group(2)!.trim()] = m.group(1)!.toLowerCase();
     }
     return out;

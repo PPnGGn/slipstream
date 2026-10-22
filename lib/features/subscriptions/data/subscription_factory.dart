@@ -41,12 +41,16 @@ class SubscriptionFactory {
 
   StoredSubscription refresh(
     StoredSubscription existing,
-    ParsedSubscription parsed,
-  ) {
+    ParsedSubscription parsed, {
+    DateTime? at,
+  }) {
     final id = existing.subscription.id;
+    final now = at ?? DateTime.now();
     return StoredSubscription(
       subscription: existing.subscription.copyWith(
-        lastUpdatedAt: DateTime.now(),
+        lastUpdatedAt: now,
+        lastAttemptAt: now,
+        lastError: null,
         announce: parsed.announce,
         expiresAt: parsed.expiresAt,
         updateIntervalHours: parsed.updateIntervalHours,

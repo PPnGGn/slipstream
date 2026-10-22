@@ -25,12 +25,15 @@ void main() {
       );
     }
 
-    test('is cancelled when no image was picked, without reading anything', () async {
-      final result = await importer(picked: null).import();
+    test(
+      'is cancelled when no image was picked, without reading anything',
+      () async {
+        final result = await importer(picked: null).import();
 
-      expect(result, isA<QrImportCancelled>());
-      expect(readPaths, isEmpty);
-    });
+        expect(result, isA<QrImportCancelled>());
+        expect(readPaths, isEmpty);
+      },
+    );
 
     test('reads the picked image', () async {
       await importer(picked: '/tmp/a.png').import();
