@@ -6,6 +6,7 @@ import 'package:slipstream/app/di/injector.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
 import 'package:slipstream/core/ui/widgets/page_header.dart';
+import 'package:slipstream/core/ui/widgets/radio_dot.dart';
 import 'package:slipstream/features/appearance/cubit/home_layout_cubit.dart';
 import 'package:slipstream/features/appearance/data/home_layout.dart';
 import 'package:slipstream/features/appearance/ui/appearance_labels.dart';
@@ -202,7 +203,7 @@ class _ChoiceCard extends StatelessWidget {
               mainAxisAlignment: .center,
               spacing: 7,
               children: [
-                _Radio(colors: colors, selected: selected),
+                RadioDot(selected: selected),
                 Flexible(
                   child: Text(
                     label,
@@ -222,7 +223,7 @@ class _ChoiceCard extends StatelessWidget {
                 children: [
                   Padding(
                     padding: const .only(top: 2),
-                    child: _Radio(colors: colors, selected: selected),
+                    child: RadioDot(selected: selected),
                   ),
                   Expanded(
                     child: Column(
@@ -244,29 +245,6 @@ class _ChoiceCard extends StatelessWidget {
               ),
             ),
         ],
-      ),
-    );
-  }
-}
-
-class _Radio extends StatelessWidget {
-  const _Radio({required this.colors, required this.selected});
-
-  final AppColors colors;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      width: 16,
-      height: 16,
-      decoration: BoxDecoration(
-        shape: .circle,
-        color: selected ? const Color(0xFFFFFFFF) : Colors.transparent,
-        border: selected
-            ? .all(color: colors.accentIcon, width: 5)
-            : .all(color: colors.border, width: 1.6),
       ),
     );
   }

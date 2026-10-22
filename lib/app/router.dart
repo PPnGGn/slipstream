@@ -2,7 +2,12 @@ import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:slipstream/features/appearance/ui/appearance_page.dart';
 import 'package:slipstream/features/qr/ui/qr_scan_page.dart';
+import 'package:slipstream/features/settings/ui/assistant_page.dart';
+import 'package:slipstream/features/settings/ui/backup_page.dart';
+import 'package:slipstream/features/settings/ui/dns_page.dart';
 import 'package:slipstream/features/settings/ui/ping_settings_page.dart';
+import 'package:slipstream/features/settings/ui/security_page.dart';
+import 'package:slipstream/features/settings/ui/split_tunneling_page.dart';
 import 'package:slipstream/features/settings/ui/routing_settings_page.dart';
 import 'package:slipstream/features/settings/ui/settings_page.dart';
 import 'package:talker_flutter/talker_flutter.dart';
@@ -37,6 +42,24 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: 'appearance',
           builder: (context, state) => const AppearancePage(),
+        ),
+        // Not built yet: laid-out pages with inactive controls.
+        GoRoute(
+          path: 'split',
+          builder: (context, state) => const SplitTunnelingPage(),
+        ),
+        GoRoute(
+          path: 'security',
+          builder: (context, state) => const SecurityPage(),
+        ),
+        GoRoute(path: 'dns', builder: (context, state) => const DnsPage()),
+        GoRoute(
+          path: 'backup',
+          builder: (context, state) => const BackupPage(),
+        ),
+        GoRoute(
+          path: 'assistant',
+          builder: (context, state) => const AssistantPage(),
         ),
       ],
     ),

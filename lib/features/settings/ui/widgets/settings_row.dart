@@ -131,21 +131,26 @@ class SettingsRow extends StatelessWidget {
       ),
     );
 
-    return Opacity(
-      opacity: enabled ? 1 : 0.45,
-      child: InkWell(
-        onTap: onTap,
-        highlightColor: colors.rowHover,
-        splashColor: Colors.transparent,
-        child: Column(
-          mainAxisSize: .min,
-          crossAxisAlignment: .stretch,
-          children: [
-            row,
-            if (footer != null)
-              Padding(padding: const .fromLTRB(14, 0, 14, 12), child: footer),
-          ],
-        ),
+    return InkWell(
+      onTap: onTap,
+      highlightColor: colors.rowHover,
+      splashColor: Colors.transparent,
+      child: Column(
+        mainAxisSize: .min,
+        crossAxisAlignment: .stretch,
+        children: [
+          Opacity(opacity: enabled ? 1 : 0.45, child: row),
+          if (footer != null)
+            // A footer control dims itself when disabled (a SegmentedPill
+            // without onChanged), so the row only blocks its taps.
+            IgnorePointer(
+              ignoring: !enabled,
+              child: Padding(
+                padding: const .fromLTRB(14, 0, 14, 12),
+                child: footer,
+              ),
+            ),
+        ],
       ),
     );
   }

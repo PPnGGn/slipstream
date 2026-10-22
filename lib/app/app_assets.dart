@@ -38,6 +38,20 @@ class AppAssets {
   static const String memory = 'assets/svg/memory.svg';
   static const String check = 'assets/svg/check.svg';
 
+  // Placeholder pages (Security, DNS, Backup, Split tunneling, Assistant).
+  static const String kill = 'assets/svg/kill.svg';
+  static const String wifi = 'assets/svg/wifi.svg';
+  static const String ipv6 = 'assets/svg/ipv6.svg';
+  static const String cloud = 'assets/svg/cloud.svg';
+  static const String chip = 'assets/svg/chip.svg';
+  static const String server = 'assets/svg/server.svg';
+  static const String shieldX = 'assets/svg/shield_x.svg';
+  static const String download = 'assets/svg/download.svg';
+  static const String sysApps = 'assets/svg/sysapps.svg';
+  static const String apps = 'assets/svg/apps.svg';
+  static const String arrowRight = 'assets/svg/arrow_right.svg';
+  static const String arrowUp = 'assets/svg/arrow_up.svg';
+
   // Routing rows.
   static const String pin = 'assets/svg/pin.svg';
   static const String block = 'assets/svg/block.svg';

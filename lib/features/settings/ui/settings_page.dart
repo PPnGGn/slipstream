@@ -145,35 +145,35 @@ class _SettingsPageState extends State<SettingsPage> {
                                 onTap: () => context.push('/settings/ping'),
                               ),
                             ),
-                            const SettingsRow(
+                            SettingsRow(
                               iconPath: AppAssets.split,
                               hue: TileHue.split,
                               title: 'Split tunneling',
                               subtitle: 'Choose which apps use the tunnel',
                               showChevron: true,
-                              enabled: false,
+                              onTap: () => context.push('/settings/split'),
                             ),
-                            const SettingsRow(
+                            SettingsRow(
                               iconPath: AppAssets.shield,
                               hue: TileHue.security,
                               title: 'Security & tunnel',
                               subtitle:
                                   'Kill switch, Always-On VPN, LAN access',
                               showChevron: true,
-                              enabled: false,
+                              onTap: () => context.push('/settings/security'),
                             ),
-                            const SettingsRow(
+                            SettingsRow(
                               iconPath: AppAssets.globe,
                               hue: TileHue.dns,
                               title: 'DNS',
                               subtitle: 'Queries resolved through the tunnel',
                               showChevron: true,
-                              enabled: false,
+                              onTap: () => context.push('/settings/dns'),
                             ),
                           ],
                         ),
                         const SectionHeader('General'),
-                        const SettingsGroup(
+                        SettingsGroup(
                           children: [
                             SettingsRow(
                               iconPath: AppAssets.backup,
@@ -181,9 +181,9 @@ class _SettingsPageState extends State<SettingsPage> {
                               title: 'Backup & restore',
                               subtitle: 'Encrypted file, QR or deep link',
                               showChevron: true,
-                              enabled: false,
+                              onTap: () => context.push('/settings/backup'),
                             ),
-                            SettingsRow(
+                            const SettingsRow(
                               iconPath: AppAssets.bell,
                               hue: TileHue.notif,
                               title: 'Notifications',
@@ -226,7 +226,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               subtitle: 'Ask anything about VPN & the app',
                               trailing: _AiBadge(colors: colors),
                               showChevron: true,
-                              enabled: false,
+                              onTap: () => context.push('/settings/assistant'),
                             ),
                           ],
                         ),
