@@ -438,12 +438,11 @@ class _ProtocolChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final protocol = server.meta.protocolLabel;
-    final label = protocol == 'HYSTERIA' ? 'HYSTERIA2' : protocol;
+    final label = server.meta.tagLabels.first;
     return _Chip(
       colors: colors,
       label: label,
-      labelColor: protocolColor(protocol, colors.palette),
+      labelColor: protocolColor(label, colors.palette),
     );
   }
 }

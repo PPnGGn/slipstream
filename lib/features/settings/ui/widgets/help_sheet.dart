@@ -4,6 +4,8 @@ import 'package:slipstream/app/di/injector.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/theme/app_theme.dart';
 import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
+import 'package:slipstream/core/ui/widgets/close_circle_button.dart';
+import 'package:slipstream/core/ui/widgets/sheet_parts.dart';
 
 class HelpEntry {
   const HelpEntry({required this.title, required this.body});
@@ -40,29 +42,35 @@ class _HelpSheet extends StatelessWidget {
     return BlocBuilder<AppThemeCubit, AppThemeState>(
       bloc: getIt<AppThemeCubit>(),
       builder: (context, _) {
-        final colors = getIt<AppColors>();
+        final colors = AppColors.of(context);
         final textTheme = Theme.of(context).textTheme;
 
         return SafeArea(
           top: false,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    margin: const EdgeInsets.only(bottom: 14),
-                    decoration: BoxDecoration(
-                      color: colors.border,
-                      borderRadius: BorderRadius.circular(100),
+                const SheetGrabber(),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: colors.textPrimary,
+                        ),
+                      ),
                     ),
-                  ),
+                    CloseCircleButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ],
                 ),
-                Text(title, style: textTheme.titleMedium),
                 const SizedBox(height: 8),
                 Flexible(
                   child: SingleChildScrollView(
@@ -109,11 +117,17 @@ class _HelpEntryTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(entry.title, style: textTheme.bodyLarge),
+          Text(
+            entry.title,
+            style: textTheme.bodyLarge?.copyWith(color: colors.textPrimary),
+          ),
           const SizedBox(height: AppDims.gapXs),
           Text(
             entry.body,
-            style: textTheme.bodyMedium?.copyWith(color: colors.textSecondary),
+            style: textTheme.bodyMedium?.copyWith(
+              color: colors.textSecondary,
+              height: 1.5,
+            ),
           ),
         ],
       ),

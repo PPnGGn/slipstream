@@ -20,6 +20,14 @@ class XrayServerMeta {
   String get protocolLabel => (protocol ?? 'proxy').toUpperCase();
   String? get networkLabel => network?.toUpperCase();
   String? get securityLabel => security?.toUpperCase();
+
+  /// Tags as the UI shows them: `VLESS · TCP · REALITY`. The config's
+  /// "hysteria" is the HYSTERIA2 protocol; security "none" says nothing.
+  List<String> get tagLabels => [
+    if (protocolLabel == 'HYSTERIA') 'HYSTERIA2' else protocolLabel,
+    ?networkLabel,
+    if (securityLabel != null && securityLabel != 'NONE') securityLabel!,
+  ];
 }
 
 XrayServerMeta readXrayServerMeta(String configJson) {

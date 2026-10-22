@@ -40,10 +40,8 @@ class _UpdateDialog extends StatelessWidget {
         return BlocBuilder<UpdateServiceCubit, UpdateState>(
           bloc: cubit,
           builder: (context, state) {
+            // Background, shape and text colors come from the dialog theme.
             return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: .circular(AppDims.radiusCard),
-              ),
               title: Text(_title(state)),
               content: SingleChildScrollView(
                 child: _Body(
@@ -208,7 +206,7 @@ class _SignatureConflictBodyState extends State<_SignatureConflictBody> {
           Text(
             'Saved to $_savedTo',
             style: widget.textTheme.labelMedium?.copyWith(
-              color: widget.colors.primary,
+              color: widget.colors.accentIcon,
             ),
           )
         else if (_saveTried)
@@ -293,7 +291,7 @@ class _DownloadingBody extends StatelessWidget {
           child: LinearProgressIndicator(
             value: progress.clamp(0, 1),
             backgroundColor: colors.chip,
-            color: colors.primary,
+            color: colors.accentIcon,
           ),
         ),
         Text(

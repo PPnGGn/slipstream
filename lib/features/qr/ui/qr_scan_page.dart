@@ -1,10 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:slipstream/app/app_assets.dart';
+import 'package:slipstream/core/ui/widgets/close_circle_button.dart';
 import 'package:slipstream/features/qr/data/qr_scan.dart';
 
 // Full-screen camera. Pops with the scanned text, or with null if closed.
@@ -115,16 +114,7 @@ class _CloseButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const .all(8),
-      child: IconButton(
-        onPressed: () => context.pop(),
-        style: IconButton.styleFrom(backgroundColor: Colors.black54),
-        icon: SvgPicture.asset(
-          AppAssets.close,
-          width: 16,
-          height: 16,
-          colorFilter: const .mode(Colors.white, .srcIn),
-        ),
-      ),
+      child: CloseCircleButton(onPressed: () => context.pop()),
     );
   }
 }

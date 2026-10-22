@@ -209,10 +209,31 @@ abstract class AppTheme {
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: raised,
         surfaceTintColor: Colors.transparent,
+        modalBarrierColor: const Color(0x8C14141E),
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
             top: Radius.circular(AppDims.radiusSheet),
           ),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: raised,
+        surfaceTintColor: Colors.transparent,
+        barrierColor: const Color(0x8C14141E),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDims.radiusCard),
+          side: BorderSide(color: border),
+        ),
+        titleTextStyle: TextStyle(
+          color: tx1,
+          fontSize: 17,
+          fontWeight: FontWeight.w700,
+          fontFamily: 'Oswald',
+        ),
+        contentTextStyle: TextStyle(
+          color: tx2,
+          fontSize: 13.5,
+          fontFamily: 'Oswald',
         ),
       ),
       popupMenuTheme: PopupMenuThemeData(

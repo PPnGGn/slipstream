@@ -7,6 +7,8 @@ import 'package:slipstream/app/di/injector.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
 import 'package:slipstream/core/ui/clipboard.dart';
+import 'package:slipstream/core/ui/widgets/accent_button.dart';
+import 'package:slipstream/core/ui/widgets/sheet_parts.dart';
 import 'package:slipstream/features/qr/data/qr_share_service.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
@@ -63,82 +65,93 @@ class _QrShareSheetState extends State<_QrShareSheet> {
     return BlocBuilder<AppThemeCubit, AppThemeState>(
       bloc: getIt<AppThemeCubit>(),
       builder: (context, _) {
-        final colors = getIt<AppColors>();
-        final textTheme = Theme.of(context).textTheme;
+        final colors = AppColors.of(context);
 
         return SafeArea(
           top: false,
           child: SingleChildScrollView(
-            padding: const .fromLTRB(20, 8, 20, 20),
+            padding: const .fromLTRB(20, 8, 20, 24),
             child: Column(
               mainAxisSize: .min,
               crossAxisAlignment: .stretch,
               children: [
-                Center(
-                  child: Container(
-                    width: 36,
-                    height: 4,
-                    margin: const .only(bottom: 14),
-                    decoration: BoxDecoration(
-                      color: colors.border,
-                      borderRadius: .circular(100),
-                    ),
-                  ),
+                const SheetGrabber(),
+                SheetTitleRow(
+                  iconPath: AppAssets.share,
+                  title: 'Share subscription',
+                  subtitle: title,
                 ),
-                Text(
-                  title,
-                  style: textTheme.titleMedium,
-                  maxLines: 1,
-                  overflow: .ellipsis,
-                ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 18),
                 Center(child: _QrCard(data: data)),
                 const SizedBox(height: 16),
-                Text(
-                  data,
-                  textAlign: .center,
-                  maxLines: 2,
-                  overflow: .ellipsis,
-                  style: TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 11,
-                    height: 1.5,
-                    color: colors.textSecondary,
+                Container(
+                  padding: const .symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: colors.inputFill,
+                    borderRadius: .circular(12),
+                    border: .all(color: colors.border),
+                  ),
+                  child: Text(
+                    data,
+                    textAlign: .center,
+                    maxLines: 1,
+                    overflow: .ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 11,
+                      fontWeight: .w500,
+                      color: colors.textSecondary,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Anyone who scans this code can use your subscription.',
                   textAlign: .center,
-                  style: textTheme.labelSmall,
+                  style: TextStyle(fontSize: 11, color: colors.textMuted),
                 ),
-                const SizedBox(height: 16),
-                FilledButton.icon(
-                  onPressed: _sharing ? null : _share,
-                  icon: SvgPicture.asset(
-                    AppAssets.share,
-                    width: 15,
-                    height: 15,
-                    colorFilter: .mode(
-                      Theme.of(context).colorScheme.onPrimary,
-                      .srcIn,
-                    ),
-                  ),
-                  label: const Text('Share'),
+                const SizedBox(height: 18),
+                AccentButton(
+                  label: 'Share',
+                  iconPath: AppAssets.share,
+                  loading: _sharing,
+                  onPressed: _share,
                 ),
-                const SizedBox(height: 8),
-                OutlinedButton.icon(
-                  onPressed: () {
+                const SizedBox(height: 10),
+                GestureDetector(
+                  onTap: () {
                     copyToClipboard(context, data, 'URL copied');
                     Navigator.of(context).pop();
                   },
-                  icon: SvgPicture.asset(
-                    AppAssets.copy,
-                    width: 15,
-                    height: 15,
-                    colorFilter: .mode(colors.textPrimary, .srcIn),
+                  behavior: .opaque,
+                  child: Container(
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: colors.chip,
+                      borderRadius: .circular(15),
+                      border: .all(color: colors.border),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: .center,
+                      spacing: 8,
+                      children: [
+                        SvgPicture.asset(
+                          AppAssets.copy,
+                          width: 14,
+                          height: 14,
+                          colorFilter: .mode(colors.textPrimary, .srcIn),
+                        ),
+                        Text(
+                          'Copy URL',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: .w600,
+                            color: colors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  label: const Text('Copy URL'),
                 ),
               ],
             ),
@@ -149,8 +162,9 @@ class _QrShareSheetState extends State<_QrShareSheet> {
   }
 }
 
-// Always black on white, even in the dark theme: many scanners cannot read
-// an inverted code. The padding is the quiet zone the scanner needs.
+// Dark on white in every theme, the dark theme included: many scanners
+// cannot read an inverted code. The padding is the quiet zone the scanner
+// needs.
 class _QrCard extends StatelessWidget {
   const _QrCard({required this.data});
 
@@ -158,13 +172,30 @@ class _QrCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: .circular(16),
+    const ink = Color(0xFF2E2F45);
+    return Container(
+      padding: const .all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: .circular(24),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x380F0F1A),
+            blurRadius: 28,
+            offset: Offset(0, 10),
+          ),
+        ],
+      ),
       child: QrImageView(
         data: data,
-        size: 260,
-        padding: const .all(16),
+        size: 200,
+        padding: .zero,
         backgroundColor: Colors.white,
+        eyeStyle: const QrEyeStyle(eyeShape: .square, color: ink),
+        dataModuleStyle: const QrDataModuleStyle(
+          dataModuleShape: .square,
+          color: ink,
+        ),
       ),
     );
   }
