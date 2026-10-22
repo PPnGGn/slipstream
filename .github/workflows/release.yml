@@ -221,13 +221,10 @@ jobs:
           EOF
 
       - run: flutter pub get
-      - name: Generate Pigeon Updater API
-        run: make generate-updater-api
-      - name: Generate Pigeon Device Info API
-        run: make generate-device-info-api
+      # Pigeon first: build_runner (injectable) resolves types from *.g.dart.
+      - name: Generate Pigeon bridges
+        run: make generate-pigeon
       - run: dart run build_runner build --delete-conflicting-outputs
-      - name: Generate Pigeon VPN API
-        run: make generate-vpn-api
 
       - name: Shorebird release (android)
         if: needs.version-check.outputs.mode == 'release'
@@ -276,6 +273,8 @@ jobs:
           cache: true
 
       - run: flutter pub get
+      - name: Generate Pigeon bridges
+        run: make generate-pigeon
       - run: dart run build_runner build --delete-conflicting-outputs
       - run: flutter build linux --release
 

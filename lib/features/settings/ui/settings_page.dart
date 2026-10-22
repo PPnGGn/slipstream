@@ -252,8 +252,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         const SectionHeader('About'),
                         SettingsGroup(
                           children: [
-                            // Turned on in 1.2.6 together with release logs
-                            // (releases.md); the /logs page already exists.
+                            // Turned on in 2.1.0 (next-releases.md); the /logs
+                            // page already exists.
                             const SettingsRow(
                               iconPath: AppAssets.logs,
                               hue: TileHue.logs,
