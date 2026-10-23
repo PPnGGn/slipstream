@@ -185,6 +185,9 @@ final class PacketFlowBridge: NSObject, IosPacketFlowProtocol {
             let bufferDepth = self.buffer.count + packets.count
             self.buffer.append(contentsOf: packets)
             self.bufferLock.unlock()
+            #if DEBUG
+            BridgeCounters.shared.backlog(bufferDepth)
+            #endif
             if firstCallback {
                 TunnelLog.packetFlow.notice("pump: FIRST readPackets callback; \(packets.count, privacy: .public) pkts (device is producing outbound traffic)")
             }
@@ -218,7 +221,11 @@ final class PacketFlowBridge: NSObject, IosPacketFlowProtocol {
         } else if readCount % 500 == 0 {
             TunnelLog.packetFlow.info("readPacket: \(self.readCount, privacy: .public) packets device→netstack")
         }
-        return buffer.removeFirst()
+        let packet = buffer.removeFirst()
+        #if DEBUG
+        BridgeCounters.shared.read(bytes: packet.count)
+        #endif
+        return packet
     }
 
     func writePacket(_ packet: Data?) throws {
@@ -237,6 +244,9 @@ final class PacketFlowBridge: NSObject, IosPacketFlowProtocol {
         }
         let family: NSNumber = (packet.first.map { $0 >> 4 } == 6) ? AF_INET6 as NSNumber : AF_INET as NSNumber
         flow.writePackets([packet], withProtocols: [family])
+        #if DEBUG
+        BridgeCounters.shared.write(bytes: packet.count)
+        #endif
     }
 }
 
@@ -489,6 +499,10 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
 ///                    free                    run a GC and hand memory back
 ///                    truncate                start samples.jsonl over
 ///
+/// Sample fields: cpuMs (CPU time of the extension since it started, ms),
+/// upPkts/upBytes (device to core) and downPkts/downBytes (core to device) of the
+/// packet bridge since the start, backlogMax (the deepest the queue of packets
+/// from the device got since the previous sample).
 /// Sample fields, bytes: footprint (what jetsam charges), peak (the highest it
 /// has been), available (os_proc_available_memory: how much more the extension
 /// may take, so footprint + available is the limit), and the Go runtime's
@@ -543,7 +557,8 @@ final class MemorySampler {
         let go = IosQueryMemory()
         let limit = go?.memoryLimitBytes ?? Int64.max
         let limitMB = limit == Int64.max ? -1 : limit >> 20
-        return #"{"t":\#(Self.nowMs()),"label":"\#(Self.escape(label))","footprint":\#(footprint),"peak":\#(footprintPeakBytes()),"available":\#(os_proc_available_memory()),"goRetained":\#(go?.retainedBytes ?? 0),"goTotal":\#(go?.totalBytes ?? 0),"goHeap":\#(go?.heapInuseBytes ?? 0),"goStack":\#(go?.stackBytes ?? 0),"goroutines":\#(go?.goroutines ?? 0),"gcCycles":\#(go?.gcCycles ?? 0),"gcPercent":\#(go?.gcPercent ?? 0),"limitMB":\#(limitMB)}"#
+        let bridge = BridgeCounters.shared.snapshot()
+        return #"{"t":\#(Self.nowMs()),"label":"\#(Self.escape(label))","cpuMs":\#(cpuTimeMs()),"upPkts":\#(bridge.upPackets),"upBytes":\#(bridge.upBytes),"downPkts":\#(bridge.downPackets),"downBytes":\#(bridge.downBytes),"backlogMax":\#(bridge.maxBacklog),"footprint":\#(footprint),"peak":\#(footprintPeakBytes()),"available":\#(os_proc_available_memory()),"goRetained":\#(go?.retainedBytes ?? 0),"goTotal":\#(go?.totalBytes ?? 0),"goHeap":\#(go?.heapInuseBytes ?? 0),"goStack":\#(go?.stackBytes ?? 0),"goroutines":\#(go?.goroutines ?? 0),"gcCycles":\#(go?.gcCycles ?? 0),"gcPercent":\#(go?.gcPercent ?? 0),"limitMB":\#(limitMB)}"#
     }
 
     private func runCommands() {
@@ -614,5 +629,70 @@ private func footprintPeakBytes() -> Int64 {
         }
     }
     return kerr == KERN_SUCCESS ? info.ledger_phys_footprint_peak : 0
+}
+
+/// CPU time the extension has used since it started, user and system, over all
+/// its threads (the Go runtime's too), in milliseconds.
+private func cpuTimeMs() -> Int64 {
+    var usage = rusage()
+    guard getrusage(RUSAGE_SELF, &usage) == 0 else { return 0 }
+    func ms(_ t: timeval) -> Int64 { Int64(t.tv_sec) * 1000 + Int64(t.tv_usec) / 1000 }
+    return ms(usage.ru_utime) + ms(usage.ru_stime)
+}
+
+/// What the packet bridge has carried, for the samples: packets and bytes since
+/// the extension started (the difference of two samples is the rate), and the
+/// deepest the queue of packets from the device got since the last sample.
+/// "up" is device to core (readPacket), "down" is core to device (writePacket).
+final class BridgeCounters {
+    static let shared = BridgeCounters()
+
+    struct Snapshot {
+        var upPackets: Int64
+        var upBytes: Int64
+        var downPackets: Int64
+        var downBytes: Int64
+        var maxBacklog: Int
+    }
+
+    private let lock = NSLock()
+    private var upPackets: Int64 = 0
+    private var upBytes: Int64 = 0
+    private var downPackets: Int64 = 0
+    private var downBytes: Int64 = 0
+    private var maxBacklog = 0
+
+    func read(bytes: Int) {
+        lock.lock()
+        upPackets += 1
+        upBytes += Int64(bytes)
+        lock.unlock()
+    }
+
+    func write(bytes: Int) {
+        lock.lock()
+        downPackets += 1
+        downBytes += Int64(bytes)
+        lock.unlock()
+    }
+
+    func backlog(_ depth: Int) {
+        lock.lock()
+        if depth > maxBacklog { maxBacklog = depth }
+        lock.unlock()
+    }
+
+    /// The counters now; the backlog starts over.
+    func snapshot() -> Snapshot {
+        lock.lock()
+        defer { lock.unlock() }
+        let s = Snapshot(
+            upPackets: upPackets, upBytes: upBytes,
+            downPackets: downPackets, downBytes: downBytes,
+            maxBacklog: maxBacklog
+        )
+        maxBacklog = 0
+        return s
+    }
 }
 #endif
