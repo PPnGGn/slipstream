@@ -166,6 +166,13 @@ class V2RayVpnService : VpnService() {
             // The core listens on no port at all. The only listener is the HTTP proxy
             // for the app's own requests, on a Unix socket in the app's private
             // directory; its password is picked by the core (see VpnQueries.localProxy).
+            //
+            // This runs on the main thread, which is also the one Dart runs on, so the
+            // UI waits for it. Measured on an A015 (Android 16), from onStartCommand to
+            // the return of Android.start: 40-200 ms, 540 ms for the first connect after
+            // the geo databases were installed; Android.stop takes 50-90 ms. The limits are
+            // seconds (5 s of a blocked input), so it stays here: a thread would need
+            // a guard for a stop that arrives before the start is done.
             Android.start(configJson, fd.toLong(), geoDir, VpnQueries.httpSocketPath(this))
             Log.d("VPN_SERVICE", "Xray + tun2socks started, fd=$fd, hijackDns=$hijackDns, geoDir=$geoDir")
 
