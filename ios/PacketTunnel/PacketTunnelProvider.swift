@@ -463,7 +463,7 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
 /// Both files are reached from the Mac with
 /// `xcrun devicectl device copy from|to --domain-type appGroupDataContainer`.
 ///
-/// Folder `memsample/` of the app group:
+/// Folder `Library/memsample/` of the app group:
 ///   samples.jsonl  one line per second, plus an event line per command
 ///   command.txt    commands, one per line; deleted once they have run:
 ///                    label <text>            tag the samples that follow
@@ -493,7 +493,8 @@ final class MemorySampler {
             TunnelLog.lifecycle.error("MemorySampler: no app group container for \(Self.groupID, privacy: .public)")
             return nil
         }
-        dir = base.appendingPathComponent("memsample", isDirectory: true)
+        // Under Library: devicectl reaches only Library, Documents and tmp of a container.
+        dir = base.appendingPathComponent("Library/memsample", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
     }
 
