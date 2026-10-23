@@ -42,7 +42,9 @@ class GeoRepository {
     @ignoreParam GeoReleaseApi? releaseApi,
     @ignoreParam http.Client Function(LocalProxyMessage?)? clientFactory,
   }) : _proxy = proxy,
-       _clientFactory = clientFactory ?? buildProxiedClient,
+       // A download is several requests on one client and can outlive the
+       // session it started in: a client that follows the core's new password.
+       _clientFactory = clientFactory ?? refreshingProxyClientFactory(proxy),
        _releaseApi = releaseApi ?? GeoReleaseApi(proxy: proxy);
 
   final GeoPaths _paths;

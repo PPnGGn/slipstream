@@ -28,7 +28,10 @@ class _FakeProxy {
   final Directory _dir;
   final ServerSocket _server;
   final String user;
-  final String pass;
+
+  /// Changed by a test to stand for a restart of the core: the same socket, a
+  /// password of a new session.
+  String pass;
   final String answer;
   final heads = <String>[];
 
@@ -40,7 +43,10 @@ class _FakeProxy {
   static Future<_FakeProxy> start({
     String user = 'u1',
     String pass = 'p1',
-    String answer = 'HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nok',
+    // "Connection: close", as the fake closes the socket after each answer: the
+    // client must not keep the connection for the next request.
+    String answer =
+        'HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 2\r\n\r\nok',
   }) async {
     // /tmp, not the system temp dir: a socket path is limited to about 100
     // bytes, and that of macOS is longer.
@@ -79,6 +85,7 @@ class _FakeProxy {
             ? answer
             : 'HTTP/1.1 407 Proxy Authentication Required\r\n'
                   'Proxy-Authenticate: Basic realm="x"\r\n'
+                  'Connection: close\r\n'
                   'Content-Length: 0\r\n\r\n',
       );
       socket.flush().whenComplete(socket.close);
@@ -209,6 +216,239 @@ void main() {
     test('without a proxy it does not touch the socket', () async {
       fake = await _FakeProxy.start();
       final client = buildProxiedClient(null);
+      addTearDown(client.close);
+
+      expect(client, isNotNull);
+      expect(fake.heads, isEmpty);
+    });
+  });
+
+  // The core picks a new password in every session. A client built before it
+  // restarted (a long download is one) still carries the old one, and the proxy
+  // answers 407 to it: the request must go again with what the core reports
+  // now, instead of failing the whole download.
+  group('after the core restarted', () {
+    late _FakeProxy fake;
+
+    tearDown(() => fake.close());
+
+    LocalProxyMessage msg(String pass) =>
+        LocalProxyMessage(socket: fake.path, user: fake.user, pass: pass);
+
+    final hello = Uri.parse('http://example.test/hello');
+
+    test('a plain request is repeated once with the new password', () async {
+      fake = await _FakeProxy.start();
+      var asked = 0;
+      final client = buildProxiedClient(
+        msg('p1'),
+        refresh: () async {
+          asked++;
+          return msg('p2');
+        },
+      );
+      addTearDown(client.close);
+      fake.pass = 'p2';
+
+      final response = await client.get(hello);
+
+      expect(response.statusCode, 200);
+      expect(response.body, 'ok');
+      expect(fake.authorized, [false, true]);
+      expect(asked, 1);
+    });
+
+    test('so is one to an HTTPS host (the CONNECT)', () async {
+      fake = await _FakeProxy.start(
+        answer: 'HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n',
+      );
+      final client = buildProxiedClient(
+        msg('p1'),
+        refresh: () async => msg('p2'),
+      );
+      addTearDown(client.close);
+      fake.pass = 'p2';
+
+      await expectLater(
+        client.get(Uri.parse('https://example.test/hello')),
+        throwsA(anything), // the 502 of the fake after the password was right
+      );
+
+      expect(fake.heads, hasLength(2));
+      expect(fake.heads, everyElement(startsWith('CONNECT example.test:443 ')));
+      expect(fake.authorized, [false, true]);
+    });
+
+    test('the new password is kept for the next requests', () async {
+      fake = await _FakeProxy.start();
+      var asked = 0;
+      final client = buildProxiedClient(
+        msg('p1'),
+        refresh: () async {
+          asked++;
+          return msg('p2');
+        },
+      );
+      addTearDown(client.close);
+      fake.pass = 'p2';
+
+      await client.get(hello);
+      final second = await client.get(hello);
+
+      expect(second.statusCode, 200);
+      expect(fake.authorized, [false, true, true]);
+      expect(asked, 1);
+    });
+
+    test('headers go again with the repeated request', () async {
+      fake = await _FakeProxy.start();
+      final client = buildProxiedClient(
+        msg('p1'),
+        refresh: () async => msg('p2'),
+      );
+      addTearDown(client.close);
+      fake.pass = 'p2';
+
+      await client.get(hello, headers: {'X-Test': 'yes'});
+
+      expect(fake.heads, hasLength(2));
+      for (final head in fake.heads) {
+        expect(head.toLowerCase(), contains('x-test: yes'));
+      }
+    });
+
+    test('requests that fail together all recover', () async {
+      fake = await _FakeProxy.start();
+      final client = buildProxiedClient(
+        msg('p1'),
+        refresh: () async => msg('p2'),
+      );
+      addTearDown(client.close);
+      fake.pass = 'p2';
+
+      final responses = await Future.wait([
+        for (var i = 0; i < 4; i++) client.get(hello),
+      ]);
+
+      expect(responses.map((r) => r.statusCode), everyElement(200));
+      expect(fake.authorized.where((ok) => ok), hasLength(4));
+    });
+
+    test('nothing is asked while the password is right', () async {
+      fake = await _FakeProxy.start();
+      var asked = 0;
+      final client = buildProxiedClient(
+        msg('p1'),
+        refresh: () async {
+          asked++;
+          return msg('p2');
+        },
+      );
+      addTearDown(client.close);
+
+      final response = await client.get(hello);
+
+      expect(response.statusCode, 200);
+      expect(asked, 0);
+    });
+
+    test(
+      'it does not repeat when the core reports the same password',
+      () async {
+        fake = await _FakeProxy.start();
+        final client = buildProxiedClient(
+          msg('p1'),
+          refresh: () async => msg('p1'),
+        );
+        addTearDown(client.close);
+        fake.pass = 'p2'; // wrong for a reason a retry cannot cure
+
+        final response = await client.get(hello);
+
+        expect(response.statusCode, 407);
+        expect(fake.authorized, [false]);
+      },
+    );
+
+    test('nor when no tunnel is up', () async {
+      fake = await _FakeProxy.start();
+      final client = buildProxiedClient(msg('p1'), refresh: () async => null);
+      addTearDown(client.close);
+      fake.pass = 'p2';
+
+      final response = await client.get(hello);
+
+      expect(response.statusCode, 407);
+      expect(fake.authorized, [false]);
+    });
+
+    test('it repeats once only', () async {
+      fake = await _FakeProxy.start();
+      var asked = 0;
+      final client = buildProxiedClient(
+        msg('p1'),
+        refresh: () async {
+          asked++;
+          return msg('p3'); // not the password of the proxy either
+        },
+      );
+      addTearDown(client.close);
+      fake.pass = 'p2';
+
+      final response = await client.get(hello);
+
+      expect(response.statusCode, 407);
+      expect(fake.authorized, [false, false]);
+      expect(asked, 1);
+    });
+
+    test('a request with a body is not repeated', () async {
+      fake = await _FakeProxy.start();
+      var asked = 0;
+      final client = buildProxiedClient(
+        msg('p1'),
+        refresh: () async {
+          asked++;
+          return msg('p2');
+        },
+      );
+      addTearDown(client.close);
+      fake.pass = 'p2';
+
+      final response = await client.post(hello, body: 'x');
+
+      expect(response.statusCode, 407);
+      expect(fake.authorized, [false]);
+      expect(asked, 0);
+    });
+
+    test('the factory for the geo download follows the provider', () async {
+      fake = await _FakeProxy.start();
+      var pass = 'p1';
+      final provider = LocalProxyProvider(
+        _FakeConnection(() async => msg(pass)),
+        Talker(),
+      );
+      final client = refreshingProxyClientFactory(provider)(
+        await provider.current(),
+      );
+      addTearDown(client.close);
+      pass = 'p2'; // the core restarts ...
+      fake.pass = 'p2'; // ... and reports the new password
+
+      final response = await client.get(hello);
+
+      expect(response.statusCode, 200);
+      expect(fake.authorized, [false, true]);
+    });
+
+    test('the factory gives a plain client when no tunnel is up', () async {
+      fake = await _FakeProxy.start();
+      final provider = LocalProxyProvider(
+        _FakeConnection(() async => null),
+        Talker(),
+      );
+      final client = refreshingProxyClientFactory(provider)(null);
       addTearDown(client.close);
 
       expect(client, isNotNull);
