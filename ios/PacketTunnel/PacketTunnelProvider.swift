@@ -248,6 +248,12 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
 
     override func startTunnel(options: [String: NSObject]?, completionHandler: @escaping (Error?) -> Void) {
         IosSetHandler(logBridge)
+        #if DEBUG
+        // Chatty core logs (xray access + DNS, tun2socks connections) for debug
+        // builds only; the build itself decides, so release never turns them on.
+        IosSetVerboseLogs(true)
+        #endif
+        TunnelLog.lifecycle.notice("startTunnel: core is xray \(IosVersion(), privacy: .public)")
         TunnelLog.lifecycle.notice("startTunnel: entry; options keys=\(options?.keys.map(String.init(describing:)).joined(separator: ",") ?? "nil", privacy: .public)")
 
         let providerConfig = (protocolConfiguration as? NETunnelProviderProtocol)?.providerConfiguration
@@ -412,7 +418,10 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
         switch String(data: messageData, encoding: .utf8) {
         case "traffic":
             let stats = IosQueryTraffic()
-            TunnelLog.packetFlow.debug("traffic query: up=\(stats?.uplinkBytes ?? 0, privacy: .public) down=\(stats?.downlinkBytes ?? 0, privacy: .public)")
+            // goRetained is what the Go runtime holds from the OS, footprint what the
+            // system charges the whole extension (and enforces its limit on).
+            let goMemory = IosQueryMemory()
+            TunnelLog.packetFlow.debug("traffic query: up=\(stats?.uplinkBytes ?? 0, privacy: .public) down=\(stats?.downlinkBytes ?? 0, privacy: .public) goRetained=\(goMemory?.retainedBytes ?? 0, privacy: .public) footprint=\(currentFootprintBytes(), privacy: .public)")
             completionHandler?(AppMessageWire.encodeTraffic(
                 uplink: stats?.uplinkBytes ?? 0,
                 downlink: stats?.downlinkBytes ?? 0,
