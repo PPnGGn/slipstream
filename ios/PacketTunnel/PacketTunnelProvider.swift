@@ -245,6 +245,9 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
     private let logBridge = CoreLogBridge()
     private let pathMonitor = NWPathMonitor()
     private let pathMonitorQueue = DispatchQueue(label: "vpn.oko.xraytunnel.path")
+    #if DEBUG
+    private var memorySampler: MemorySampler?
+    #endif
 
     override func startTunnel(options: [String: NSObject]?, completionHandler: @escaping (Error?) -> Void) {
         IosSetHandler(logBridge)
@@ -252,6 +255,10 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
         // Chatty core logs (xray access + DNS, tun2socks connections) for debug
         // builds only; the build itself decides, so release never turns them on.
         IosSetVerboseLogs(true)
+        // Memory samples and the command file, see MemorySampler. Started before
+        // the core so that the peak of building a large config is in them.
+        memorySampler = MemorySampler()
+        memorySampler?.start()
         #endif
         TunnelLog.lifecycle.notice("startTunnel: core is xray \(IosVersion(), privacy: .public)")
         TunnelLog.lifecycle.notice("startTunnel: entry; options keys=\(options?.keys.map(String.init(describing:)).joined(separator: ",") ?? "nil", privacy: .public)")
@@ -336,6 +343,10 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
                 var stopError: NSError?
                 _ = IosStop(&stopError)
                 TunnelLog.lifecycle.notice("stopTunnel: IosStop returned; stopError=\(stopError?.localizedDescription ?? "nil", privacy: .public)")
+                #if DEBUG
+                self.memorySampler?.stop()
+                self.memorySampler = nil
+                #endif
                 IosSetHandler(nil)
                 completionHandler()
             }
@@ -444,3 +455,145 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
         TunnelLog.lifecycle.notice("wake: device woke")
     }
 }
+
+#if DEBUG
+/// Debug builds only. Measures the extension on a device without Xcode attached:
+/// once a second it appends one JSON line of memory figures to a file in the app
+/// group, and it runs the commands found in a command file in the same folder.
+/// Both files are reached from the Mac with
+/// `xcrun devicectl device copy from|to --domain-type appGroupDataContainer`.
+///
+/// Folder `memsample/` of the app group:
+///   samples.jsonl  one line per second, plus an event line per command
+///   command.txt    commands, one per line; deleted once they have run:
+///                    label <text>            tag the samples that follow
+///                    gc <percent> <limitMB>  GC settings of the core (0 = no limit)
+///                    heap <name>             write heap-<name>.pprof here
+///                    goroutines <name>       write goroutines-<name>.txt here
+///                    free                    run a GC and hand memory back
+///                    truncate                start samples.jsonl over
+///
+/// Sample fields, bytes: footprint (what jetsam charges), peak (the highest it
+/// has been), available (os_proc_available_memory: how much more the extension
+/// may take, so footprint + available is the limit), and the Go runtime's
+/// share (retained, total, heap, stack), goroutines, gc cycles, gcPercent and
+/// limitMB (-1 = none).
+final class MemorySampler {
+    static let groupID = "group.vpn.oko"
+
+    private let queue = DispatchQueue(label: "vpn.oko.xraytunnel.memsampler", qos: .utility)
+    private var timer: DispatchSourceTimer?
+    private let dir: URL
+    private var samplesURL: URL { dir.appendingPathComponent("samples.jsonl") }
+    private var commandURL: URL { dir.appendingPathComponent("command.txt") }
+    private var label = "start"
+
+    init?() {
+        guard let base = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: Self.groupID) else {
+            TunnelLog.lifecycle.error("MemorySampler: no app group container for \(Self.groupID, privacy: .public)")
+            return nil
+        }
+        dir = base.appendingPathComponent("memsample", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+    }
+
+    func start() {
+        queue.async {
+            self.append(#"{"event":"sampler-start","t":\#(Self.nowMs())}"#)
+        }
+        let timer = DispatchSource.makeTimerSource(queue: queue)
+        timer.schedule(deadline: .now(), repeating: 1.0)
+        timer.setEventHandler { [weak self] in self?.tick() }
+        timer.resume()
+        self.timer = timer
+    }
+
+    func stop() {
+        timer?.cancel()
+        timer = nil
+        queue.async {
+            self.append(#"{"event":"sampler-stop","t":\#(Self.nowMs())}"#)
+        }
+    }
+
+    private func tick() {
+        runCommands()
+        append(sampleLine())
+    }
+
+    private func sampleLine() -> String {
+        let footprint = currentFootprintBytes()
+        let go = IosQueryMemory()
+        let limit = go?.memoryLimitBytes ?? Int64.max
+        let limitMB = limit == Int64.max ? -1 : limit >> 20
+        return #"{"t":\#(Self.nowMs()),"label":"\#(Self.escape(label))","footprint":\#(footprint),"peak":\#(footprintPeakBytes()),"available":\#(os_proc_available_memory()),"goRetained":\#(go?.retainedBytes ?? 0),"goTotal":\#(go?.totalBytes ?? 0),"goHeap":\#(go?.heapInuseBytes ?? 0),"goStack":\#(go?.stackBytes ?? 0),"goroutines":\#(go?.goroutines ?? 0),"gcCycles":\#(go?.gcCycles ?? 0),"gcPercent":\#(go?.gcPercent ?? 0),"limitMB":\#(limitMB)}"#
+    }
+
+    private func runCommands() {
+        guard let text = try? String(contentsOf: commandURL, encoding: .utf8) else { return }
+        try? FileManager.default.removeItem(at: commandURL)
+        for raw in text.split(whereSeparator: \.isNewline) {
+            let line = raw.trimmingCharacters(in: .whitespaces)
+            if line.isEmpty { continue }
+            let parts = line.split(separator: " ", maxSplits: 2).map(String.init)
+            var error: NSError?
+            var detail = ""
+            var ok = true
+            switch parts[0] {
+            case "label" where parts.count >= 2:
+                label = parts.dropFirst().joined(separator: " ")
+            case "gc" where parts.count == 3:
+                ok = IosSetGCTuning(Int(parts[1]) ?? 0, Int(parts[2]) ?? 0, &error)
+            case "heap" where parts.count == 2:
+                detail = IosWriteHeapProfile(dir.path, parts[1], &error)
+                ok = error == nil
+            case "goroutines" where parts.count == 2:
+                detail = IosWriteGoroutineDump(dir.path, parts[1], &error)
+                ok = error == nil
+            case "free":
+                IosFreeMemory()
+            case "truncate":
+                try? FileManager.default.removeItem(at: samplesURL)
+            default:
+                ok = false
+                detail = "unknown command"
+            }
+            if let error { detail = error.localizedDescription }
+            append(#"{"event":"cmd","t":\#(Self.nowMs()),"cmd":"\#(Self.escape(line))","ok":\#(ok),"detail":"\#(Self.escape(detail))"}"#)
+        }
+    }
+
+    private func append(_ line: String) {
+        let data = Data((line + "\n").utf8)
+        if let handle = try? FileHandle(forWritingTo: samplesURL) {
+            defer { try? handle.close() }
+            _ = try? handle.seekToEnd()
+            try? handle.write(contentsOf: data)
+        } else {
+            try? data.write(to: samplesURL)
+        }
+    }
+
+    private static func nowMs() -> Int64 { Int64(Date().timeIntervalSince1970 * 1000) }
+
+    private static func escape(_ s: String) -> String {
+        s.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
+    }
+}
+
+/// The highest `phys_footprint` the extension has reached, which one-second
+/// samples can miss (the start of a session, building the geo matchers, is a
+/// peak a few hundred milliseconds wide).
+private func footprintPeakBytes() -> Int64 {
+    var info = task_vm_info_data_t()
+    var count = mach_msg_type_number_t(
+        MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<integer_t>.size
+    )
+    let kerr = withUnsafeMutablePointer(to: &info) { ptr -> kern_return_t in
+        ptr.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+            task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
+        }
+    }
+    return kerr == KERN_SUCCESS ? info.ledger_phys_footprint_peak : 0
+}
+#endif
