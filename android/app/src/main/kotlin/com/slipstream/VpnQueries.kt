@@ -21,10 +21,11 @@ object VpnQueries {
             File(context.filesDir, "http.sock").absolutePath
 
     // Same process as V2RayVpnService, so the Go core's session state is right here.
-    // Carries the proxy password: never log the result.
+    // Carries the proxy password: never log the result. The core's object keeps the
+    // credentials behind methods and hides them from toString, but this message does not.
     fun localProxy(): LocalProxyMessage? {
         val proxy = Android.localHTTPProxy() ?: return null
-        return LocalProxyMessage(socket = proxy.socket, user = proxy.user, pass = proxy.pass)
+        return LocalProxyMessage(socket = proxy.socket(), user = proxy.user(), pass = proxy.pass())
     }
 
     // Private DNS is a global setting, so any network's LinkProperties carry it:
