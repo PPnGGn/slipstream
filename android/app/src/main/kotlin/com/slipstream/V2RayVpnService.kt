@@ -155,8 +155,10 @@ class V2RayVpnService : VpnService() {
             // Chatty core logs for debug builds only. The flag comes from the
             // build itself (release APKs are never debuggable), not from Dart.
             Android.setVerboseLogs(isDebuggable())
-            // The core picks the SOCKS port and credentials itself; they never leave Go.
-            Android.start(configJson, fd.toLong(), geoDir)
+            // The core listens on no port at all. The only listener is the HTTP proxy
+            // for the app's own requests, on a Unix socket in the app's private
+            // directory; its password is picked by the core (see VpnQueries.localProxy).
+            Android.start(configJson, fd.toLong(), geoDir, VpnQueries.httpSocketPath(this))
             Log.d("VPN_SERVICE", "Xray + tun2socks started, fd=$fd, dns=$dnsServers, geoDir=$geoDir")
 
             val connectedAtMs = System.currentTimeMillis()

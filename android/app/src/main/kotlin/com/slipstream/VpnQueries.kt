@@ -13,11 +13,18 @@ object VpnQueries {
     fun geoDir(context: Context): String =
             File(context.filesDir, "geo").apply { mkdirs() }.absolutePath
 
+    // Where the core serves the HTTP proxy for the app's own requests: a Unix
+    // socket in the app's private directory, not a TCP port, because a port on
+    // the loopback can be found by every other app on the phone. Keep the path
+    // short, a socket path is limited to about 100 bytes.
+    fun httpSocketPath(context: Context): String =
+            File(context.filesDir, "http.sock").absolutePath
+
     // Same process as V2RayVpnService, so the Go core's session state is right here.
     // Carries the proxy password: never log the result.
     fun localProxy(): LocalProxyMessage? {
         val proxy = Android.localHTTPProxy() ?: return null
-        return LocalProxyMessage(port = proxy.port, user = proxy.user, pass = proxy.pass)
+        return LocalProxyMessage(socket = proxy.socket, user = proxy.user, pass = proxy.pass)
     }
 
     // Private DNS is a global setting, so any network's LinkProperties carry it:

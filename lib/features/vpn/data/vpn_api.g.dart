@@ -346,24 +346,27 @@ class VpnTrafficMessage {
   int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
 }
 
-/// The core's loopback HTTP proxy for the app's own requests while the tunnel
-/// is up (the app is excluded from its own tunnel). Port and credentials are
-/// fresh every session. Carries a password: never log it.
+/// The core's HTTP proxy for the app's own requests while the tunnel is up
+/// (the app is excluded from its own tunnel). It listens on a Unix socket in
+/// the app's private directory, not on a TCP port: a port on the loopback can
+/// be found by every other app. Credentials are fresh every session. Carries a
+/// password: never log it.
 class LocalProxyMessage {
   LocalProxyMessage({
-    required this.port,
+    required this.socket,
     required this.user,
     required this.pass,
   });
 
-  int port;
+  /// Absolute path of the Unix socket.
+  String socket;
 
   String user;
 
   String pass;
 
   List<Object?> _toList() {
-    return <Object?>[port, user, pass];
+    return <Object?>[socket, user, pass];
   }
 
   Object encode() {
@@ -373,7 +376,7 @@ class LocalProxyMessage {
   static LocalProxyMessage decode(Object result) {
     result as List<Object?>;
     return LocalProxyMessage(
-      port: result[0]! as int,
+      socket: result[0]! as String,
       user: result[1]! as String,
       pass: result[2]! as String,
     );
@@ -388,7 +391,7 @@ class LocalProxyMessage {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(port, other.port) &&
+    return _deepEquals(socket, other.socket) &&
         _deepEquals(user, other.user) &&
         _deepEquals(pass, other.pass);
   }

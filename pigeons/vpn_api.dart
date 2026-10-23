@@ -47,11 +47,14 @@ class VpnTrafficMessage {
   int? memoryBytes;
 }
 
-/// The core's loopback HTTP proxy for the app's own requests while the tunnel
-/// is up (the app is excluded from its own tunnel). Port and credentials are
-/// fresh every session. Carries a password: never log it.
+/// The core's HTTP proxy for the app's own requests while the tunnel is up
+/// (the app is excluded from its own tunnel). It listens on a Unix socket in
+/// the app's private directory, not on a TCP port: a port on the loopback can
+/// be found by every other app. Credentials are fresh every session. Carries a
+/// password: never log it.
 class LocalProxyMessage {
-  int port;
+  /// Absolute path of the Unix socket.
+  String socket;
   String user;
   String pass;
 }

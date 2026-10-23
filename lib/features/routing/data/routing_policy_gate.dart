@@ -46,8 +46,10 @@ class RoutingPolicyGate {
   /// destination" — i.e. it brought its own policy, leave it alone.
   static const _matcherKeys = {'domain', 'domains', 'ip', 'geoip'};
 
-  /// Tag of the inbound the core puts in front of tun2socks. Owned by
-  /// slipstream-core (`localInbounds`); the DNS hijack rule below depends on it.
+  /// Tag the core gives the traffic of tun2socks. There is no inbound behind
+  /// it: the core hands the connections to xray inside the process, under this
+  /// tag (slipstream-core `bridgeInboundTag`). The DNS hijack rule below
+  /// depends on it.
   static const _socksInboundTag = 'socks';
 
   /// Fallback tag for the proxy outbound when the config's first outbound has

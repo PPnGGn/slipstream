@@ -300,7 +300,7 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
             self.flowBridge = bridge
 
             var startError: NSError?
-            // The core picks the SOCKS port and credentials itself; they never leave Go.
+            // The core listens on no port: tun2socks reaches xray inside the process.
             let ok = IosStart(configJson, bridge, geoAssetDir, &startError)
             TunnelLog.lifecycle.notice("IosStart(configLen=\(configJson.count, privacy: .public), geoAssetDir=\(geoAssetDir.isEmpty ? "<default>" : geoAssetDir, privacy: .public)) -> ok=\(ok, privacy: .public)")
             if !ok {

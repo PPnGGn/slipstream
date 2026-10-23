@@ -25,7 +25,7 @@ class _FakeProxy implements LocalProxyProvider {
   }
 }
 
-final _tunnel = LocalProxyMessage(port: 10808, user: 'u', pass: 'p');
+final _tunnel = LocalProxyMessage(socket: '/tmp/h.sock', user: 'u', pass: 'p');
 
 void main() {
   Future<SubscriptionFetcher> fetcherOn(
