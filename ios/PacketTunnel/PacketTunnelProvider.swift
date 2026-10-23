@@ -496,6 +496,9 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
 ///                    udp <seconds>           idle time of a UDP session (60 by default)
 ///                    heap <name>             write heap-<name>.pprof here
 ///                    goroutines <name>       write goroutines-<name>.txt here
+///                    aes                     speed of AES-GCM in this process: tens of MB/s is
+///                                            software, several GB/s the instructions of the
+///                                            processor; the speed is in the detail of the event
 ///                    free                    run a GC and hand memory back
 ///                    truncate                start samples.jsonl over
 ///
@@ -583,6 +586,9 @@ final class MemorySampler {
                 ok = error == nil
             case "goroutines" where parts.count == 2:
                 detail = IosWriteGoroutineDump(dir.path, parts[1], &error)
+                ok = error == nil
+            case "aes":
+                detail = IosMeasureAESGCM(&error)
                 ok = error == nil
             case "free":
                 IosFreeMemory()
