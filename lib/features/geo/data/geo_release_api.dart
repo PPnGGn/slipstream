@@ -31,8 +31,12 @@ class GeoReleaseApi {
   final GeoSource _source;
 
   Future<GeoRelease> fetchLatest() async {
+    // With a refresh: the core can restart while the request is on its way (the
+    // user picks another server while connected), and the request is then sent
+    // again once with the password of the new session.
     final client =
-        _overrideClient ?? buildProxiedClient(await _proxy?.current());
+        _overrideClient ??
+        buildProxiedClient(await _proxy?.current(), refresh: _proxy?.current);
     try {
       final info =
           jsonDecode(await _get(client, _source.releaseInfoUrl))

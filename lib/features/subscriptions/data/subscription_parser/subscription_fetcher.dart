@@ -68,7 +68,7 @@ class SubscriptionFetcher {
     this._identity,
     this._proxy, {
     @ignoreParam http.Client Function(LocalProxyMessage?)? clientFactory,
-  }) : _clientFactory = clientFactory ?? buildProxiedClient;
+  }) : _clientFactory = clientFactory ?? refreshingProxyClientFactory(_proxy);
 
   Future<SubscriptionResponse> fetch(String url) async {
     final identity = await _identity.current();
