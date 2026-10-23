@@ -468,6 +468,7 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
 ///   command.txt    commands, one per line; deleted once they have run:
 ///                    label <text>            tag the samples that follow
 ///                    gc <percent> <limitMB>  GC settings of the core (0 = no limit)
+///                    udp <seconds>           idle time of a UDP session (60 by default)
 ///                    heap <name>             write heap-<name>.pprof here
 ///                    goroutines <name>       write goroutines-<name>.txt here
 ///                    free                    run a GC and hand memory back
@@ -545,6 +546,8 @@ final class MemorySampler {
                 label = parts.dropFirst().joined(separator: " ")
             case "gc" where parts.count == 3:
                 ok = IosSetGCTuning(Int(parts[1]) ?? 0, Int(parts[2]) ?? 0, &error)
+            case "udp" where parts.count == 2:
+                ok = IosSetUDPTimeout(Int(parts[1]) ?? 0, &error)
             case "heap" where parts.count == 2:
                 detail = IosWriteHeapProfile(dir.path, parts[1], &error)
                 ok = error == nil
