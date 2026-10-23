@@ -278,15 +278,30 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
             return
         }
 
+        // A network of its own for every session: the same addresses every time are
+        // something another app can read off the interface and look for. The MTU is
+        // the core's, take it as it is. No random numbers are made here.
+        var networkError: NSError?
+        guard let network = IosNewTunnelNetwork(&networkError) else {
+            TunnelLog.lifecycle.error("startTunnel: no tunnel network: \(networkError?.localizedDescription ?? "unknown", privacy: .public)")
+            completionHandler(networkError ?? NSError(
+                domain: "vpn.oko.XrayTunnel",
+                code: 2,
+                userInfo: [NSLocalizedDescriptionKey: "No tunnel network"]
+            ))
+            return
+        }
+
         let settings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: "127.0.0.1")
-        settings.ipv4Settings = NEIPv4Settings(addresses: ["10.10.10.2"], subnetMasks: ["255.255.255.0"])
+        settings.ipv4Settings = NEIPv4Settings(addresses: [network.address4], subnetMasks: [network.mask4])
         settings.ipv4Settings?.includedRoutes = [NEIPv4Route.default()]
-        settings.ipv6Settings = NEIPv6Settings(addresses: ["fd00:10:10:10::2"], networkPrefixLengths: [64])
+        settings.ipv6Settings = NEIPv6Settings(addresses: [network.address6], networkPrefixLengths: [NSNumber(value: network.prefix6)])
         settings.ipv6Settings?.includedRoutes = [NEIPv6Route.default()]
-        settings.mtu = 1500
+        settings.mtu = NSNumber(value: network.mtu)
         settings.dnsSettings = NEDNSSettings(servers: ["1.1.1.1", "1.0.0.1"])
 
-        TunnelLog.lifecycle.notice("startTunnel: applying network settings (tunnel 10.10.10.2/24 + fd00:10:10:10::2/64, dns 1.1.1.1, mtu 1500)")
+        // The addresses are not logged: this is the tunnel's own, per-session network.
+        TunnelLog.lifecycle.notice("startTunnel: applying network settings (random tunnel network, dns 1.1.1.1, mtu \(network.mtu, privacy: .public))")
         setTunnelNetworkSettings(settings) { [weak self] error in
             guard let self else { return }
             if let error {
