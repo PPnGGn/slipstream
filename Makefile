@@ -66,8 +66,24 @@ clean-sync-api:
 	rm -f android/app/src/main/kotlin/com/slipstream/sync/SyncApi.g.kt
 
 
+# Pigeon installed-apps bridge (Android-only, for split tunneling). Own Kotlin
+# package for the same FlutterError reason as above.
+generate-installed-apps-api:
+	dart run pigeon \
+	--input pigeons/installed_apps_api.dart \
+	--copyright_header pigeons/copyright_header.txt \
+	--dart_out lib/features/split_tunnel/data/installed_apps_api.g.dart \
+	--kotlin_out android/app/src/main/kotlin/com/slipstream/apps/InstalledAppsApi.g.kt \
+	--kotlin_package "com.slipstream.apps"
+
+# Remove generated Pigeon outputs
+clean-installed-apps-api:
+	rm -f lib/features/split_tunnel/data/installed_apps_api.g.dart
+	rm -f android/app/src/main/kotlin/com/slipstream/apps/InstalledAppsApi.g.kt
+
+
 # All Pigeon bridges at once (needed after a fresh clone: *.g.dart is gitignored)
-generate-pigeon: generate-vpn-api generate-updater-api generate-device-info-api generate-sync-api
+generate-pigeon: generate-vpn-api generate-updater-api generate-device-info-api generate-sync-api generate-installed-apps-api
 
 
 build-core-android:
