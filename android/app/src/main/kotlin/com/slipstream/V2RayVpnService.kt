@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.net.VpnService
 import android.os.Build
@@ -115,18 +116,29 @@ class V2RayVpnService : VpnService() {
         val geoDir = intent.getStringExtra("GEO_DIR")
                 ?: java.io.File(filesDir, "geo").apply { mkdirs() }.absolutePath
         val hijackDns = intent.getBooleanExtra("HIJACK_DNS", false)
+        val splitMode =
+                intent.getStringExtra("SPLIT_MODE")?.let {
+                    runCatching { VpnSplitMode.valueOf(it) }.getOrNull()
+                }
+        val splitPackages = intent.getStringArrayListExtra("SPLIT_PACKAGES") ?: emptyList<String>()
 
         Log.d("VPN_SERVICE", "Starting service and core...")
         isStopping = false
         startForegroundWithNotification(buildNotification("Подключение…"))
         VpnEventBridge.notifyStatus(VpnStatus.CONNECTING)
         Android.setHandler(VpnEventBridge)
-        setupVpn(configJson, geoDir, hijackDns)
+        setupVpn(configJson, geoDir, hijackDns, splitMode, splitPackages)
 
         return START_STICKY
     }
 
-    private fun setupVpn(configJson: String, geoDir: String, hijackDns: Boolean) {
+    private fun setupVpn(
+            configJson: String,
+            geoDir: String,
+            hijackDns: Boolean,
+            splitMode: VpnSplitMode?,
+            splitPackages: List<String>,
+    ) {
         try {
             // A network of its own for every session: the same addresses every time
             // are something another app can read off the interface and look for.
@@ -144,15 +156,23 @@ class V2RayVpnService : VpnService() {
                             .addAddress(network.address4, network.prefix4.toInt())
                             .addAddress(network.address6, network.prefix6.toInt())
             dnsServers.forEach { builder.addDnsServer(it) }
+            // The app itself stays outside the tunnel: the core's own connections
+            // must not loop back into it, server ping must measure the direct path,
+            // and subscription/geo requests go direct unless they ask for the core's
+            // local proxy. applySplitTunnel keeps that true in every mode. Do not drop.
+            val split =
+                    applySplitTunnel(
+                            splitMode,
+                            splitPackages,
+                            packageName,
+                            allow = { pkg -> builder.tryAllowApplication(pkg) },
+                            disallow = { pkg -> builder.tryDisallowApplication(pkg) },
+                    )
+            logSplitTunnel(splitMode, split)
             val tunnel =
                     builder
                             .addRoute("0.0.0.0", 0)
                             .addRoute("::", 0)
-                            // The app itself stays outside the tunnel: the core's own
-                            // connections must not loop back into it, server ping must
-                            // measure the direct path, and subscription/geo requests go
-                            // direct unless they ask for the core's local proxy. Do not drop.
-                            .addDisallowedApplication(packageName)
                             .setSession("Slipstream")
                             .setMtu(network.getMTU().toInt())
                             .establish()
@@ -184,6 +204,34 @@ class V2RayVpnService : VpnService() {
             Log.e("VPN_SERVICE", "Critical error in setupVpn: ${e.message}")
             VpnEventBridge.notifyStatus(VpnStatus.ERROR, e.message ?: "setupVpn failed")
             stopVpn(dueToError = true)
+        }
+    }
+
+    // An app can be uninstalled after the user picked it: the Builder then throws
+    // NameNotFoundException, which must not stop the tunnel from coming up.
+    private fun Builder.tryAllowApplication(pkg: String): Boolean =
+            try {
+                addAllowedApplication(pkg)
+                true
+            } catch (e: PackageManager.NameNotFoundException) {
+                false
+            }
+
+    private fun Builder.tryDisallowApplication(pkg: String): Boolean =
+            try {
+                addDisallowedApplication(pkg)
+                true
+            } catch (e: PackageManager.NameNotFoundException) {
+                false
+            }
+
+    private fun logSplitTunnel(mode: VpnSplitMode?, outcome: SplitTunnelOutcome) {
+        Log.d(
+                "VPN_SERVICE",
+                "Split tunnel: mode=$mode applied=${outcome.applied} skipped=${outcome.skipped}",
+        )
+        if (outcome.fellBackToFullTunnel) {
+            Log.w("VPN_SERVICE", "Split tunnel: no picked app is installed, tunneling every app")
         }
     }
 

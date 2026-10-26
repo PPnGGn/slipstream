@@ -125,6 +125,11 @@ enum VpnStatus {
   error,
 }
 
+enum VpnSplitMode {
+  proxy,
+  bypass,
+}
+
 class VpnConfigMessage {
   VpnConfigMessage({
     required this.configJson,
@@ -132,6 +137,8 @@ class VpnConfigMessage {
     this.title,
     this.geoAssetDir,
     this.hijackDns,
+    this.splitMode,
+    this.splitPackages,
   });
 
   String configJson;
@@ -150,6 +157,13 @@ class VpnConfigMessage {
   /// (provider configs route DNS their own way).
   bool? hijackDns;
 
+  /// Per-app split tunneling (Android only; iOS ignores both fields). Null
+  /// means "tunnel every app". [splitPackages] is never empty when [splitMode]
+  /// is set: the client treats an empty list as "off" before it gets here.
+  VpnSplitMode? splitMode;
+
+  List<String>? splitPackages;
+
   List<Object?> _toList() {
     return <Object?>[
       configJson,
@@ -157,6 +171,8 @@ class VpnConfigMessage {
       title,
       geoAssetDir,
       hijackDns,
+      splitMode,
+      splitPackages,
     ];
   }
 
@@ -171,6 +187,8 @@ class VpnConfigMessage {
       title: result[2] as String?,
       geoAssetDir: result[3] as String?,
       hijackDns: result[4] as bool?,
+      splitMode: result[5] as VpnSplitMode?,
+      splitPackages: (result[6] as List<Object?>?)?.cast<String>(),
     );
   }
 
@@ -183,7 +201,7 @@ class VpnConfigMessage {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(configJson, other.configJson) && _deepEquals(serverId, other.serverId) && _deepEquals(title, other.title) && _deepEquals(geoAssetDir, other.geoAssetDir) && _deepEquals(hijackDns, other.hijackDns);
+    return _deepEquals(configJson, other.configJson) && _deepEquals(serverId, other.serverId) && _deepEquals(title, other.title) && _deepEquals(geoAssetDir, other.geoAssetDir) && _deepEquals(hijackDns, other.hijackDns) && _deepEquals(splitMode, other.splitMode) && _deepEquals(splitPackages, other.splitPackages);
   }
 
   @override
@@ -469,23 +487,26 @@ class _PigeonCodec extends StandardMessageCodec {
     }    else if (value is VpnStatus) {
       buffer.putUint8(129);
       writeValue(buffer, value.index);
-    }    else if (value is VpnConfigMessage) {
+    }    else if (value is VpnSplitMode) {
       buffer.putUint8(130);
-      writeValue(buffer, value.encode());
-    }    else if (value is VpnStatusMessage) {
+      writeValue(buffer, value.index);
+    }    else if (value is VpnConfigMessage) {
       buffer.putUint8(131);
       writeValue(buffer, value.encode());
-    }    else if (value is VpnLogMessage) {
+    }    else if (value is VpnStatusMessage) {
       buffer.putUint8(132);
       writeValue(buffer, value.encode());
-    }    else if (value is VpnTrafficMessage) {
+    }    else if (value is VpnLogMessage) {
       buffer.putUint8(133);
       writeValue(buffer, value.encode());
-    }    else if (value is LocalProxyMessage) {
+    }    else if (value is VpnTrafficMessage) {
       buffer.putUint8(134);
       writeValue(buffer, value.encode());
-    }    else if (value is VpnResult) {
+    }    else if (value is LocalProxyMessage) {
       buffer.putUint8(135);
+      writeValue(buffer, value.encode());
+    }    else if (value is VpnResult) {
+      buffer.putUint8(136);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -499,16 +520,19 @@ class _PigeonCodec extends StandardMessageCodec {
         final value = readValue(buffer) as int?;
         return value == null ? null : VpnStatus.values[value];
       case 130:
-        return VpnConfigMessage.decode(readValue(buffer)!);
+        final value = readValue(buffer) as int?;
+        return value == null ? null : VpnSplitMode.values[value];
       case 131:
-        return VpnStatusMessage.decode(readValue(buffer)!);
+        return VpnConfigMessage.decode(readValue(buffer)!);
       case 132:
-        return VpnLogMessage.decode(readValue(buffer)!);
+        return VpnStatusMessage.decode(readValue(buffer)!);
       case 133:
-        return VpnTrafficMessage.decode(readValue(buffer)!);
+        return VpnLogMessage.decode(readValue(buffer)!);
       case 134:
-        return LocalProxyMessage.decode(readValue(buffer)!);
+        return VpnTrafficMessage.decode(readValue(buffer)!);
       case 135:
+        return LocalProxyMessage.decode(readValue(buffer)!);
+      case 136:
         return VpnResult.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);

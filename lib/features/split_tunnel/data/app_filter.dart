@@ -1,6 +1,14 @@
 import 'package:slipstream/features/split_tunnel/data/installed_apps_api.g.dart';
 import 'package:slipstream/features/split_tunnel/data/split_tunnel_settings.dart';
 
+List<InstalledAppMessage> selectedFirst(
+  List<InstalledAppMessage> apps,
+  Set<String> pinned,
+) => [
+  ...apps.where((a) => pinned.contains(a.packageName)),
+  ...apps.where((a) => !pinned.contains(a.packageName)),
+];
+
 List<InstalledAppMessage> visibleApps(
   List<InstalledAppMessage> apps,
   SplitTunnelSettings settings,

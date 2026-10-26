@@ -9,6 +9,8 @@ import 'package:slipstream/features/geo/data/geo_paths.dart';
 import 'package:slipstream/features/routing/cubit/ad_block_cubit.dart';
 import 'package:slipstream/features/routing/cubit/ru_bypass_cubit.dart';
 import 'package:slipstream/features/routing/data/routing_policy_gate.dart';
+import 'package:slipstream/features/split_tunnel/cubit/split_tunnel_cubit.dart';
+import 'package:slipstream/features/split_tunnel/data/split_tunnel_message.dart';
 import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
 import 'package:slipstream/features/vpn/data/vpn_event_receiver.dart';
 import 'package:slipstream/features/vpn/data/xray_log_store.dart';
@@ -25,6 +27,7 @@ class VpnRepository {
   final RoutingPolicyGate _routingPolicyGate;
   final RuBypassCubit _ruBypassCubit;
   final AdBlockCubit _adBlockCubit;
+  final SplitTunnelCubit _splitTunnelCubit;
   late final StreamSubscription<VpnLogMessage> _logSubscription;
 
   VpnRepository(
@@ -38,6 +41,7 @@ class VpnRepository {
     this._routingPolicyGate,
     this._ruBypassCubit,
     this._adBlockCubit,
+    this._splitTunnelCubit,
   ) {
     _logSubscription = _events.logs.listen(_xrayLogStore.add);
   }
@@ -64,6 +68,7 @@ class VpnRepository {
       );
       // 2. strip geo tokens the installed .dat can't resolve.
       final configJson = _geoGate.prepare(policy.configJson, _geoCubit.state);
+      final split = splitTunnelMessage(_splitTunnelCubit.state);
       final result = await _vpnConnection.start(
         VpnConfigMessage(
           configJson: configJson,
@@ -71,6 +76,8 @@ class VpnRepository {
           title: server.title,
           geoAssetDir: geoDir,
           hijackDns: policy.hijacksDns,
+          splitMode: split.mode,
+          splitPackages: split.packages,
         ),
       );
 

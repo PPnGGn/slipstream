@@ -8,10 +8,12 @@ class SubscriptionSearchBar extends StatefulWidget {
     super.key,
     required this.colors,
     required this.controller,
+    this.hintText = 'Search servers, countries or protocols',
   });
 
   final AppColors colors;
   final TextEditingController controller;
+  final String hintText;
 
   @override
   State<SubscriptionSearchBar> createState() => _SubscriptionSearchBarState();
@@ -56,7 +58,7 @@ class _SubscriptionSearchBarState extends State<SubscriptionSearchBar> {
         enabledBorder: border,
         focusedBorder: border,
         contentPadding: const .symmetric(vertical: 13),
-        hintText: 'Search servers, countries or protocols',
+        hintText: widget.hintText,
         prefixIcon: Padding(
           padding: const .fromLTRB(14, 0, 9, 0),
           child: SvgPicture.asset(

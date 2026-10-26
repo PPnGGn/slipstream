@@ -61,6 +61,24 @@ void main() {
     });
   });
 
+  group('selectedFirst', () {
+    List<String> order(Iterable<dynamic> list) =>
+        list.map((a) => a.packageName as String).toList();
+
+    test('moves the pinned apps to the top, keeping the order in each part', () {
+      final sorted = selectedFirst(apps, {'com.webview', 'com.bank'});
+      expect(order(sorted), ['com.bank', 'com.webview', 'com.chrome']);
+    });
+
+    test('nothing pinned keeps the incoming order', () {
+      expect(order(selectedFirst(apps, const {})), order(apps));
+    });
+
+    test('a pinned package missing from the list changes nothing', () {
+      expect(order(selectedFirst(apps, {'gone'})), order(apps));
+    });
+  });
+
   test('keeps the incoming order', () {
     final shown = visibleApps(
       apps,

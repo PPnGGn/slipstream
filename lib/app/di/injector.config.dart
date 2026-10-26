@@ -298,12 +298,6 @@ extension GetItInjectableX on _i174.GetIt {
         talker: gh<_i207.Talker>(),
       ),
     );
-    gh.lazySingleton<_i302.SubscriptionParserService>(
-      () => _i302.SubscriptionParserService(
-        gh<_i207.Talker>(),
-        gh<_i746.SubscriptionFetcher>(),
-      ),
-    );
     gh.lazySingleton<_i1056.VpnRepository>(
       () => _i1056.VpnRepository(
         gh<_i207.Talker>(),
@@ -316,6 +310,28 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i194.RoutingPolicyGate>(),
         gh<_i1048.RuBypassCubit>(),
         gh<_i863.AdBlockCubit>(),
+        gh<_i277.SplitTunnelCubit>(),
+      ),
+      dispose: (i) => i.dispose(),
+    );
+    gh.lazySingleton<_i202.VpnServiceCubit>(
+      () => _i202.VpnServiceCubit(
+        repository: gh<_i1056.VpnRepository>(),
+        sessionStore: gh<_i871.VpnSessionStore>(),
+        talker: gh<_i207.Talker>(),
+      ),
+    );
+    gh.lazySingleton<_i302.SubscriptionParserService>(
+      () => _i302.SubscriptionParserService(
+        gh<_i207.Talker>(),
+        gh<_i746.SubscriptionFetcher>(),
+      ),
+    );
+    gh.lazySingleton<_i196.GeoUpdateService>(
+      () => _i196.GeoUpdateService(
+        gh<_i818.GeoCubit>(),
+        gh<_i202.VpnServiceCubit>(),
+        gh<_i207.Talker>(),
       ),
       dispose: (i) => i.dispose(),
     );
@@ -328,13 +344,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i179.SubscriptionFactory>(),
       ),
     );
-    gh.lazySingleton<_i202.VpnServiceCubit>(
-      () => _i202.VpnServiceCubit(
-        repository: gh<_i1056.VpnRepository>(),
-        sessionStore: gh<_i871.VpnSessionStore>(),
-        talker: gh<_i207.Talker>(),
-      ),
-    );
     gh.lazySingleton<_i83.SubscriptionsCubit>(
       () => _i83.SubscriptionsCubit(
         parser: gh<_i302.SubscriptionParserService>(),
@@ -345,14 +354,6 @@ extension GetItInjectableX on _i174.GetIt {
         vpnServiceCubit: gh<_i202.VpnServiceCubit>(),
         talker: gh<_i207.Talker>(),
       ),
-    );
-    gh.lazySingleton<_i196.GeoUpdateService>(
-      () => _i196.GeoUpdateService(
-        gh<_i818.GeoCubit>(),
-        gh<_i202.VpnServiceCubit>(),
-        gh<_i207.Talker>(),
-      ),
-      dispose: (i) => i.dispose(),
     );
     gh.lazySingleton<_i474.SubscriptionSyncJob>(
       () => _i474.SubscriptionSyncJob(

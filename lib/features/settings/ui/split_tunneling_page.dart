@@ -36,6 +36,9 @@ class _SplitTunnelingPageState extends State<SplitTunnelingPage> {
   final _apps = getIt<InstalledAppsCubit>();
   final _search = TextEditingController();
 
+  // Fixed on entry: picking an app must not make its row jump to the top.
+  late final Set<String> _pinned = {..._split.state.packages};
+
   @override
   void initState() {
     super.initState();
@@ -253,6 +256,6 @@ class _SplitTunnelingPageState extends State<SplitTunnelingPage> {
     SplitTunnelSettings settings,
     InstalledAppsState apps,
   ) => apps is InstalledAppsLoaded
-      ? visibleApps(apps.apps, settings, apps.query)
+      ? selectedFirst(visibleApps(apps.apps, settings, apps.query), _pinned)
       : null;
 }

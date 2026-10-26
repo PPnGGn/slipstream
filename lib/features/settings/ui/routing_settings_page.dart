@@ -14,6 +14,7 @@ import 'package:slipstream/features/routing/cubit/ru_bypass_cubit.dart';
 import 'package:slipstream/features/routing/data/ad_block_mode.dart';
 import 'package:slipstream/features/routing/data/ru_bypass_mode.dart';
 import 'package:slipstream/features/settings/ui/widgets/help_sheet.dart';
+import 'package:slipstream/features/settings/ui/widgets/reconnect_hint.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_card.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_row.dart';
 
@@ -82,7 +83,7 @@ class RoutingSettingsPage extends StatelessWidget {
                           onSwitch: (enabled) async {
                             await ruBypassCubit.setBypassRu(enabled: enabled);
                             if (context.mounted) {
-                              _notifyIfConnected(context, vpn);
+                              notifyIfTunnelActive(context, vpn);
                             }
                           },
                         ),
@@ -100,7 +101,7 @@ class RoutingSettingsPage extends StatelessWidget {
                           onSwitch: (enabled) async {
                             await adBlockCubit.setEnabled(enabled: enabled);
                             if (context.mounted) {
-                              _notifyIfConnected(context, vpn);
+                              notifyIfTunnelActive(context, vpn);
                             }
                           },
                           footer: mode.enabled && adBlockCubit.fullAllowed
@@ -113,7 +114,7 @@ class RoutingSettingsPage extends StatelessWidget {
                                   onChanged: (value) async {
                                     await adBlockCubit.setMode(value);
                                     if (context.mounted) {
-                                      _notifyIfConnected(context, vpn);
+                                      notifyIfTunnelActive(context, vpn);
                                     }
                                   },
                                 )
@@ -278,20 +279,6 @@ class RoutingSettingsPage extends StatelessWidget {
 
   static String _date(DateTime d) =>
       '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';
-
-  static void _notifyIfConnected(BuildContext context, VpnServiceCubit vpn) {
-    final active = vpn.state.maybeWhen(
-      connected: (_, _, _, _) => true,
-      connecting: () => true,
-      orElse: () => false,
-    );
-    if (!active) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        const SnackBar(content: Text('Применится при переподключении')),
-      );
-  }
 }
 
 class _Action {
