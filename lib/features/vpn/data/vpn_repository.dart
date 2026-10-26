@@ -52,8 +52,8 @@ class VpnRepository {
       _talker.debug('Starting VPN with server: ${server.title}');
       final geoDir = await _geoPaths.dir();
 
-      // Inbounds are not touched here: the core replaces them with its own
-      // authenticated pair on random ports (see LocalProxyProvider).
+      // Inbounds are not touched here: the core drops them and listens on no
+      // port, apart from the HTTP proxy on a Unix socket (see LocalProxyProvider).
       // 1. client's own split policy (RU-bypass, ad-block), for scaffold
       //    configs that carry no routing of their own.
       final policy = _routingPolicyGate.apply(

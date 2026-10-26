@@ -96,11 +96,30 @@ Uint8List _salamanderKey(String password, Uint8List salt) {
   return out;
 }
 
+/// Opens the datagram socket of a probe. A seam for tests: the real one is
+/// [RawDatagramSocket.bind].
+typedef DatagramSocketBinder =
+    Future<RawDatagramSocket> Function(
+      InternetAddress host,
+      int port, {
+      int ttl,
+    });
+
+Future<RawDatagramSocket> _bindDatagramSocket(
+  InternetAddress host,
+  int port, {
+  int ttl = 1,
+}) => RawDatagramSocket.bind(host, port, ttl: ttl);
+
 /// Probes a UDP/QUIC endpoint (hysteria2) by sending one
 /// [buildQuicProbe] datagram and waiting for any reply.
 @LazySingleton(as: ServerPinger)
 @Named('quic')
 class QuicProbePinger implements ServerPinger {
+  QuicProbePinger({@ignoreParam DatagramSocketBinder? bind})
+    : _bind = bind ?? _bindDatagramSocket;
+
+  final DatagramSocketBinder _bind;
   final _rng = Random();
 
   @override
@@ -110,6 +129,7 @@ class QuicProbePinger implements ServerPinger {
     required Duration timeout,
   }) async {
     RawDatagramSocket? socket;
+    StreamSubscription<RawSocketEvent>? subscription;
     final stopwatch = Stopwatch()..start();
     try {
       final bindAddress = address.type == InternetAddressType.IPv6
@@ -118,42 +138,58 @@ class QuicProbePinger implements ServerPinger {
       // NB: RawDatagramSocket.bind defaults ttl to 1 (meant for
       // multicast); a plain unicast probe with that TTL dies after
       // one router hop and every remote server would read as dead.
-      socket = await RawDatagramSocket.bind(bindAddress, 0, ttl: 64);
+      socket = await _bind(bindAddress, 0, ttl: 64);
 
       var probe = buildQuicProbe(_rng);
       final password = target.salamanderPassword;
       if (password != null && password.isNotEmpty) {
         probe = applySalamanderObfuscation(probe, password, _rng);
       }
-      socket.send(probe, address, target.port);
-
+      // Listening starts before the send: the OS can refuse the send ("Operation
+      // not permitted" while the network is not up yet) and dart:io then
+      // reports it as an error on the socket's stream, not by throwing. With no
+      // onError that error is an unhandled exception of the app, and the probe
+      // waits out its whole timeout; handled here, it is the answer at once.
       final completer = Completer<PingAttemptResult>();
-      final subscription = socket.listen((event) {
-        if (event != RawSocketEvent.read || completer.isCompleted) return;
-        try {
-          final datagram = socket!.receive();
-          if (datagram == null) return;
-          stopwatch.stop();
-          completer.complete(
-            PingAttemptSuccess(stopwatch.elapsedMicroseconds / 1000),
-          );
-        } on SocketException catch (e) {
-          completer.complete(_classifySocketException(e));
-        }
-      });
+      subscription = socket.listen(
+        (event) {
+          if (event != RawSocketEvent.read || completer.isCompleted) return;
+          try {
+            final datagram = socket!.receive();
+            if (datagram == null) return;
+            stopwatch.stop();
+            completer.complete(
+              PingAttemptSuccess(stopwatch.elapsedMicroseconds / 1000),
+            );
+          } on SocketException catch (e) {
+            completer.complete(_classifySocketException(e));
+          }
+        },
+        onError: (Object error) {
+          if (completer.isCompleted) return;
+          completer.complete(_classify(error));
+        },
+      );
+
+      socket.send(probe, address, target.port);
 
       final result = await completer.future.timeout(
         timeout,
         onTimeout: () => const PingAttemptTimedOut(),
       );
-      await subscription.cancel();
       return result;
-    } on SocketException catch (e) {
-      return _classifySocketException(e);
+    } on IOException catch (e) {
+      // The send that throws, or a socket that could not be opened.
+      return _classify(e);
     } finally {
+      await subscription?.cancel();
       socket?.close();
     }
   }
+
+  PingAttemptResult _classify(Object error) => error is SocketException
+      ? _classifySocketException(error)
+      : PingAttemptSocketError(error);
 
   PingAttemptResult _classifySocketException(SocketException e) {
     final osError = e.osError;

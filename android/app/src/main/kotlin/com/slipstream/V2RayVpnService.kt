@@ -39,11 +39,9 @@ class V2RayVpnService : VpnService() {
         private const val ACTION_MEM_LOG = "com.slipstream.MEM_LOG"
         private const val TRAFFIC_POLL_INTERVAL_MS = 1000L
 
-        // Inside the TUN subnet (we are 10.0.0.2/24). Nothing answers on 853 here,
-        // so automatic Private DNS can't upgrade to DoT and the config's port-53
-        // hijack sees every query. Only for configs that hijack DNS themselves:
-        // provider rules would send a private address direct, into nowhere.
-        private const val TUN_DNS = "10.0.0.1"
+        // For configs that route DNS their own way. The other choice is the DNS
+        // address inside the TUN subnet that the core draws with the addresses
+        // (TunnelNetwork.dns4), see setupVpn.
         private val PUBLIC_DNS = listOf("1.1.1.1", "1.0.0.1")
     }
 
@@ -130,11 +128,21 @@ class V2RayVpnService : VpnService() {
 
     private fun setupVpn(configJson: String, geoDir: String, hijackDns: Boolean) {
         try {
-            val dnsServers = if (hijackDns) listOf(TUN_DNS) else PUBLIC_DNS
+            // A network of its own for every session: the same addresses every time
+            // are something another app can read off the interface and look for.
+            // Its MTU is the core's, take it as it is.
+            val network = Android.newTunnelNetwork()
+            // Inside the TUN subnet nothing answers on 853, so automatic Private DNS
+            // can't upgrade to DoT and the config's port-53 hijack sees every query.
+            // Only for configs that hijack DNS themselves: provider rules would send a
+            // private address direct, into nowhere.
+            // getDNS4() and getMTU() are called as methods: Kotlin turns the all-capital
+            // names gomobile makes from DNS4 and MTU into properties by its own rules.
+            val dnsServers = if (hijackDns) listOf(network.getDNS4()) else PUBLIC_DNS
             val builder =
                     Builder()
-                            .addAddress("10.0.0.2", 24)
-                            .addAddress("fd00:10:10:10::2", 64)
+                            .addAddress(network.address4, network.prefix4.toInt())
+                            .addAddress(network.address6, network.prefix6.toInt())
             dnsServers.forEach { builder.addDnsServer(it) }
             val tunnel =
                     builder
@@ -146,7 +154,7 @@ class V2RayVpnService : VpnService() {
                             // direct unless they ask for the core's local proxy. Do not drop.
                             .addDisallowedApplication(packageName)
                             .setSession("Slipstream")
-                            .setMtu(1500)
+                            .setMtu(network.getMTU().toInt())
                             .establish()
                             ?: throw Exception("Failed to establish the VPN interface")
             localTunnel = tunnel
@@ -155,9 +163,18 @@ class V2RayVpnService : VpnService() {
             // Chatty core logs for debug builds only. The flag comes from the
             // build itself (release APKs are never debuggable), not from Dart.
             Android.setVerboseLogs(isDebuggable())
-            // The core picks the SOCKS port and credentials itself; they never leave Go.
-            Android.start(configJson, fd.toLong(), geoDir)
-            Log.d("VPN_SERVICE", "Xray + tun2socks started, fd=$fd, dns=$dnsServers, geoDir=$geoDir")
+            // The core listens on no port at all. The only listener is the HTTP proxy
+            // for the app's own requests, on a Unix socket in the app's private
+            // directory; its password is picked by the core (see VpnQueries.localProxy).
+            //
+            // This runs on the main thread, which is also the one Dart runs on, so the
+            // UI waits for it. Measured on an A015 (Android 16), from onStartCommand to
+            // the return of Android.start: 40-200 ms, 540 ms for the first connect after
+            // the geo databases were installed; Android.stop takes 50-90 ms. The limits are
+            // seconds (5 s of a blocked input), so it stays here: a thread would need
+            // a guard for a stop that arrives before the start is done.
+            Android.start(configJson, fd.toLong(), geoDir, VpnQueries.httpSocketPath(this))
+            Log.d("VPN_SERVICE", "Xray + tun2socks started, fd=$fd, hijackDns=$hijackDns, geoDir=$geoDir")
 
             val connectedAtMs = System.currentTimeMillis()
             VpnEventBridge.notifyStatus(VpnStatus.CONNECTED, connectedAtEpochMs = connectedAtMs)

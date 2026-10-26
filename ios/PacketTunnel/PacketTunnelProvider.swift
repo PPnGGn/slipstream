@@ -185,6 +185,9 @@ final class PacketFlowBridge: NSObject, IosPacketFlowProtocol {
             let bufferDepth = self.buffer.count + packets.count
             self.buffer.append(contentsOf: packets)
             self.bufferLock.unlock()
+            #if DEBUG
+            BridgeCounters.shared.backlog(bufferDepth)
+            #endif
             if firstCallback {
                 TunnelLog.packetFlow.notice("pump: FIRST readPackets callback; \(packets.count, privacy: .public) pkts (device is producing outbound traffic)")
             }
@@ -218,7 +221,11 @@ final class PacketFlowBridge: NSObject, IosPacketFlowProtocol {
         } else if readCount % 500 == 0 {
             TunnelLog.packetFlow.info("readPacket: \(self.readCount, privacy: .public) packets device→netstack")
         }
-        return buffer.removeFirst()
+        let packet = buffer.removeFirst()
+        #if DEBUG
+        BridgeCounters.shared.read(bytes: packet.count)
+        #endif
+        return packet
     }
 
     func writePacket(_ packet: Data?) throws {
@@ -237,6 +244,9 @@ final class PacketFlowBridge: NSObject, IosPacketFlowProtocol {
         }
         let family: NSNumber = (packet.first.map { $0 >> 4 } == 6) ? AF_INET6 as NSNumber : AF_INET as NSNumber
         flow.writePackets([packet], withProtocols: [family])
+        #if DEBUG
+        BridgeCounters.shared.write(bytes: packet.count)
+        #endif
     }
 }
 
@@ -245,9 +255,22 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
     private let logBridge = CoreLogBridge()
     private let pathMonitor = NWPathMonitor()
     private let pathMonitorQueue = DispatchQueue(label: "vpn.oko.xraytunnel.path")
+    #if DEBUG
+    private var memorySampler: MemorySampler?
+    #endif
 
     override func startTunnel(options: [String: NSObject]?, completionHandler: @escaping (Error?) -> Void) {
         IosSetHandler(logBridge)
+        #if DEBUG
+        // Chatty core logs (xray access + DNS, tun2socks connections) for debug
+        // builds only; the build itself decides, so release never turns them on.
+        IosSetVerboseLogs(true)
+        // Memory samples and the command file, see MemorySampler. Started before
+        // the core so that the peak of building a large config is in them.
+        memorySampler = MemorySampler()
+        memorySampler?.start()
+        #endif
+        TunnelLog.lifecycle.notice("startTunnel: core is xray \(IosVersion(), privacy: .public)")
         TunnelLog.lifecycle.notice("startTunnel: entry; options keys=\(options?.keys.map(String.init(describing:)).joined(separator: ",") ?? "nil", privacy: .public)")
 
         let providerConfig = (protocolConfiguration as? NETunnelProviderProtocol)?.providerConfiguration
@@ -265,15 +288,30 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
             return
         }
 
+        // A network of its own for every session: the same addresses every time are
+        // something another app can read off the interface and look for. The MTU is
+        // the core's, take it as it is. No random numbers are made here.
+        var networkError: NSError?
+        guard let network = IosNewTunnelNetwork(&networkError) else {
+            TunnelLog.lifecycle.error("startTunnel: no tunnel network: \(networkError?.localizedDescription ?? "unknown", privacy: .public)")
+            completionHandler(networkError ?? NSError(
+                domain: "vpn.oko.XrayTunnel",
+                code: 2,
+                userInfo: [NSLocalizedDescriptionKey: "No tunnel network"]
+            ))
+            return
+        }
+
         let settings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: "127.0.0.1")
-        settings.ipv4Settings = NEIPv4Settings(addresses: ["10.10.10.2"], subnetMasks: ["255.255.255.0"])
+        settings.ipv4Settings = NEIPv4Settings(addresses: [network.address4], subnetMasks: [network.mask4])
         settings.ipv4Settings?.includedRoutes = [NEIPv4Route.default()]
-        settings.ipv6Settings = NEIPv6Settings(addresses: ["fd00:10:10:10::2"], networkPrefixLengths: [64])
+        settings.ipv6Settings = NEIPv6Settings(addresses: [network.address6], networkPrefixLengths: [NSNumber(value: network.prefix6)])
         settings.ipv6Settings?.includedRoutes = [NEIPv6Route.default()]
-        settings.mtu = 1500
+        settings.mtu = NSNumber(value: network.mtu)
         settings.dnsSettings = NEDNSSettings(servers: ["1.1.1.1", "1.0.0.1"])
 
-        TunnelLog.lifecycle.notice("startTunnel: applying network settings (tunnel 10.10.10.2/24 + fd00:10:10:10::2/64, dns 1.1.1.1, mtu 1500)")
+        // The addresses are not logged: this is the tunnel's own, per-session network.
+        TunnelLog.lifecycle.notice("startTunnel: applying network settings (random tunnel network, dns 1.1.1.1, mtu \(network.mtu, privacy: .public))")
         setTunnelNetworkSettings(settings) { [weak self] error in
             guard let self else { return }
             if let error {
@@ -287,7 +325,7 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
             self.flowBridge = bridge
 
             var startError: NSError?
-            // The core picks the SOCKS port and credentials itself; they never leave Go.
+            // The core listens on no port: tun2socks reaches xray inside the process.
             let ok = IosStart(configJson, bridge, geoAssetDir, &startError)
             TunnelLog.lifecycle.notice("IosStart(configLen=\(configJson.count, privacy: .public), geoAssetDir=\(geoAssetDir.isEmpty ? "<default>" : geoAssetDir, privacy: .public)) -> ok=\(ok, privacy: .public)")
             if !ok {
@@ -330,6 +368,10 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
                 var stopError: NSError?
                 _ = IosStop(&stopError)
                 TunnelLog.lifecycle.notice("stopTunnel: IosStop returned; stopError=\(stopError?.localizedDescription ?? "nil", privacy: .public)")
+                #if DEBUG
+                self.memorySampler?.stop()
+                self.memorySampler = nil
+                #endif
                 IosSetHandler(nil)
                 completionHandler()
             }
@@ -412,7 +454,10 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
         switch String(data: messageData, encoding: .utf8) {
         case "traffic":
             let stats = IosQueryTraffic()
-            TunnelLog.packetFlow.debug("traffic query: up=\(stats?.uplinkBytes ?? 0, privacy: .public) down=\(stats?.downlinkBytes ?? 0, privacy: .public)")
+            // goRetained is what the Go runtime holds from the OS, footprint what the
+            // system charges the whole extension (and enforces its limit on).
+            let goMemory = IosQueryMemory()
+            TunnelLog.packetFlow.debug("traffic query: up=\(stats?.uplinkBytes ?? 0, privacy: .public) down=\(stats?.downlinkBytes ?? 0, privacy: .public) goRetained=\(goMemory?.retainedBytes ?? 0, privacy: .public) footprint=\(currentFootprintBytes(), privacy: .public)")
             completionHandler?(AppMessageWire.encodeTraffic(
                 uplink: stats?.uplinkBytes ?? 0,
                 downlink: stats?.downlinkBytes ?? 0,
@@ -435,3 +480,225 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
         TunnelLog.lifecycle.notice("wake: device woke")
     }
 }
+
+#if DEBUG
+/// Debug builds only. Measures the extension on a device without Xcode attached:
+/// once a second it appends one JSON line of memory figures to a file in the app
+/// group, and it runs the commands found in a command file in the same folder.
+/// Both files are reached from the Mac with
+/// `xcrun devicectl device copy from|to --domain-type appGroupDataContainer`.
+///
+/// Folder `Library/memsample/` of the app group:
+///   samples.jsonl  one line per second, plus an event line per command
+///   command.txt    commands, one per line; deleted once they have run:
+///                    label <text>            tag the samples that follow
+///                    gc <percent> <limitMB>  GC settings of the core (0 = no limit)
+///                    udp <seconds>           idle time of a UDP session (60 by default)
+///                    heap <name>             write heap-<name>.pprof here
+///                    goroutines <name>       write goroutines-<name>.txt here
+///                    aes                     speed of AES-GCM in this process: tens of MB/s is
+///                                            software, several GB/s the instructions of the
+///                                            processor; the speed is in the detail of the event
+///                    free                    run a GC and hand memory back
+///                    truncate                start samples.jsonl over
+///
+/// Sample fields: cpuMs (CPU time of the extension since it started, ms),
+/// upPkts/upBytes (device to core) and downPkts/downBytes (core to device) of the
+/// packet bridge since the start, backlogMax (the deepest the queue of packets
+/// from the device got since the previous sample).
+/// Sample fields, bytes: footprint (what jetsam charges), peak (the highest it
+/// has been), available (os_proc_available_memory: how much more the extension
+/// may take, so footprint + available is the limit), and the Go runtime's
+/// share (retained, total, heap, stack), goroutines, gc cycles, gcPercent and
+/// limitMB (-1 = none).
+final class MemorySampler {
+    static let groupID = "group.vpn.oko"
+
+    private let queue = DispatchQueue(label: "vpn.oko.xraytunnel.memsampler", qos: .utility)
+    private var timer: DispatchSourceTimer?
+    private let dir: URL
+    private var samplesURL: URL { dir.appendingPathComponent("samples.jsonl") }
+    private var commandURL: URL { dir.appendingPathComponent("command.txt") }
+    private var label = "start"
+
+    init?() {
+        guard let base = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: Self.groupID) else {
+            TunnelLog.lifecycle.error("MemorySampler: no app group container for \(Self.groupID, privacy: .public)")
+            return nil
+        }
+        // Under Library: devicectl reaches only Library, Documents and tmp of a container.
+        dir = base.appendingPathComponent("Library/memsample", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+    }
+
+    func start() {
+        queue.async {
+            self.append(#"{"event":"sampler-start","t":\#(Self.nowMs())}"#)
+        }
+        let timer = DispatchSource.makeTimerSource(queue: queue)
+        timer.schedule(deadline: .now(), repeating: 1.0)
+        timer.setEventHandler { [weak self] in self?.tick() }
+        timer.resume()
+        self.timer = timer
+    }
+
+    func stop() {
+        timer?.cancel()
+        timer = nil
+        queue.async {
+            self.append(#"{"event":"sampler-stop","t":\#(Self.nowMs())}"#)
+        }
+    }
+
+    private func tick() {
+        runCommands()
+        append(sampleLine())
+    }
+
+    private func sampleLine() -> String {
+        let footprint = currentFootprintBytes()
+        let go = IosQueryMemory()
+        let limit = go?.memoryLimitBytes ?? Int64.max
+        let limitMB = limit == Int64.max ? -1 : limit >> 20
+        let bridge = BridgeCounters.shared.snapshot()
+        return #"{"t":\#(Self.nowMs()),"label":"\#(Self.escape(label))","cpuMs":\#(cpuTimeMs()),"upPkts":\#(bridge.upPackets),"upBytes":\#(bridge.upBytes),"downPkts":\#(bridge.downPackets),"downBytes":\#(bridge.downBytes),"backlogMax":\#(bridge.maxBacklog),"footprint":\#(footprint),"peak":\#(footprintPeakBytes()),"available":\#(os_proc_available_memory()),"goRetained":\#(go?.retainedBytes ?? 0),"goTotal":\#(go?.totalBytes ?? 0),"goHeap":\#(go?.heapInuseBytes ?? 0),"goStack":\#(go?.stackBytes ?? 0),"goroutines":\#(go?.goroutines ?? 0),"gcCycles":\#(go?.gcCycles ?? 0),"gcPercent":\#(go?.gcPercent ?? 0),"limitMB":\#(limitMB)}"#
+    }
+
+    private func runCommands() {
+        guard let text = try? String(contentsOf: commandURL, encoding: .utf8) else { return }
+        try? FileManager.default.removeItem(at: commandURL)
+        for raw in text.split(whereSeparator: \.isNewline) {
+            let line = raw.trimmingCharacters(in: .whitespaces)
+            if line.isEmpty { continue }
+            let parts = line.split(separator: " ", maxSplits: 2).map(String.init)
+            var error: NSError?
+            var detail = ""
+            var ok = true
+            switch parts[0] {
+            case "label" where parts.count >= 2:
+                label = parts.dropFirst().joined(separator: " ")
+            case "gc" where parts.count == 3:
+                ok = IosSetGCTuning(Int(parts[1]) ?? 0, Int(parts[2]) ?? 0, &error)
+            case "udp" where parts.count == 2:
+                ok = IosSetUDPTimeout(Int(parts[1]) ?? 0, &error)
+            case "heap" where parts.count == 2:
+                detail = IosWriteHeapProfile(dir.path, parts[1], &error)
+                ok = error == nil
+            case "goroutines" where parts.count == 2:
+                detail = IosWriteGoroutineDump(dir.path, parts[1], &error)
+                ok = error == nil
+            case "aes":
+                detail = IosMeasureAESGCM(&error)
+                ok = error == nil
+            case "free":
+                IosFreeMemory()
+            case "truncate":
+                try? FileManager.default.removeItem(at: samplesURL)
+            default:
+                ok = false
+                detail = "unknown command"
+            }
+            if let error { detail = error.localizedDescription }
+            append(#"{"event":"cmd","t":\#(Self.nowMs()),"cmd":"\#(Self.escape(line))","ok":\#(ok),"detail":"\#(Self.escape(detail))"}"#)
+        }
+    }
+
+    private func append(_ line: String) {
+        let data = Data((line + "\n").utf8)
+        if let handle = try? FileHandle(forWritingTo: samplesURL) {
+            defer { try? handle.close() }
+            _ = try? handle.seekToEnd()
+            try? handle.write(contentsOf: data)
+        } else {
+            try? data.write(to: samplesURL)
+        }
+    }
+
+    private static func nowMs() -> Int64 { Int64(Date().timeIntervalSince1970 * 1000) }
+
+    private static func escape(_ s: String) -> String {
+        s.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
+    }
+}
+
+/// The highest `phys_footprint` the extension has reached, which one-second
+/// samples can miss (the start of a session, building the geo matchers, is a
+/// peak a few hundred milliseconds wide).
+private func footprintPeakBytes() -> Int64 {
+    var info = task_vm_info_data_t()
+    var count = mach_msg_type_number_t(
+        MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<integer_t>.size
+    )
+    let kerr = withUnsafeMutablePointer(to: &info) { ptr -> kern_return_t in
+        ptr.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+            task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
+        }
+    }
+    return kerr == KERN_SUCCESS ? info.ledger_phys_footprint_peak : 0
+}
+
+/// CPU time the extension has used since it started, user and system, over all
+/// its threads (the Go runtime's too), in milliseconds.
+private func cpuTimeMs() -> Int64 {
+    var usage = rusage()
+    guard getrusage(RUSAGE_SELF, &usage) == 0 else { return 0 }
+    func ms(_ t: timeval) -> Int64 { Int64(t.tv_sec) * 1000 + Int64(t.tv_usec) / 1000 }
+    return ms(usage.ru_utime) + ms(usage.ru_stime)
+}
+
+/// What the packet bridge has carried, for the samples: packets and bytes since
+/// the extension started (the difference of two samples is the rate), and the
+/// deepest the queue of packets from the device got since the last sample.
+/// "up" is device to core (readPacket), "down" is core to device (writePacket).
+final class BridgeCounters {
+    static let shared = BridgeCounters()
+
+    struct Snapshot {
+        var upPackets: Int64
+        var upBytes: Int64
+        var downPackets: Int64
+        var downBytes: Int64
+        var maxBacklog: Int
+    }
+
+    private let lock = NSLock()
+    private var upPackets: Int64 = 0
+    private var upBytes: Int64 = 0
+    private var downPackets: Int64 = 0
+    private var downBytes: Int64 = 0
+    private var maxBacklog = 0
+
+    func read(bytes: Int) {
+        lock.lock()
+        upPackets += 1
+        upBytes += Int64(bytes)
+        lock.unlock()
+    }
+
+    func write(bytes: Int) {
+        lock.lock()
+        downPackets += 1
+        downBytes += Int64(bytes)
+        lock.unlock()
+    }
+
+    func backlog(_ depth: Int) {
+        lock.lock()
+        if depth > maxBacklog { maxBacklog = depth }
+        lock.unlock()
+    }
+
+    /// The counters now; the backlog starts over.
+    func snapshot() -> Snapshot {
+        lock.lock()
+        defer { lock.unlock() }
+        let s = Snapshot(
+            upPackets: upPackets, upBytes: upBytes,
+            downPackets: downPackets, downBytes: downBytes,
+            maxBacklog: maxBacklog
+        )
+        maxBacklog = 0
+        return s
+    }
+}
+#endif

@@ -302,8 +302,8 @@ class XrayConfigBuilder {
         "queryStrategy": "UseIP",
         "servers": ["https://8.8.8.8/dns-query", "https://8.8.4.4/dns-query"],
       },
-      // Placeholder only: the core swaps these for an authenticated pair on
-      // random ports before starting (slipstream-core hardenConfig).
+      // Placeholder only: the core drops every inbound before starting and
+      // listens on no port (slipstream-core hardenConfig).
       "inbounds": [
         {
           "listen": "127.0.0.1",

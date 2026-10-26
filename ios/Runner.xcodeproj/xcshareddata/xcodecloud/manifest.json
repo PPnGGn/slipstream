@@ -1,0 +1,9 @@
+{
+  "id" : "aec1eb44-6329-46f3-8d8e-ae98f548ee28",
+  "targets" : [
+    {
+      "id" : "EE4D577E-BC28-4CEA-A070-A1E05560740B",
+      "name" : "v2net"
+    }
+  ]
+}
