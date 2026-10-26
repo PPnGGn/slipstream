@@ -55,6 +55,8 @@ import '../../features/routing/data/ad_block_store.dart' as _i117;
 import '../../features/routing/data/local_proxy_client.dart' as _i864;
 import '../../features/routing/data/routing_policy_gate.dart' as _i194;
 import '../../features/routing/data/ru_bypass_store.dart' as _i310;
+import '../../features/split_tunnel/cubit/split_tunnel_cubit.dart' as _i277;
+import '../../features/split_tunnel/data/split_tunnel_store.dart' as _i43;
 import '../../features/subscriptions/cubit/subscription_auto_update_cubit.dart'
     as _i3;
 import '../../features/subscriptions/cubit/subscription_auto_updater.dart'
@@ -177,6 +179,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i310.RuBypassStore>(
       () => _i310.RuBypassStore(gh<_i460.SharedPreferences>()),
     );
+    gh.lazySingleton<_i43.SplitTunnelStore>(
+      () => _i43.SplitTunnelStore(gh<_i460.SharedPreferences>()),
+    );
     gh.lazySingleton<_i331.SubscriptionUpdateSettingsStore>(
       () =>
           _i331.SubscriptionUpdateSettingsStore(gh<_i460.SharedPreferences>()),
@@ -231,6 +236,9 @@ extension GetItInjectableX on _i174.GetIt {
         repository: gh<_i11.UpdateRepository>(),
         talker: gh<_i207.Talker>(),
       ),
+    );
+    gh.lazySingleton<_i277.SplitTunnelCubit>(
+      () => _i277.SplitTunnelCubit(store: gh<_i43.SplitTunnelStore>()),
     );
     gh.lazySingleton<_i568.ClientIdentityRepository>(
       () => _i568.ClientIdentityRepository(
