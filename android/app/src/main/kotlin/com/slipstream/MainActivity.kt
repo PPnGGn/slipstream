@@ -19,6 +19,8 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
 import androidx.core.content.pm.PackageInfoCompat
 import com.slipstream.android.Android
+import com.slipstream.apps.InstalledAppsApi
+import com.slipstream.apps.InstalledAppsApiImpl
 import com.slipstream.device.DeviceInfoApi
 import com.slipstream.device.DeviceInfoApiImpl
 import com.slipstream.sync.MainEngine
@@ -64,6 +66,10 @@ class MainActivity : FlutterActivity(), VpnConnection, UpdateInstaller {
         DeviceInfoApi.setUp(
                 flutterEngine.dartExecutor.binaryMessenger,
                 DeviceInfoApiImpl(applicationContext),
+        )
+        InstalledAppsApi.setUp(
+                flutterEngine.dartExecutor.binaryMessenger,
+                InstalledAppsApiImpl(applicationContext),
         )
         SubscriptionSyncScheduler.setUp(
                 flutterEngine.dartExecutor.binaryMessenger,

@@ -91,4 +91,5 @@ dependencies {
     implementation(files("libs/slipstreamcore.aar"))
     // Background subscription refresh (sync/SubscriptionSyncWorker.kt).
     implementation("androidx.work:work-runtime:2.11.0")
+    testImplementation("junit:junit:4.13.2")
 }
