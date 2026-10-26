@@ -20,9 +20,9 @@ import 'package:flutter/services.dart';
 import 'package:meta/meta.dart' show immutable, protected, visibleForTesting;
 
 Object? _extractReplyValueOrThrow(
-  List<Object?>? replyList,
-  String channelName, {
-  required bool isNullValid,
+    List<Object?>? replyList,
+    String channelName, {
+    required bool isNullValid,
 }) {
   if (replyList == null) {
     throw PlatformException(
@@ -44,11 +44,8 @@ Object? _extractReplyValueOrThrow(
   return replyList.firstOrNull;
 }
 
-List<Object?> wrapResponse({
-  Object? result,
-  PlatformException? error,
-  bool empty = false,
-}) {
+
+List<Object?> wrapResponse({Object? result, PlatformException? error, bool empty = false}) {
   if (empty) {
     return <Object?>[];
   }
@@ -57,7 +54,6 @@ List<Object?> wrapResponse({
   }
   return <Object?>[error.code, error.message, error.details];
 }
-
 bool _deepEquals(Object? a, Object? b) {
   if (identical(a, b)) {
     return true;
@@ -70,9 +66,8 @@ bool _deepEquals(Object? a, Object? b) {
   }
   if (a is List && b is List) {
     return a.length == b.length &&
-        a.indexed.every(
-          ((int, dynamic) item) => _deepEquals(item.$2, b[item.$1]),
-        );
+        a.indexed
+            .every(((int, dynamic) item) => _deepEquals(item.$2, b[item.$1]));
   }
   if (a is Map && b is Map) {
     if (a.length != b.length) {
@@ -121,7 +116,14 @@ int _deepHash(Object? value) {
   return value.hashCode;
 }
 
-enum VpnStatus { disconnected, connecting, connected, disconnecting, error }
+
+enum VpnStatus {
+  disconnected,
+  connecting,
+  connected,
+  disconnecting,
+  error,
+}
 
 class VpnConfigMessage {
   VpnConfigMessage({
@@ -149,12 +151,17 @@ class VpnConfigMessage {
   bool? hijackDns;
 
   List<Object?> _toList() {
-    return <Object?>[configJson, serverId, title, geoAssetDir, hijackDns];
+    return <Object?>[
+      configJson,
+      serverId,
+      title,
+      geoAssetDir,
+      hijackDns,
+    ];
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static VpnConfigMessage decode(Object result) {
     result as List<Object?>;
@@ -176,11 +183,7 @@ class VpnConfigMessage {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(configJson, other.configJson) &&
-        _deepEquals(serverId, other.serverId) &&
-        _deepEquals(title, other.title) &&
-        _deepEquals(geoAssetDir, other.geoAssetDir) &&
-        _deepEquals(hijackDns, other.hijackDns);
+    return _deepEquals(configJson, other.configJson) && _deepEquals(serverId, other.serverId) && _deepEquals(title, other.title) && _deepEquals(geoAssetDir, other.geoAssetDir) && _deepEquals(hijackDns, other.hijackDns);
   }
 
   @override
@@ -189,7 +192,11 @@ class VpnConfigMessage {
 }
 
 class VpnStatusMessage {
-  VpnStatusMessage({required this.status, this.error, this.connectedAtEpochMs});
+  VpnStatusMessage({
+    required this.status,
+    this.error,
+    this.connectedAtEpochMs,
+  });
 
   VpnStatus status;
 
@@ -198,12 +205,15 @@ class VpnStatusMessage {
   int? connectedAtEpochMs;
 
   List<Object?> _toList() {
-    return <Object?>[status, error, connectedAtEpochMs];
+    return <Object?>[
+      status,
+      error,
+      connectedAtEpochMs,
+    ];
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static VpnStatusMessage decode(Object result) {
     result as List<Object?>;
@@ -223,9 +233,7 @@ class VpnStatusMessage {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(status, other.status) &&
-        _deepEquals(error, other.error) &&
-        _deepEquals(connectedAtEpochMs, other.connectedAtEpochMs);
+    return _deepEquals(status, other.status) && _deepEquals(error, other.error) && _deepEquals(connectedAtEpochMs, other.connectedAtEpochMs);
   }
 
   @override
@@ -250,12 +258,16 @@ class VpnLogMessage {
   int timestampMs;
 
   List<Object?> _toList() {
-    return <Object?>[level, message, source, timestampMs];
+    return <Object?>[
+      level,
+      message,
+      source,
+      timestampMs,
+    ];
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static VpnLogMessage decode(Object result) {
     result as List<Object?>;
@@ -276,10 +288,7 @@ class VpnLogMessage {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(level, other.level) &&
-        _deepEquals(message, other.message) &&
-        _deepEquals(source, other.source) &&
-        _deepEquals(timestampMs, other.timestampMs);
+    return _deepEquals(level, other.level) && _deepEquals(message, other.message) && _deepEquals(source, other.source) && _deepEquals(timestampMs, other.timestampMs);
   }
 
   @override
@@ -311,12 +320,15 @@ class VpnTrafficMessage {
   int? memoryBytes;
 
   List<Object?> _toList() {
-    return <Object?>[uplinkBytes, downlinkBytes, memoryBytes];
+    return <Object?>[
+      uplinkBytes,
+      downlinkBytes,
+      memoryBytes,
+    ];
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static VpnTrafficMessage decode(Object result) {
     result as List<Object?>;
@@ -336,9 +348,7 @@ class VpnTrafficMessage {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(uplinkBytes, other.uplinkBytes) &&
-        _deepEquals(downlinkBytes, other.downlinkBytes) &&
-        _deepEquals(memoryBytes, other.memoryBytes);
+    return _deepEquals(uplinkBytes, other.uplinkBytes) && _deepEquals(downlinkBytes, other.downlinkBytes) && _deepEquals(memoryBytes, other.memoryBytes);
   }
 
   @override
@@ -366,12 +376,15 @@ class LocalProxyMessage {
   String pass;
 
   List<Object?> _toList() {
-    return <Object?>[socket, user, pass];
+    return <Object?>[
+      socket,
+      user,
+      pass,
+    ];
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static LocalProxyMessage decode(Object result) {
     result as List<Object?>;
@@ -391,9 +404,7 @@ class LocalProxyMessage {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(socket, other.socket) &&
-        _deepEquals(user, other.user) &&
-        _deepEquals(pass, other.pass);
+    return _deepEquals(socket, other.socket) && _deepEquals(user, other.user) && _deepEquals(pass, other.pass);
   }
 
   @override
@@ -403,19 +414,24 @@ class LocalProxyMessage {
 
 /// Result of a start/stop request.
 class VpnResult {
-  VpnResult({required this.successful, this.error});
+  VpnResult({
+    required this.successful,
+    this.error,
+  });
 
   bool successful;
 
   String? error;
 
   List<Object?> _toList() {
-    return <Object?>[successful, error];
+    return <Object?>[
+      successful,
+      error,
+    ];
   }
 
   Object encode() {
-    return _toList();
-  }
+    return _toList();  }
 
   static VpnResult decode(Object result) {
     result as List<Object?>;
@@ -434,14 +450,14 @@ class VpnResult {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(successful, other.successful) &&
-        _deepEquals(error, other.error);
+    return _deepEquals(successful, other.successful) && _deepEquals(error, other.error);
   }
 
   @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
   int get hashCode => _deepHash(<Object?>[runtimeType, ..._toList()]);
 }
+
 
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
@@ -450,25 +466,25 @@ class _PigeonCodec extends StandardMessageCodec {
     if (value is int) {
       buffer.putUint8(4);
       buffer.putInt64(value);
-    } else if (value is VpnStatus) {
+    }    else if (value is VpnStatus) {
       buffer.putUint8(129);
       writeValue(buffer, value.index);
-    } else if (value is VpnConfigMessage) {
+    }    else if (value is VpnConfigMessage) {
       buffer.putUint8(130);
       writeValue(buffer, value.encode());
-    } else if (value is VpnStatusMessage) {
+    }    else if (value is VpnStatusMessage) {
       buffer.putUint8(131);
       writeValue(buffer, value.encode());
-    } else if (value is VpnLogMessage) {
+    }    else if (value is VpnLogMessage) {
       buffer.putUint8(132);
       writeValue(buffer, value.encode());
-    } else if (value is VpnTrafficMessage) {
+    }    else if (value is VpnTrafficMessage) {
       buffer.putUint8(133);
       writeValue(buffer, value.encode());
-    } else if (value is LocalProxyMessage) {
+    }    else if (value is LocalProxyMessage) {
       buffer.putUint8(134);
       writeValue(buffer, value.encode());
-    } else if (value is VpnResult) {
+    }    else if (value is VpnResult) {
       buffer.putUint8(135);
       writeValue(buffer, value.encode());
     } else {
@@ -505,13 +521,9 @@ class VpnConnection {
   /// Constructor for [VpnConnection].  The [binaryMessenger] named argument is
   /// available for dependency injection.  If it is left null, the default
   /// BinaryMessenger will be used which routes to the host platform.
-  VpnConnection({
-    BinaryMessenger? binaryMessenger,
-    String messageChannelSuffix = '',
-  }) : pigeonVar_binaryMessenger = binaryMessenger,
-       pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty
-           ? '.$messageChannelSuffix'
-           : '';
+  VpnConnection({BinaryMessenger? binaryMessenger, String messageChannelSuffix = ''})
+      : pigeonVar_binaryMessenger = binaryMessenger,
+        pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
   final BinaryMessenger? pigeonVar_binaryMessenger;
 
   static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
@@ -519,29 +531,26 @@ class VpnConnection {
   final String pigeonVar_messageChannelSuffix;
 
   Future<VpnResult> start(VpnConfigMessage config) async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.slipstream.VpnConnection.start$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.slipstream.VpnConnection.start$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
-      <Object?>[config],
-    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[config]);
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as VpnResult;
   }
 
   Future<VpnResult> stop() async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.slipstream.VpnConnection.stop$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.slipstream.VpnConnection.stop$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -551,16 +560,16 @@ class VpnConnection {
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as VpnResult;
   }
 
   Future<VpnStatusMessage> getStatus() async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.slipstream.VpnConnection.getStatus$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.slipstream.VpnConnection.getStatus$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -570,16 +579,16 @@ class VpnConnection {
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as VpnStatusMessage;
   }
 
   Future<String?> geoAssetDir() async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.slipstream.VpnConnection.geoAssetDir$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.slipstream.VpnConnection.geoAssetDir$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -589,17 +598,17 @@ class VpnConnection {
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: true,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
     return pigeonVar_replyValue as String?;
   }
 
   /// The embedded xray-core version (Android-only).
   Future<String> xrayCoreVersion() async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.slipstream.VpnConnection.xrayCoreVersion$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.slipstream.VpnConnection.xrayCoreVersion$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -609,10 +618,11 @@ class VpnConnection {
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as String;
   }
 
@@ -620,8 +630,7 @@ class VpnConnection {
   /// Ask right before use: the value changes every session. iOS always
   /// returns null (the core lives in the Packet Tunnel process).
   Future<LocalProxyMessage?> localProxy() async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.slipstream.VpnConnection.localProxy$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.slipstream.VpnConnection.localProxy$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -631,10 +640,11 @@ class VpnConnection {
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: true,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: true,
+    )
+    ;
     return pigeonVar_replyValue as LocalProxyMessage?;
   }
 
@@ -643,8 +653,7 @@ class VpnConnection {
   /// of the DoT server's own name — which a provider's `dns.hosts` may
   /// deliberately blackhole. Asked before the config is built. iOS: false.
   Future<bool> privateDnsStrict() async {
-    final pigeonVar_channelName =
-        'dev.flutter.pigeon.slipstream.VpnConnection.privateDnsStrict$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channelName = 'dev.flutter.pigeon.slipstream.VpnConnection.privateDnsStrict$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
@@ -654,10 +663,11 @@ class VpnConnection {
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-      pigeonVar_replyList,
-      pigeonVar_channelName,
-      isNullValid: false,
-    );
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
     return pigeonVar_replyValue! as bool;
   }
 }
@@ -672,20 +682,12 @@ abstract class VpnEventReceiver {
 
   void onTraffic(VpnTrafficMessage message);
 
-  static void setUp(
-    VpnEventReceiver? api, {
-    BinaryMessenger? binaryMessenger,
-    String messageChannelSuffix = '',
-  }) {
-    messageChannelSuffix = messageChannelSuffix.isNotEmpty
-        ? '.$messageChannelSuffix'
-        : '';
+  static void setUp(VpnEventReceiver? api, {BinaryMessenger? binaryMessenger, String messageChannelSuffix = '',}) {
+    messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.slipstream.VpnEventReceiver.onStatusChanged$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+          'dev.flutter.pigeon.slipstream.VpnEventReceiver.onStatusChanged$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
@@ -697,20 +699,16 @@ abstract class VpnEventReceiver {
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
     }
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.slipstream.VpnEventReceiver.onLog$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+          'dev.flutter.pigeon.slipstream.VpnEventReceiver.onLog$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
@@ -722,20 +720,16 @@ abstract class VpnEventReceiver {
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
     }
     {
       final pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.slipstream.VpnEventReceiver.onTraffic$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+          'dev.flutter.pigeon.slipstream.VpnEventReceiver.onTraffic$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
@@ -747,10 +741,8 @@ abstract class VpnEventReceiver {
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
