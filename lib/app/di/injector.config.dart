@@ -55,7 +55,11 @@ import '../../features/routing/data/ad_block_store.dart' as _i117;
 import '../../features/routing/data/local_proxy_client.dart' as _i864;
 import '../../features/routing/data/routing_policy_gate.dart' as _i194;
 import '../../features/routing/data/ru_bypass_store.dart' as _i310;
+import '../../features/split_tunnel/cubit/installed_apps_cubit.dart' as _i998;
 import '../../features/split_tunnel/cubit/split_tunnel_cubit.dart' as _i277;
+import '../../features/split_tunnel/data/installed_apps_api.g.dart' as _i999;
+import '../../features/split_tunnel/data/installed_apps_repository.dart'
+    as _i315;
 import '../../features/split_tunnel/data/split_tunnel_store.dart' as _i43;
 import '../../features/subscriptions/cubit/subscription_auto_update_cubit.dart'
     as _i3;
@@ -87,6 +91,7 @@ import '../../features/vpn/data/vpn_repository.dart' as _i1056;
 import '../../features/vpn/data/vpn_session_store.dart' as _i871;
 import '../../features/vpn/data/xray_log_store.dart' as _i490;
 import 'device_module.dart' as _i782;
+import 'installed_apps_module.dart' as _i394;
 import 'logger_module.dart' as _i987;
 import 'prefs_module.dart' as _i891;
 import 'storage_module.dart' as _i372;
@@ -102,6 +107,7 @@ extension GetItInjectableX on _i174.GetIt {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
     final prefsModule = _$PrefsModule();
     final deviceModule = _$DeviceModule();
+    final installedAppsModule = _$InstalledAppsModule();
     final loggerModule = _$LoggerModule();
     final updaterModule = _$UpdaterModule();
     final vpnModule = _$VpnModule();
@@ -111,6 +117,9 @@ extension GetItInjectableX on _i174.GetIt {
       preResolve: true,
     );
     gh.lazySingleton<_i1033.DeviceInfoApi>(() => deviceModule.deviceInfoApi);
+    gh.lazySingleton<_i999.InstalledAppsApi>(
+      () => installedAppsModule.installedAppsApi,
+    );
     gh.lazySingleton<_i207.Talker>(() => loggerModule.talker);
     gh.lazySingleton<_i942.UpdateInstaller>(
       () => updaterModule.updateInstaller,
@@ -131,6 +140,12 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i490.XrayLogStore(),
       dispose: (i) => i.dispose(),
     );
+    gh.lazySingleton<_i315.InstalledAppsRepository>(
+      () => _i315.InstalledAppsRepository(
+        gh<_i999.InstalledAppsApi>(),
+        gh<_i207.Talker>(),
+      ),
+    );
     gh.lazySingleton<_i437.ServerPinger>(
       () => _i970.TcpConnectPinger(),
       instanceName: 'tcp',
@@ -138,6 +153,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i437.ServerPinger>(
       () => _i874.QuicProbePinger(),
       instanceName: 'quic',
+    );
+    gh.factory<_i998.InstalledAppsCubit>(
+      () => _i998.InstalledAppsCubit(gh<_i315.InstalledAppsRepository>()),
     );
     gh.lazySingleton<_i694.BackgroundSyncScheduler>(
       () => _i694.PlatformBackgroundSyncScheduler(gh<_i207.Talker>()),
@@ -374,6 +392,8 @@ extension GetItInjectableX on _i174.GetIt {
 class _$PrefsModule extends _i891.PrefsModule {}
 
 class _$DeviceModule extends _i782.DeviceModule {}
+
+class _$InstalledAppsModule extends _i394.InstalledAppsModule {}
 
 class _$LoggerModule extends _i987.LoggerModule {}
 

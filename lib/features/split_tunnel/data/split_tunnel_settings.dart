@@ -1,47 +1,18 @@
-import 'package:flutter/foundation.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:slipstream/features/split_tunnel/data/split_tunnel_mode.dart';
 
-@immutable
-class SplitTunnelSettings {
-  const SplitTunnelSettings({
-    this.enabled = false,
-    this.mode = SplitTunnelMode.bypass,
-    this.packages = const {},
-    this.includeSystem = false,
-  });
+part 'split_tunnel_settings.freezed.dart';
 
-  final bool enabled;
-  final SplitTunnelMode mode;
-  final Set<String> packages;
-  final bool includeSystem;
+@freezed
+abstract class SplitTunnelSettings with _$SplitTunnelSettings {
+  const SplitTunnelSettings._();
+
+  const factory SplitTunnelSettings({
+    @Default(false) bool enabled,
+    @Default(SplitTunnelMode.bypass) SplitTunnelMode mode,
+    @Default(<String>{}) Set<String> packages,
+    @Default(false) bool includeSystem,
+  }) = _SplitTunnelSettings;
 
   bool get isActive => enabled && packages.isNotEmpty;
-
-  SplitTunnelSettings copyWith({
-    bool? enabled,
-    SplitTunnelMode? mode,
-    Set<String>? packages,
-    bool? includeSystem,
-  }) => SplitTunnelSettings(
-    enabled: enabled ?? this.enabled,
-    mode: mode ?? this.mode,
-    packages: packages ?? this.packages,
-    includeSystem: includeSystem ?? this.includeSystem,
-  );
-
-  @override
-  bool operator ==(Object other) =>
-      other is SplitTunnelSettings &&
-      other.enabled == enabled &&
-      other.mode == mode &&
-      other.includeSystem == includeSystem &&
-      setEquals(other.packages, packages);
-
-  @override
-  int get hashCode => Object.hash(
-    enabled,
-    mode,
-    includeSystem,
-    Object.hashAllUnordered(packages),
-  );
 }
