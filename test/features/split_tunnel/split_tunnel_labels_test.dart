@@ -23,6 +23,34 @@ void main() {
     expect(splitTunnelSummary(settings), 'Bypass · 1 app');
   });
 
+  test('each mode explains which side the picked apps end up on', () {
+    expect(
+      splitTunnelHint(SplitTunnelMode.proxy),
+      'Only selected apps go through the tunnel; everything else connects '
+      'directly.',
+    );
+    expect(
+      splitTunnelHint(SplitTunnelMode.bypass),
+      'Selected apps connect directly; everything else goes through the '
+      'tunnel.',
+    );
+  });
+
+  test('the counter says how many of the listed apps are picked', () {
+    expect(
+      splitTunnelCounter(
+        selected: 3,
+        total: 41,
+        mode: SplitTunnelMode.bypass,
+      ),
+      '3 of 41 apps bypassed',
+    );
+    expect(
+      splitTunnelCounter(selected: 0, total: 5, mode: SplitTunnelMode.proxy),
+      '0 of 5 apps proxied',
+    );
+  });
+
   test('proxy with several apps', () {
     const settings = SplitTunnelSettings(
       enabled: true,

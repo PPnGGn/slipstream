@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -22,6 +23,10 @@ import 'package:slipstream/features/routing/data/ad_block_mode.dart';
 import 'package:slipstream/features/routing/data/ru_bypass_mode.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_card.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_row.dart';
+import 'package:slipstream/features/split_tunnel/cubit/split_tunnel_cubit.dart';
+import 'package:slipstream/features/split_tunnel/data/split_tunnel_settings.dart';
+import 'package:slipstream/features/split_tunnel/data/split_tunnel_support.dart';
+import 'package:slipstream/features/split_tunnel/ui/split_tunnel_labels.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscription_auto_update_cubit.dart';
 import 'package:slipstream/features/subscriptions/data/auto_update/auto_update_interval.dart';
 import 'package:slipstream/features/subscriptions/ui/auto_update_labels.dart';
@@ -164,14 +169,19 @@ class _SettingsPageState extends State<SettingsPage> {
                                     context.push('/settings/subscriptions'),
                               ),
                             ),
-                            SettingsRow(
-                              iconPath: AppAssets.split,
-                              hue: TileHue.split,
-                              title: 'Split tunneling',
-                              subtitle: 'Choose which apps use the tunnel',
-                              showChevron: true,
-                              onTap: () => context.push('/settings/split'),
-                            ),
+                            if (isSplitTunnelSupported(defaultTargetPlatform))
+                              BlocBuilder<SplitTunnelCubit, SplitTunnelSettings>(
+                                bloc: getIt<SplitTunnelCubit>(),
+                                builder: (context, split) => SettingsRow(
+                                  iconPath: AppAssets.split,
+                                  hue: TileHue.split,
+                                  title: 'Split tunneling',
+                                  subtitle: 'Choose which apps use the tunnel',
+                                  value: splitTunnelSummary(split),
+                                  showChevron: true,
+                                  onTap: () => context.push('/settings/split'),
+                                ),
+                              ),
                             SettingsRow(
                               iconPath: AppAssets.shield,
                               hue: TileHue.security,
@@ -252,15 +262,13 @@ class _SettingsPageState extends State<SettingsPage> {
                         const SectionHeader('About'),
                         SettingsGroup(
                           children: [
-                            // Turned on in 2.1.0 (next-releases.md); the /logs
-                            // page already exists.
-                            const SettingsRow(
+                            SettingsRow(
                               iconPath: AppAssets.logs,
                               hue: TileHue.logs,
                               title: 'Xray core logs',
                               subtitle: 'Live tunnel output',
                               showChevron: true,
-                              enabled: false,
+                              onTap: () => context.push('/logs'),
                             ),
                             _VersionRow(colors: colors),
                             // The in-app updater installs APKs: Android only.
