@@ -62,7 +62,10 @@ Generate code:
 
 ```bash
 dart run build_runner build --delete-conflicting-outputs
-make generate-vpn-api generate-updater-api generate-device-info-api generate-sync-api
+make generate-pigeon      # all Pigeon bridges at once
 ```
+
+A single bridge can be regenerated with `make generate-vpn-api`, `generate-updater-api`, `generate-device-info-api` or
+`generate-sync-api`. The `*.g.dart` files are gitignored, so run both commands after a fresh clone.
 
 Then run with Flutter as usual (`flutter run`).
