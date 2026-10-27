@@ -10,6 +10,7 @@ abstract class AppRelease with _$AppRelease {
     required String tagName,
     required String downloadUrl,
     required int sizeBytes,
-    String? notes,
+    // The "What's new" items, see parseReleaseNotes.
+    @Default(<String>[]) List<String> notes,
   }) = _AppRelease;
 }

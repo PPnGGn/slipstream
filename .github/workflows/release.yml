@@ -365,6 +365,16 @@ jobs:
           fi
           ls -l release-assets
 
+      # The app shows the "- ..." lines of this text as "What's new" in the
+      # update dialog (parseReleaseNotes), so the release description is the
+      # body of the commit that is being released: the head commit of the push
+      # that bumped the version. Lines that are not bullets are ignored there.
+      - name: Take the release notes from the commit body
+        run: |
+          git log -1 --format=%b "$GITHUB_SHA" > release-notes.md
+          echo "Release notes:"
+          cat release-notes.md
+
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -372,7 +382,7 @@ jobs:
         run: |
           gh release create "v$VERSION" \
             --title "v$VERSION" \
-            --generate-notes \
+            --notes-file release-notes.md \
             release-assets/*
 
       - name: Upload assets (clobber any existing)

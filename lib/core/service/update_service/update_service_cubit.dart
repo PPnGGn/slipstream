@@ -12,6 +12,9 @@ import 'package:slipstream/features/update/data/update_repository.dart';
 part 'update_service_state.dart';
 part 'update_service_cubit.freezed.dart';
 
+/// How a tap on Install ended, for the UI to react to.
+enum InstallAttempt { launched, permissionRequired, signatureConflict, failed }
+
 @lazySingleton
 class UpdateServiceCubit extends Cubit<UpdateState> {
   UpdateServiceCubit({
@@ -104,22 +107,30 @@ class UpdateServiceCubit extends Cubit<UpdateState> {
     if (!isClosed) emit(const UpdateState.idle());
   }
 
-  Future<void> install() async {
+  /// Starts the system installer for the downloaded update and says what
+  /// happened. Only a signature conflict changes the state (the dialog then
+  /// shows the reinstall steps); every other outcome leaves the update ready,
+  /// so a failed attempt can simply be tried again.
+  Future<InstallAttempt> install() async {
     final ready = state.whenOrNull(
       readyToInstall: (release, filePath) => (release, filePath),
     );
-    if (ready == null) return;
+    if (ready == null) return InstallAttempt.failed;
     final (release, filePath) = ready;
 
     final result = await _repository.install(filePath);
-    if (isClosed) return;
+    if (isClosed) return InstallAttempt.failed;
     switch (result) {
       case Success(data: InstallOutcome.launched):
-        break;
+        return InstallAttempt.launched;
+      case Success(data: InstallOutcome.permissionRequired):
+        return InstallAttempt.permissionRequired;
       case Success(data: InstallOutcome.signatureConflict):
         emit(UpdateState.signatureConflict(release, filePath));
+        return InstallAttempt.signatureConflict;
       case Failure(:final message):
-        emit(UpdateState.error(message));
+        _talker.error('Updater: install failed -> $message');
+        return InstallAttempt.failed;
     }
   }
 

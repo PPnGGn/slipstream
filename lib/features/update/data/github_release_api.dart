@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:slipstream/core/models/app_release/app_release.dart';
+import 'package:slipstream/features/update/data/release_notes.dart';
 
 class GithubReleaseApi {
   static const _latestReleaseUrl =
@@ -37,7 +38,7 @@ class GithubReleaseApi {
       tagName: tagName,
       downloadUrl: apk['browser_download_url'] as String,
       sizeBytes: apk['size'] as int,
-      notes: (json['body'] as String?)?.trim(),
+      notes: parseReleaseNotes(json['body'] as String?),
     );
   }
 

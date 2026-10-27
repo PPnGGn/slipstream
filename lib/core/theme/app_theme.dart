@@ -19,7 +19,7 @@ abstract class AppDims {
 }
 
 abstract class AppTheme {
-  /// Material widgets (inputs, sheets, menus, SnackBar, Switch) take their
+  /// Material widgets (inputs, sheets, menus, Switch) take their
   /// colors from here; custom widgets read the same palette via AppColors.
   static ThemeData fromPalette(AppPalette p) => _build(
     brightness: p.brightness,
@@ -249,19 +249,6 @@ abstract class AppTheme {
           fontSize: 12.5,
           fontWeight: FontWeight.w600,
           fontFamily: 'Oswald',
-        ),
-      ),
-      snackBarTheme: SnackBarThemeData(
-        backgroundColor: inverseSurface,
-        contentTextStyle: TextStyle(
-          color: onInverseSurface,
-          fontWeight: FontWeight.w600,
-          fontSize: 12,
-          fontFamily: 'Oswald',
-        ),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDims.radiusChip),
         ),
       ),
       listTileTheme: ListTileThemeData(iconColor: tx2),

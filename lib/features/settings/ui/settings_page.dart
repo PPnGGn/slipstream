@@ -8,6 +8,7 @@ import 'package:slipstream/app/di/injector.dart';
 import 'package:slipstream/core/service/update_service/update_service_cubit.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
+import 'package:slipstream/core/ui/toast/show_toast.dart';
 import 'package:slipstream/core/ui/widgets/page_header.dart';
 import 'package:slipstream/features/appearance/cubit/home_layout_cubit.dart';
 import 'package:slipstream/features/appearance/data/home_layout.dart';
@@ -31,6 +32,7 @@ import 'package:slipstream/features/subscriptions/cubit/subscription_auto_update
 import 'package:slipstream/features/subscriptions/data/auto_update/auto_update_interval.dart';
 import 'package:slipstream/features/subscriptions/ui/auto_update_labels.dart';
 import 'package:slipstream/features/update/data/updater_api.g.dart';
+import 'package:slipstream/features/update/ui/update_toasts.dart';
 import 'package:slipstream/features/update/ui/widgets/update_dialog.dart';
 import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
 
@@ -44,43 +46,30 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   final _updateCubit = getIt<UpdateServiceCubit>();
 
+  // Tap on the Version row. What to show for each updater state is decided
+  // by updateCheckFeedback; this only asks GitHub first when there is no
+  // downloaded, downloading or conflicting update to show as it is.
   Future<void> _checkForUpdates() async {
-    final alreadyReady = _updateCubit.state.maybeWhen(
-      readyToInstall: (_, _) => true,
-      orElse: () => false,
-    );
-    if (alreadyReady) {
-      await showUpdateDialog(context);
-      return;
-    }
-
-    final alreadyDownloading = _updateCubit.state.maybeWhen(
-      downloading: (_, _) => true,
-      orElse: () => false,
-    );
-    if (alreadyDownloading) {
-      _showSnack('Downloading update…');
-      return;
-    }
-
-    await _updateCubit.check(userInitiated: true);
+    final app = await getIt<UpdateInstaller>().getAppVersion();
     if (!mounted) return;
 
-    await _updateCubit.state.when(
-      idle: () async {},
-      checking: () async {},
-      upToDate: () async => _showSnack("You're up to date"),
-      downloading: (_, _) async => _showSnack('Downloading update…'),
-      readyToInstall: (_, _) => showUpdateDialog(context),
-      signatureConflict: (_, _) => showUpdateDialog(context),
-      error: (message) async => _showSnack(message),
-    );
-  }
+    if (!isUpdateStateWorthShowing(_updateCubit.state)) {
+      await _updateCubit.check(userInitiated: true);
+      if (!mounted) return;
+    }
 
-  void _showSnack(String text) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(text)));
+    final feedback = updateCheckFeedback(
+      _updateCubit.state,
+      '${app.version} (${app.buildNumber})',
+    );
+    switch (feedback) {
+      case OpenUpdateDialog():
+        await showUpdateDialog(context);
+      case ShowUpdateToast(:final spec):
+        showToastSpec(spec);
+      case NoUpdateFeedback():
+        break;
+    }
   }
 
   @override
@@ -270,18 +259,14 @@ class _SettingsPageState extends State<SettingsPage> {
                               showChevron: true,
                               onTap: () => context.push('/logs'),
                             ),
-                            _VersionRow(colors: colors),
-                            // The in-app updater installs APKs: Android only.
-                            if (Platform.isAndroid)
-                              SettingsRow(
-                                iconPath: AppAssets.refresh,
-                                hue: TileHue.green,
-                                title: 'Check for updates',
-                                subtitle:
-                                    'Download and install the latest release',
-                                showChevron: true,
-                                onTap: _checkForUpdates,
-                              ),
+                            // The in-app updater installs APKs: a tap checks
+                            // for updates on Android only.
+                            _VersionRow(
+                              colors: colors,
+                              onTap: Platform.isAndroid
+                                  ? _checkForUpdates
+                                  : null,
+                            ),
                           ],
                         ),
                       ],
@@ -385,12 +370,51 @@ class _AiBadge extends StatelessWidget {
   }
 }
 
-/// Xray core version under the title, app version on the right. The app
-/// version comes from the Android updater API, so iOS shows only Xray.
-class _VersionRow extends StatefulWidget {
-  const _VersionRow({required this.colors});
+/// The spinner and "CHECKING" that stand in for the version while the app
+/// asks GitHub for a newer release.
+class _CheckingBadge extends StatelessWidget {
+  const _CheckingBadge({required this.colors});
 
   final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: .min,
+      spacing: 7,
+      children: [
+        SizedBox.square(
+          dimension: 12,
+          child: CircularProgressIndicator(
+            strokeWidth: 1.8,
+            color: colors.accentIcon,
+            backgroundColor: colors.border,
+          ),
+        ),
+        Text(
+          'CHECKING',
+          style: TextStyle(
+            fontFamily: 'monospace',
+            fontSize: 10,
+            fontWeight: .w600,
+            letterSpacing: 0.8,
+            color: colors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Xray core version under the title, app version on the right. The app
+/// version comes from the Android updater API, so iOS shows only Xray.
+/// With [onTap] the row checks for updates, and "CHECKING" replaces the app
+/// version while the check runs.
+class _VersionRow extends StatefulWidget {
+  const _VersionRow({required this.colors, this.onTap});
+
+  final AppColors colors;
+  final VoidCallback? onTap;
 
   @override
   State<_VersionRow> createState() => _VersionRowState();
@@ -420,18 +444,30 @@ class _VersionRowState extends State<_VersionRow> {
               ? 'Unavailable'
               : xrayVersion == null
               ? '…'
-              : 'Xray $xrayVersion',
-          trailing: appVersion == null
-              ? null
-              : Text(
-                  appVersion,
-                  style: TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 12,
-                    fontWeight: .w600,
-                    color: widget.colors.accentIcon,
-                  ),
+              : widget.onTap == null
+              ? 'Xray $xrayVersion'
+              : 'Xray $xrayVersion · Tap to check for updates',
+          onTap: widget.onTap,
+          trailing: BlocBuilder<UpdateServiceCubit, UpdateState>(
+            bloc: getIt<UpdateServiceCubit>(),
+            builder: (context, update) {
+              final checking = update.maybeWhen(
+                checking: () => true,
+                orElse: () => false,
+              );
+              if (checking) return _CheckingBadge(colors: widget.colors);
+              if (appVersion == null) return const SizedBox.shrink();
+              return Text(
+                appVersion,
+                style: TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                  fontWeight: .w600,
+                  color: widget.colors.accentIcon,
                 ),
+              );
+            },
+          ),
         );
       },
     );

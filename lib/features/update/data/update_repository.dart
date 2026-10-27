@@ -11,7 +11,7 @@ import 'package:slipstream/features/update/data/update_cache.dart';
 import 'package:slipstream/features/update/data/update_check.dart';
 import 'package:slipstream/features/update/data/updater_api.g.dart';
 
-enum InstallOutcome { launched, signatureConflict }
+enum InstallOutcome { launched, permissionRequired, signatureConflict }
 
 @lazySingleton
 class UpdateRepository {
@@ -146,10 +146,10 @@ class UpdateRepository {
     try {
       final allowed = await _installer.canInstallPackages();
       if (!allowed) {
+        // Not an error: the user is sent to the settings screen and taps
+        // Install again when they come back.
         await _installer.openInstallSettings();
-        return const Failure(
-          'Grant "install unknown apps" permission and try again',
-        );
+        return const Success(InstallOutcome.permissionRequired);
       }
 
       final signatureMatches = await _installer.apkSignatureMatchesInstalled(
