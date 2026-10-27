@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
@@ -6,6 +7,7 @@ import 'package:slipstream/app/di/injector.dart';
 import 'package:slipstream/core/models/stored_subscription/stored_subscription.dart';
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
+import 'package:slipstream/core/ui/toast/show_toast.dart';
 import 'package:slipstream/features/ping/presentation/ping_cubit.dart';
 import 'package:slipstream/features/ping/presentation/ui/ping_sorting.dart';
 import 'package:slipstream/features/qr/ui/qr_share_sheet.dart';
@@ -15,6 +17,7 @@ import 'package:slipstream/features/subscriptions/data/auto_update/auto_update_i
 import 'package:slipstream/features/subscriptions/data/search.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_description_store.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_display.dart';
+import 'package:slipstream/features/subscriptions/ui/subscription_menu_toasts.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/server_tile.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/subscription_info.dart';
 
@@ -82,12 +85,25 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
   void _sync() =>
       _effectiveExpanded ? _controller.expand() : _controller.collapse();
 
+  // The ⋯ menu's refresh tells the user how it ended; the automatic refresh
+  // runs the same cubit method and stays silent.
+  Future<void> _refresh(SubscriptionsCubit cubit, String id) async {
+    final toast = refreshToast(await cubit.refreshSubscription(id));
+    if (toast != null) showToastSpec(toast);
+  }
+
+  // The name is taken before the delete: afterwards the section is gone.
+  Future<void> _delete(SubscriptionsCubit cubit, String id, String name) async {
+    await cubit.removeSubscription(id);
+    showToastSpec(subscriptionDeletedToast(name));
+  }
+
   void _runAction(_SectionAction action) {
     final cubit = getIt<SubscriptionsCubit>();
     final id = widget.stored.subscription.id;
     switch (action) {
       case _SectionAction.refresh:
-        cubit.refreshSubscription(id);
+        unawaited(_refresh(cubit, id));
       case _SectionAction.share:
         final url = widget.stored.subscription.url;
         if (url == null) return;
@@ -97,7 +113,7 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
           data: url,
         );
       case _SectionAction.delete:
-        cubit.removeSubscription(id);
+        unawaited(_delete(cubit, id, widget.stored.subscription.name));
       case _SectionAction.pingAll:
         getIt<PingCubit>().runForServers(widget.stored.servers);
       case _SectionAction.toggleDescription:

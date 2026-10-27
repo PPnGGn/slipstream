@@ -7,6 +7,7 @@ import 'package:slipstream/core/models/result.dart';
 import 'package:slipstream/core/models/stored_subscription/stored_subscription.dart';
 import 'package:slipstream/core/models/subscription/subscription.dart';
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
+import 'package:slipstream/features/subscriptions/cubit/refresh_outcome.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
 import 'package:slipstream/features/subscriptions/data/selected_server_store.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_factory.dart';
@@ -107,6 +108,78 @@ void main() {
 
       expect(cubit.state.errorCause, isNull);
       expect(cubit.state.errorMessage, isNull);
+    });
+  });
+
+  group('refreshSubscription says how it ended', () {
+    test('Refreshed carries the new subscription', () async {
+      final cubit = await cubitWith(
+        FakeParser((_) async => _parsed(['x:1:u:#0', 'x:2:u:#1'])),
+        initial: [
+          _stored('a', ['old:1:u:#0']),
+        ],
+      );
+
+      final outcome = await cubit.refreshSubscription('a');
+
+      expect(
+        (outcome as Refreshed).subscription.servers.map((s) => s.id),
+        ['x:1:u:#0', 'x:2:u:#1'],
+      );
+    });
+
+    test('RefreshFailed carries the reason, the old servers stay', () async {
+      const reason = HttpStatusException(502);
+      final cubit = await cubitWith(
+        FakeParser((_) async => Failure(reason.toString(), reason)),
+        initial: [
+          _stored('a', ['old:1:u:#0']),
+        ],
+      );
+
+      final outcome = await cubit.refreshSubscription('a');
+
+      expect((outcome as RefreshFailed).cause, same(reason));
+      expect(cubit.state.subscriptions.single.servers.single.id, 'old:1:u:#0');
+    });
+
+    test('an unknown id is ignored', () async {
+      final cubit = await cubitWith(FakeParser((_) async => _parsed(['x'])));
+
+      expect(await cubit.refreshSubscription('nope'), isA<RefreshIgnored>());
+    });
+
+    test('a second refresh while the first runs is ignored', () async {
+      final gate = Completer<Result<ParsedSubscription>>();
+      final cubit = await cubitWith(
+        FakeParser((_) => gate.future),
+        initial: [
+          _stored('a', ['a:1:u:#0']),
+        ],
+      );
+
+      final first = cubit.refreshSubscription('a');
+      final second = await cubit.refreshSubscription('a');
+      gate.complete(_parsed(['a:1:u:#0']));
+
+      expect(second, isA<RefreshIgnored>());
+      expect(await first, isA<Refreshed>());
+    });
+
+    test('a subscription deleted meanwhile is ignored', () async {
+      final gate = Completer<Result<ParsedSubscription>>();
+      final cubit = await cubitWith(
+        FakeParser((_) => gate.future),
+        initial: [
+          _stored('a', ['a:1:u:#0']),
+        ],
+      );
+
+      final refresh = cubit.refreshSubscription('a');
+      await cubit.removeSubscription('a');
+      gate.complete(_parsed(['a:1:u:#0']));
+
+      expect(await refresh, isA<RefreshIgnored>());
     });
   });
 

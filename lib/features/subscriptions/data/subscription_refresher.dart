@@ -22,19 +22,33 @@ class SubscriptionRefresher {
   /// The refreshed subscription. A failure is not thrown: it comes back as
   /// the same servers with `lastError` and `lastAttemptAt` set, so the
   /// schedule can back off and the list can show it.
-  Future<StoredSubscription> refresh(StoredSubscription stored) async {
+  Future<StoredSubscription> refresh(StoredSubscription stored) async =>
+      (await refreshDetailed(stored)).stored;
+
+  /// [refresh], and for a failure also the exception behind it (`cause`), so
+  /// the manual refresh can explain what went wrong in plain words. `cause`
+  /// is null after a success and for a subscription without a URL.
+  Future<({StoredSubscription stored, Object? cause})> refreshDetailed(
+    StoredSubscription stored,
+  ) async {
     final url = stored.subscription.url;
-    if (url == null) return stored;
+    if (url == null) return (stored: stored, cause: null);
 
     final result = await _parser.parseFromInput(url);
     final now = _now();
     return switch (result) {
-      Success(:final data) => _factory.refresh(stored, data, at: now),
-      Failure(:final message) => stored.copyWith(
-        subscription: stored.subscription.copyWith(
-          lastAttemptAt: now,
-          lastError: message,
+      Success(:final data) => (
+        stored: _factory.refresh(stored, data, at: now),
+        cause: null,
+      ),
+      Failure(:final message, :final exception) => (
+        stored: stored.copyWith(
+          subscription: stored.subscription.copyWith(
+            lastAttemptAt: now,
+            lastError: message,
+          ),
         ),
+        cause: exception,
       ),
     };
   }

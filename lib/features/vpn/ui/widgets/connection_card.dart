@@ -19,6 +19,7 @@ import 'package:slipstream/features/diagnostics/data/memory_monitor_mode.dart';
 import 'package:slipstream/features/ping/presentation/ping_cubit.dart';
 import 'package:slipstream/features/ping/presentation/ping_entry.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
+import 'package:slipstream/features/vpn/presentation/connect_tap.dart';
 import 'package:slipstream/features/subscriptions/data/vpn_server_display.dart';
 import 'package:slipstream/features/vpn/presentation/connection_status_view.dart';
 import 'package:slipstream/features/vpn/ui/widgets/connection_phase_colors.dart';
@@ -50,7 +51,11 @@ class ConnectionCard extends StatelessWidget {
                 );
 
                 return GestureDetector(
-                  onTap: () => cubit.toggle(selectedServer),
+                  onTap: () => handleConnectTap(
+                    cubit,
+                    server: selectedServer,
+                    hasSubscriptions: subsState.subscriptions.isNotEmpty,
+                  ),
                   behavior: .opaque,
                   child: AnimatedSize(
                     duration: const Duration(milliseconds: 200),

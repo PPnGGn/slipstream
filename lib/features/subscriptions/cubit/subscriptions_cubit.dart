@@ -7,6 +7,7 @@ import 'package:slipstream/core/models/stored_subscription/stored_subscription.d
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/core/models/result.dart';
 import 'package:slipstream/core/service/vpn_service/vpn_service_cubit.dart';
+import 'package:slipstream/features/subscriptions/cubit/refresh_outcome.dart';
 import 'package:slipstream/features/subscriptions/data/selected_server_store.dart';
 import 'package:slipstream/features/subscriptions/data/server_identity.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_factory.dart';
@@ -175,15 +176,23 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
   /// line), never in [SubscriptionsState.errorMessage], which belongs to the
   /// add sheet. A refresh already running for [subscriptionId] wins: a
   /// second call returns at once.
-  Future<void> refreshSubscription(String subscriptionId) async {
-    if (state.refreshingIds.contains(subscriptionId)) return;
+  ///
+  /// Returns how it ended; the manual refresh tells the user, the automatic
+  /// one does not look at it.
+  Future<RefreshOutcome> refreshSubscription(String subscriptionId) async {
+    if (state.refreshingIds.contains(subscriptionId)) {
+      return const RefreshIgnored();
+    }
     final stored = _findSubscription(subscriptionId);
-    if (stored == null || stored.subscription.url == null) return;
+    if (stored == null || stored.subscription.url == null) {
+      return const RefreshIgnored();
+    }
 
     emit(
       state.copyWith(refreshingIds: {...state.refreshingIds, subscriptionId}),
     );
-    final updated = await _refresher.refresh(stored);
+    final refreshed = await _refresher.refreshDetailed(stored);
+    final updated = refreshed.stored;
     final refreshing = {...state.refreshingIds}..remove(subscriptionId);
 
     // Looked up again by id: the list may have changed during the fetch,
@@ -194,7 +203,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
     if (index == -1) {
       _talker.debug('Subscriptions: $subscriptionId deleted mid-refresh');
       emit(state.copyWith(refreshingIds: refreshing));
-      return;
+      return const RefreshIgnored();
     }
 
     await _storage.save(updated);
@@ -213,6 +222,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
       state.copyWith(subscriptions: subscriptions, refreshingIds: refreshing),
     );
     await _followSelectedServer();
+    return error == null ? Refreshed(updated) : RefreshFailed(refreshed.cause);
   }
 
   /// Re-reads every subscription from disk, for when the background job

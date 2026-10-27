@@ -4,6 +4,7 @@ import 'package:slipstream/core/models/stored_subscription/stored_subscription.d
 import 'package:slipstream/core/models/subscription/subscription.dart';
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_factory.dart';
+import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_exceptions.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_parser_service.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_refresher.dart';
 
@@ -63,6 +64,41 @@ void main() {
     expect(result.subscription.lastUpdatedAt, before);
     expect(result.subscription.lastAttemptAt, now);
     expect(result.subscription.lastError, 'HTTP error: 502');
+  });
+
+  group('refreshDetailed', () {
+    test('hands over the reason of a failure, for the UI to explain', () async {
+      const reason = HttpStatusException(502);
+      final parser = FakeParser(
+        (_) async => Failure(reason.toString(), reason),
+      );
+
+      final result = await refresherWith(parser).refreshDetailed(stored());
+
+      expect(result.cause, same(reason));
+      expect(result.stored.subscription.lastError, 'HTTP error: 502');
+    });
+
+    test('has no reason after a success', () async {
+      final parser = FakeParser(
+        (_) async => Success(ParsedSubscription(servers: [server('n:1:u:#0')])),
+      );
+
+      final result = await refresherWith(parser).refreshDetailed(stored());
+
+      expect(result.cause, isNull);
+      expect(result.stored.servers.single.id, 'n:1:u:#0');
+    });
+
+    test('has no reason for a subscription without a URL', () async {
+      final parser = FakeParser((_) async => throw StateError('no fetch'));
+      final manual = stored(url: null);
+
+      final result = await refresherWith(parser).refreshDetailed(manual);
+
+      expect(result.cause, isNull);
+      expect(result.stored, manual);
+    });
   });
 
   test('a subscription without a URL is returned untouched', () async {

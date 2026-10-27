@@ -29,7 +29,16 @@ const noQrInImageToast = ToastSpec(
 
 /// Plain words for why an add failed. [cause] is the exception the parser
 /// gave the cubit (`errorCause`); the technical text stays in the logs.
-ToastSpec addFailedToast(Object? cause) {
+ToastSpec addFailedToast(Object? cause) =>
+    subscriptionFailedToast(cause, fallbackTitle: "Couldn't add subscription");
+
+/// The words for a failed fetch of a subscription, shared by adding and
+/// refreshing: the cause decides them. [fallbackTitle] is the headline for a
+/// cause nobody expected.
+ToastSpec subscriptionFailedToast(
+  Object? cause, {
+  required String fallbackTitle,
+}) {
   final (title, hint) = switch (cause) {
     InvalidInputFormatException() => (
       'Invalid key or link',
@@ -81,7 +90,7 @@ ToastSpec addFailedToast(Object? cause) {
       "Can't reach the server",
       'CHECK CONNECTION · TRY AGAIN',
     ),
-    _ => ("Couldn't add subscription", 'SEE APP LOGS FOR DETAILS'),
+    _ => (fallbackTitle, 'SEE APP LOGS FOR DETAILS'),
   };
   return ToastSpec(title, subtitle: hint, kind: ToastKind.error);
 }

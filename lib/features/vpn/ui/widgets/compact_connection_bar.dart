@@ -9,6 +9,7 @@ import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
 import 'package:slipstream/core/utils/formatters.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
 import 'package:slipstream/features/subscriptions/data/vpn_server_display.dart';
+import 'package:slipstream/features/vpn/presentation/connect_tap.dart';
 import 'package:slipstream/features/vpn/presentation/connection_status_view.dart';
 import 'package:slipstream/features/vpn/ui/widgets/connection_phase_colors.dart';
 import 'package:slipstream/features/vpn/ui/widgets/connection_timer.dart';
@@ -55,7 +56,11 @@ class CompactConnectionBar extends StatelessWidget {
                     // The whole bar toggles the tunnel, like the classic
                     // card; the switch only shows the state.
                     child: GestureDetector(
-                      onTap: () => cubit.toggle(selectedServer),
+                      onTap: () => handleConnectTap(
+                        cubit,
+                        server: selectedServer,
+                        hasSubscriptions: subsState.subscriptions.isNotEmpty,
+                      ),
                       behavior: .opaque,
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
