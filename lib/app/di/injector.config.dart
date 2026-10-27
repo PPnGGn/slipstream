@@ -16,6 +16,7 @@ import 'package:injectable/injectable.dart' as _i526;
 import 'package:shared_preferences/shared_preferences.dart' as _i460;
 import 'package:talker_flutter/talker_flutter.dart' as _i207;
 
+import '../../core/service/toast/toast_cubit.dart' as _i169;
 import '../../core/service/update_service/update_service_cubit.dart' as _i1021;
 import '../../core/service/vpn_service/vpn_service_cubit.dart' as _i202;
 import '../../core/theme/app_colors.dart' as _i962;
@@ -128,6 +129,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i924.NativeVpnEventReceiver>(
       () => vpnModule.vpnEventReceiver,
     );
+    gh.lazySingleton<_i169.ToastCubit>(() => _i169.ToastCubit());
     gh.lazySingleton<_i142.PingTargetResolver>(
       () => const _i142.PingTargetResolver(),
     );

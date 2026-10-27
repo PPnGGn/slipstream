@@ -3,10 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:slipstream/app/di/injector.dart';
+import 'package:slipstream/core/service/toast/toast_cubit.dart';
 import 'package:slipstream/core/service/update_service/update_service_cubit.dart';
 import 'package:slipstream/core/service/vpn_service/vpn_service_cubit.dart';
 import 'package:slipstream/core/theme/app_theme.dart';
 import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
+import 'package:slipstream/core/ui/toast/toast_host.dart';
 import 'package:slipstream/features/update/ui/widgets/update_dialog.dart';
 import 'router.dart';
 
@@ -26,7 +28,12 @@ class MainApp extends StatelessWidget {
           // so no darkTheme/themeMode pair is needed.
           theme: AppTheme.fromPalette(state.palette),
           builder: (context, child) {
-            return _UpdaterHost(child: child ?? const SizedBox.shrink());
+            // The toast layer is outermost, above the Navigator: a toast is
+            // visible over bottom sheets and the update dialog too.
+            return ToastHost(
+              cubit: getIt<ToastCubit>(),
+              child: _UpdaterHost(child: child ?? const SizedBox.shrink()),
+            );
           },
         );
       },

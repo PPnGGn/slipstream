@@ -8,11 +8,13 @@ import 'package:slipstream/app/app_assets.dart';
 import 'package:slipstream/app/di/injector.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
+import 'package:slipstream/core/ui/toast/show_toast.dart';
 import 'package:slipstream/core/ui/widgets/accent_button.dart';
 import 'package:slipstream/core/ui/widgets/sheet_parts.dart';
 import 'package:slipstream/features/qr/data/qr_image_import.dart';
 import 'package:slipstream/features/qr/data/qr_scan.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
+import 'package:slipstream/features/subscriptions/ui/add_subscription_toasts.dart';
 
 /// What the sheet does as soon as it opens (the compact layout's Paste and
 /// Scan QR buttons): the result and any error show up inside the sheet.
@@ -44,7 +46,9 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
   final _name = TextEditingController();
 
   bool _busy = false;
-  String? _error;
+  // The words of a failure go to a toast; the sheet itself only outlines the
+  // field the failed value came from.
+  bool _hasError = false;
 
   @override
   void initState() {
@@ -77,12 +81,17 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
 
   Future<void> _submit({required bool activate}) async {
     final text = _input.text.trim();
-    if (text.isEmpty || _busy) return;
+    if (_busy) return;
+    if (text.isEmpty) {
+      setState(() => _hasError = true);
+      showToastSpec(nothingToAddToast);
+      return;
+    }
 
     FocusScope.of(context).unfocus();
     setState(() {
       _busy = true;
-      _error = null;
+      _hasError = false;
     });
 
     final ok = activate
@@ -91,12 +100,20 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
 
     if (!mounted) return;
     if (ok) {
+      final added = _cubit.state.subscriptions.last;
+      showToastSpec(
+        subscriptionAddedToast(
+          servers: added.servers.length,
+          name: added.subscription.name,
+        ),
+      );
       Navigator.of(context).pop();
     } else {
       setState(() {
         _busy = false;
-        _error = _cubit.state.errorMessage ?? 'Could not add subscription';
+        _hasError = true;
       });
+      showToastSpec(addFailedToast(_cubit.state.errorCause));
     }
   }
 
@@ -105,7 +122,7 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
     final text = data?.text?.trim() ?? '';
     if (!mounted) return;
     if (text.isEmpty) {
-      setState(() => _error = 'Clipboard is empty');
+      showToastSpec(emptyClipboardToast);
       return;
     }
     await _addFromText(text);
@@ -118,14 +135,14 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
   }
 
   Future<void> _importFromImage() async {
-    setState(() => _error = null);
+    setState(() => _hasError = false);
     final result = await getIt<QrImageImporter>().import();
     if (!mounted) return;
     switch (result) {
       case QrImportCancelled():
         return;
       case QrImportNotFound():
-        setState(() => _error = 'No QR code found in this image');
+        showToastSpec(noQrInImageToast);
       case QrImportFound(:final text):
         await _addFromText(text);
     }
@@ -183,14 +200,10 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
                       hintText:
                           'https://…, vless://…, vmess://…, trojan://…, hy2://…, ss://… or JSON',
                       // A failed add outlines the field it came from.
-                      enabledBorder: _error != null ? errorBorder : null,
-                      focusedBorder: _error != null ? errorBorder : null,
+                      enabledBorder: _hasError ? errorBorder : null,
+                      focusedBorder: _hasError ? errorBorder : null,
                     ),
                   ),
-                  if (_error != null) ...[
-                    const SizedBox(height: 10),
-                    _ErrorBox(colors: colors, message: _error!),
-                  ],
                   const SizedBox(height: 10),
                   Row(
                     spacing: 8,
@@ -307,46 +320,6 @@ class _ChipButton extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _ErrorBox extends StatelessWidget {
-  const _ErrorBox({required this.colors, required this.message});
-
-  final AppColors colors;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const .symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: colors.danger.withValues(alpha: 0.13),
-        borderRadius: .circular(12),
-        border: .all(color: colors.danger.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        crossAxisAlignment: .start,
-        spacing: 8,
-        children: [
-          Padding(
-            padding: const .only(top: 1),
-            child: SvgPicture.asset(
-              AppAssets.info,
-              width: 14,
-              height: 14,
-              colorFilter: .mode(colors.danger, .srcIn),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              message,
-              style: TextStyle(color: colors.danger, fontSize: 12, height: 1.5),
-            ),
-          ),
-        ],
       ),
     );
   }

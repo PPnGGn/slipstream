@@ -57,4 +57,9 @@ class AppAssets {
   static const String block = 'assets/svg/block.svg';
   static const String home = 'assets/svg/home.svg';
   static const String database = 'assets/svg/database.svg';
+
+  // Toast icons (design v3): check, "!" and "i" on a colored circle.
+  static const String toastOk = 'assets/svg/toast_ok.svg';
+  static const String toastError = 'assets/svg/toast_error.svg';
+  static const String toastInfo = 'assets/svg/toast_info.svg';
 }

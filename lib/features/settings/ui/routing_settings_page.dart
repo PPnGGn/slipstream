@@ -5,10 +5,12 @@ import 'package:slipstream/app/app_assets.dart';
 import 'package:slipstream/app/di/injector.dart';
 import 'package:slipstream/core/service/vpn_service/vpn_service_cubit.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
+import 'package:slipstream/core/ui/toast/show_toast.dart';
 import 'package:slipstream/core/ui/widgets/page_header.dart';
 import 'package:slipstream/core/ui/widgets/segmented_pill.dart';
 import 'package:slipstream/features/geo/cubit/geo_cubit.dart';
 import 'package:slipstream/features/geo/data/geo_update_service.dart';
+import 'package:slipstream/features/geo/presentation/geo_update_toast.dart';
 import 'package:slipstream/features/routing/cubit/ad_block_cubit.dart';
 import 'package:slipstream/features/routing/cubit/ru_bypass_cubit.dart';
 import 'package:slipstream/features/routing/data/ad_block_mode.dart';
@@ -82,9 +84,7 @@ class RoutingSettingsPage extends StatelessWidget {
                           switchValue: mode == RuBypassMode.bypassRu,
                           onSwitch: (enabled) async {
                             await ruBypassCubit.setBypassRu(enabled: enabled);
-                            if (context.mounted) {
-                              notifyIfTunnelActive(context, vpn);
-                            }
+                            notifyIfTunnelActive(vpn);
                           },
                         ),
                       ),
@@ -100,9 +100,7 @@ class RoutingSettingsPage extends StatelessWidget {
                           switchValue: mode.enabled,
                           onSwitch: (enabled) async {
                             await adBlockCubit.setEnabled(enabled: enabled);
-                            if (context.mounted) {
-                              notifyIfTunnelActive(context, vpn);
-                            }
+                            notifyIfTunnelActive(vpn);
                           },
                           footer: mode.enabled && adBlockCubit.fullAllowed
                               ? SegmentedPill<AdBlockMode>(
@@ -113,9 +111,7 @@ class RoutingSettingsPage extends StatelessWidget {
                                   selected: mode,
                                   onChanged: (value) async {
                                     await adBlockCubit.setMode(value);
-                                    if (context.mounted) {
-                                      notifyIfTunnelActive(context, vpn);
-                                    }
+                                    notifyIfTunnelActive(vpn);
                                   },
                                 )
                               : null,
@@ -175,7 +171,7 @@ class RoutingSettingsPage extends StatelessWidget {
       ),
       GeoReady(:final tag, :final updatedAt) => (
         'Актуально · $tag · ${_date(updatedAt)}',
-        _Action('Обновить', () => _update(context, geoService)),
+        _Action('Обновить', () => _update(geoService)),
       ),
       GeoUpdateAvailable(:final latestTag) => (
         'Доступно обновление: $latestTag',
@@ -261,20 +257,9 @@ class RoutingSettingsPage extends StatelessWidget {
     );
   }
 
-  static Future<void> _update(
-    BuildContext context,
-    GeoUpdateService service,
-  ) async {
+  static Future<void> _update(GeoUpdateService service) async {
     final outcome = await service.updateNow();
-    if (!context.mounted) return;
-    final text = switch (outcome) {
-      GeoUpdateOutcome.updated => 'Базы обновлены',
-      GeoUpdateOutcome.upToDate => 'Уже актуально',
-      GeoUpdateOutcome.failed => 'Не удалось проверить обновление',
-    };
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(text)));
+    showToastSpec(geoUpdateToast(outcome));
   }
 
   static String _date(DateTime d) =>

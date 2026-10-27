@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:slipstream/features/client_identity/data/hwid.dart';
 import 'package:slipstream/features/routing/data/local_proxy_client.dart';
+import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_exceptions.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_fetcher.dart';
 import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
 
@@ -186,6 +187,19 @@ void main() {
             (e) => e.toString(),
             'message',
             contains('HTTP error: 404'),
+          ),
+        ),
+      );
+    });
+
+    test('an error status carries its code, so the UI can explain it', () {
+      expect(
+        fetchReplying(502, {}),
+        throwsA(
+          isA<HttpStatusException>().having(
+            (e) => e.statusCode,
+            'statusCode',
+            502,
           ),
         ),
       );

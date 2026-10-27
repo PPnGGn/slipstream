@@ -10,6 +10,7 @@ import 'package:slipstream/core/service/vpn_service/vpn_service_cubit.dart';
 import 'package:slipstream/features/subscriptions/data/selected_server_store.dart';
 import 'package:slipstream/features/subscriptions/data/server_identity.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_factory.dart';
+import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_exceptions.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_parser_service.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_refresher.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_storage/subscription_storage.dart';
@@ -66,15 +67,17 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
 
     final isUrl = trimmed.toLowerCase().startsWith('http');
     if (isUrl && _findByUrl(trimmed) != null) {
+      const duplicate = DuplicateSubscriptionException();
       emit(
         state.copyWith(
-          errorMessage: 'This subscription has already been added',
+          errorMessage: duplicate.toString(),
+          errorCause: duplicate,
         ),
       );
       return false;
     }
 
-    emit(state.copyWith(isAdding: true, errorMessage: null));
+    emit(state.copyWith(isAdding: true, errorMessage: null, errorCause: null));
     final result = await _parser.parseFromInput(trimmed);
 
     switch (result) {
@@ -96,9 +99,15 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
           ),
         );
         return true;
-      case Failure(:final message):
+      case Failure(:final message, :final exception):
         _talker.warning('Subscriptions: failed to add -> $message');
-        emit(state.copyWith(isAdding: false, errorMessage: message));
+        emit(
+          state.copyWith(
+            isAdding: false,
+            errorMessage: message,
+            errorCause: exception,
+          ),
+        );
         return false;
     }
   }
@@ -245,7 +254,8 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
     return null;
   }
 
-  void clearError() => emit(state.copyWith(errorMessage: null));
+  void clearError() =>
+      emit(state.copyWith(errorMessage: null, errorCause: null));
 
   StoredSubscription? _findByUrl(String url) {
     for (final stored in state.subscriptions) {

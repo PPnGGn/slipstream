@@ -1,10 +1,12 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:slipstream/core/ui/toast/show_toast.dart';
 
-// Copy and show snackbar
-void copyToClipboard(BuildContext context, String text, String toast) {
-  Clipboard.setData(ClipboardData(text: text));
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(toast)));
+/// Puts [text] on the clipboard and confirms it with a toast.
+Future<void> copyToClipboard(
+  String text, {
+  required String title,
+  String? subtitle,
+}) async {
+  await Clipboard.setData(ClipboardData(text: text));
+  showToast(title, subtitle: subtitle);
 }

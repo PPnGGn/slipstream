@@ -4,9 +4,11 @@ import 'package:flutter_svg/svg.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:slipstream/app/app_assets.dart';
 import 'package:slipstream/app/di/injector.dart';
+import 'package:slipstream/core/service/toast/toast_message.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
 import 'package:slipstream/core/ui/clipboard.dart';
+import 'package:slipstream/core/ui/toast/show_toast.dart';
 import 'package:slipstream/core/ui/widgets/accent_button.dart';
 import 'package:slipstream/core/ui/widgets/sheet_parts.dart';
 import 'package:slipstream/features/qr/data/qr_share_service.dart';
@@ -48,13 +50,11 @@ class _QrShareSheetState extends State<_QrShareSheet> {
       await getIt<QrShareService>().shareQr(data: data, name: title);
     } on Object catch (e, st) {
       getIt<Talker>().handle(e, st, 'QR: share failed');
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            const SnackBar(content: Text('Could not share the QR code')),
-          );
-      }
+      showToast(
+        "Couldn't share QR code",
+        subtitle: 'TRY AGAIN OR COPY THE LINK',
+        kind: ToastKind.error,
+      );
     } finally {
       if (mounted) setState(() => _sharing = false);
     }
@@ -120,7 +120,11 @@ class _QrShareSheetState extends State<_QrShareSheet> {
                 const SizedBox(height: 10),
                 GestureDetector(
                   onTap: () {
-                    copyToClipboard(context, data, 'URL copied');
+                    copyToClipboard(
+                      data,
+                      title: 'Link copied',
+                      subtitle: 'SUBSCRIPTION URL · READY TO PASTE',
+                    );
                     Navigator.of(context).pop();
                   },
                   behavior: .opaque,

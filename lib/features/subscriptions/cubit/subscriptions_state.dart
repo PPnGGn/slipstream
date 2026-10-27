@@ -10,6 +10,10 @@ abstract class SubscriptionsState with _$SubscriptionsState {
     @Default(<String>{}) Set<String> refreshingIds,
     String? errorMessage,
 
+    /// What went wrong with the last add, as an exception type: the add
+    /// sheet picks its wording from this, [errorMessage] is the log line.
+    Object? errorCause,
+
     /// False until the first read from storage lands: an empty list before
     /// that means "not known yet", not "no subscriptions".
     @Default(false) bool isLoaded,

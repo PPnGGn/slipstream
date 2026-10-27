@@ -103,7 +103,7 @@ class _SplitTunnelingPageState extends State<SplitTunnelingPage> {
                 switchValue: settings.enabled,
                 onSwitch: (enabled) {
                   _split.setEnabled(enabled: enabled);
-                  notifyIfTunnelActive(context, _vpn);
+                  notifyIfTunnelActive(_vpn);
                 },
               ),
             ],
@@ -117,7 +117,7 @@ class _SplitTunnelingPageState extends State<SplitTunnelingPage> {
             selected: settings.mode,
             onChanged: (mode) {
               _split.setMode(mode);
-              notifyIfTunnelActive(context, _vpn);
+              notifyIfTunnelActive(_vpn);
             },
           ),
           Padding(
@@ -242,7 +242,7 @@ class _SplitTunnelingPageState extends State<SplitTunnelingPage> {
                 loadIcon: _apps.iconFor,
                 onChanged: (selected) {
                   _split.setAppSelected(app.packageName, selected: selected);
-                  notifyIfTunnelActive(context, _vpn);
+                  notifyIfTunnelActive(_vpn);
                 },
               );
             },

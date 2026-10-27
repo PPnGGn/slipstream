@@ -7,6 +7,7 @@ import 'base64_codec.dart';
 import 'custom_json_parser.dart';
 import 'hysteria2_uri_parser.dart';
 import 'shadowsocks_uri_parser.dart';
+import 'subscription_exceptions.dart';
 import 'subscription_fetcher.dart';
 import 'trojan_uri_parser.dart';
 import 'uri_scheme_parser.dart';
@@ -75,10 +76,7 @@ class SubscriptionParserService {
           !cleanInput.startsWith('[') &&
           !cleanInput.startsWith('{') &&
           tryDecodeBase64(cleanInput) == null) {
-        return const Failure(
-          'Unknown input format. Expected an http(s) link, vless://, '
-          'vmess://, trojan://, hysteria2://, ss:// or a raw JSON config',
-        );
+        return _failure(const InvalidInputFormatException());
       }
 
       final trimmed = textToParse.trim();
@@ -102,7 +100,7 @@ class SubscriptionParserService {
       }
 
       if (servers.isEmpty) {
-        return const Failure('No supported servers were found in the response');
+        return _failure(const NoServersFoundException());
       }
 
       _talker.info('Parser: successfully parsed ${servers.length} server(s)');
@@ -119,9 +117,13 @@ class SubscriptionParserService {
       );
     } catch (e, st) {
       _talker.handle(e, st, 'Parser: unhandled error while processing');
-      return Failure('Failed to process the data: $e');
+      return Failure('Failed to process the data: $e', e);
     }
   }
+
+  /// The exception is the cause the UI explains; its text is the log line.
+  Failure<ParsedSubscription> _failure(Exception cause) =>
+      Failure(cause.toString(), cause);
 
   List<VpnServer> _parseLinks(String text, String sourceId) {
     final servers = <VpnServer>[];

@@ -121,7 +121,12 @@ class _ServerInfoSheet extends StatelessWidget {
                       _CopyButton(
                         colors: colors,
                         onTap: () {
-                          copyToClipboard(context, pretty, 'Config copied');
+                          copyToClipboard(
+                            pretty,
+                            title: 'Config copied',
+                            subtitle:
+                                'XRAY JSON · ${server.title.toUpperCase()}',
+                          );
                           Navigator.of(context).pop();
                         },
                       ),

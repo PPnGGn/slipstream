@@ -7,6 +7,7 @@ import 'package:slipstream/features/client_identity/data/client_identity_reposit
 import 'package:slipstream/features/routing/data/local_proxy_client.dart';
 import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
 import 'base64_codec.dart';
+import 'subscription_exceptions.dart';
 
 class SubscriptionResponse {
   final String body;
@@ -88,7 +89,7 @@ class SubscriptionFetcher {
     // a bare "HTTP error: 404" would hide the real reason from the user.
     _throwIfHwidRefused(response);
     if (response.statusCode != 200) {
-      throw Exception('HTTP error: ${response.statusCode}');
+      throw HttpStatusException(response.statusCode);
     }
     final headers = response.headers;
     final userInfo = _parseUserInfo(headers['subscription-userinfo']);

@@ -6,6 +6,7 @@ import 'package:http/testing.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:slipstream/core/models/result.dart';
 import 'package:slipstream/features/routing/data/local_proxy_client.dart';
+import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_exceptions.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_fetcher.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_parser_service.dart';
 import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
@@ -70,6 +71,10 @@ void main() {
       final result = await service.parseFromInput('what is this?!');
 
       expect(result, isA<Failure<ParsedSubscription>>());
+      expect(
+        (result as Failure<ParsedSubscription>).exception,
+        isA<InvalidInputFormatException>(),
+      );
     });
 
     test('parses a fetched base64 body', () async {
@@ -137,6 +142,10 @@ void main() {
       final result = await service.parseFromInput('https://sub.example.com');
 
       expect(result, isA<Failure<ParsedSubscription>>());
+      expect(
+        (result as Failure<ParsedSubscription>).exception,
+        isA<NoServersFoundException>(),
+      );
     });
 
     test('carries subscription metadata from the response headers', () async {
@@ -178,6 +187,7 @@ void main() {
         (result as Failure<ParsedSubscription>).message,
         contains('device limit'),
       );
+      expect(result.exception, isA<DeviceLimitReachedException>());
     });
 
     test('fails instead of throwing when the fetch fails', () async {
@@ -187,6 +197,10 @@ void main() {
       final result = await service.parseFromInput('https://sub.example.com');
 
       expect(result, isA<Failure<ParsedSubscription>>());
+      expect(
+        (result as Failure<ParsedSubscription>).exception,
+        isA<HttpStatusException>().having((e) => e.statusCode, 'code', 500),
+      );
     });
   });
 }

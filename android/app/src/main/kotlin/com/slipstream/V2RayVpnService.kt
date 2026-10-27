@@ -353,6 +353,16 @@ class V2RayVpnService : VpnService() {
         manager.notify(NOTIFICATION_ID, notification)
     }
 
+    private fun openAppPendingIntent(): PendingIntent? {
+        val launchIntent = packageManager.getLaunchIntentForPackage(packageName) ?: return null
+        return PendingIntent.getActivity(
+                this,
+                1,
+                launchIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+    }
+
     private fun buildNotification(statusText: String): Notification {
         val stopIntent = Intent(this, V2RayVpnService::class.java).setAction(ACTION_STOP_VPN)
         val stopPendingIntent =
@@ -366,6 +376,7 @@ class V2RayVpnService : VpnService() {
                 .setContentTitle("Slipstream")
                 .setContentText(statusText)
                 .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentIntent(openAppPendingIntent())
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
                 .setPriority(NotificationCompat.PRIORITY_LOW)

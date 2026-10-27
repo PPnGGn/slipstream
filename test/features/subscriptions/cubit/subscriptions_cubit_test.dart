@@ -10,6 +10,7 @@ import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
 import 'package:slipstream/features/subscriptions/data/selected_server_store.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_factory.dart';
+import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_exceptions.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_parser_service.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_refresher.dart';
 
@@ -65,6 +66,49 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     return cubit;
   }
+
+  group('addFromInput failures', () {
+    test('keep the parser\'s reason for the UI to explain', () async {
+      const reason = InvalidInputFormatException();
+      final cubit = await cubitWith(
+        FakeParser((_) async => Failure(reason.toString(), reason)),
+      );
+
+      final ok = await cubit.addFromInput('nonsense');
+
+      expect(ok, isFalse);
+      expect(cubit.state.errorMessage, reason.toString());
+      expect(cubit.state.errorCause, same(reason));
+    });
+
+    test('a link that is already in the list is a duplicate', () async {
+      final cubit = await cubitWith(
+        FakeParser((_) async => _parsed(['x'])),
+        initial: [
+          _stored('a', ['old:1:u:#0']),
+        ],
+      );
+
+      final ok = await cubit.addFromInput('https://example.com/a');
+
+      expect(ok, isFalse);
+      expect(cubit.state.errorCause, isA<DuplicateSubscriptionException>());
+    });
+
+    test('a new attempt clears the previous reason', () async {
+      final answers = <Result<ParsedSubscription>>[
+        const Failure('bad', InvalidInputFormatException()),
+        _parsed(['x']),
+      ];
+      final cubit = await cubitWith(FakeParser((_) async => answers.removeAt(0)));
+
+      await cubit.addFromInput('first');
+      await cubit.addFromInput('second');
+
+      expect(cubit.state.errorCause, isNull);
+      expect(cubit.state.errorMessage, isNull);
+    });
+  });
 
   group('refreshSubscription', () {
     test('replaces the subscription and saves it', () async {
