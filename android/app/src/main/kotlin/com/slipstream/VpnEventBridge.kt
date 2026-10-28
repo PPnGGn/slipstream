@@ -4,6 +4,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import com.slipstream.android.Handler as CoreLogHandler
+import java.util.concurrent.CopyOnWriteArraySet
 
 object VpnEventBridge : CoreLogHandler {
 
@@ -20,6 +21,18 @@ object VpnEventBridge : CoreLogHandler {
     fun currentStatus(): VpnStatusMessage =
             VpnStatusMessage(lastStatus, lastError, lastConnectedAtEpochMs)
 
+    // Others that want every status change besides Flutter: the quick settings
+    // tile. Called on whichever thread changed the status.
+    private val statusListeners = CopyOnWriteArraySet<(VpnStatusMessage) -> Unit>()
+
+    fun addStatusListener(listener: (VpnStatusMessage) -> Unit) {
+        statusListeners.add(listener)
+    }
+
+    fun removeStatusListener(listener: (VpnStatusMessage) -> Unit) {
+        statusListeners.remove(listener)
+    }
+
     fun notifyStatus(status: VpnStatus, error: String? = null, connectedAtEpochMs: Long? = null) {
         lastStatus = status
         lastError = error
@@ -31,12 +44,16 @@ object VpnEventBridge : CoreLogHandler {
                     else -> lastConnectedAtEpochMs
                 }
 
+        val message = VpnStatusMessage(status, error, lastConnectedAtEpochMs)
+        // Before the Flutter check below: the tile starts the VPN with no app, so
+        // there may be no engine at all, and the tile still has to know.
+        statusListeners.forEach { it(message) }
+
         val receiver = this.receiver
         if (receiver == null) {
             Log.w("VPN_BRIDGE", "No Flutter engine attached, status update cached: $status")
             return
         }
-        val message = VpnStatusMessage(status, error, lastConnectedAtEpochMs)
         mainHandler.post {
             receiver.onStatusChanged(message) { result ->
                 result.onFailure { e ->
