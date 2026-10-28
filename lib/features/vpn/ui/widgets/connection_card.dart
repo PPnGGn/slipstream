@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
@@ -13,9 +12,6 @@ import 'package:slipstream/core/service/vpn_service/vpn_service_cubit.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
 import 'package:slipstream/core/theme/protocol_colors.dart';
-import 'package:slipstream/features/diagnostics/cubit/memory_monitor_cubit.dart';
-import 'package:slipstream/features/diagnostics/cubit/memory_usage_cubit.dart';
-import 'package:slipstream/features/diagnostics/data/memory_monitor_mode.dart';
 import 'package:slipstream/features/ping/presentation/ping_cubit.dart';
 import 'package:slipstream/features/ping/presentation/ping_entry.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
@@ -412,25 +408,21 @@ class _Chips extends StatelessWidget {
     final traffic = state.whenOrNull(connected: (_, _, up, down) => (up, down));
     final server = this.server;
 
-    return BlocBuilder<MemoryMonitorCubit, MemoryMonitorMode>(
-      bloc: getIt<MemoryMonitorCubit>(),
-      builder: (context, monitorMode) => Wrap(
-        spacing: 6,
-        runSpacing: 6,
-        children: [
-          if (server == null)
-            _Chip(colors: colors, label: 'NO SERVER')
-          else
-            _ProtocolChip(colors: colors, server: server),
-          if (server != null) _PingChip(colors: colors, serverId: server.id),
-          _TrafficChip(
-            colors: colors,
-            up: traffic?.$1 ?? 0,
-            down: traffic?.$2 ?? 0,
-          ),
-          if (monitorMode.enabled) _MemoryChip(colors: colors),
-        ],
-      ),
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: [
+        if (server == null)
+          _Chip(colors: colors, label: 'NO SERVER')
+        else
+          _ProtocolChip(colors: colors, server: server),
+        if (server != null) _PingChip(colors: colors, serverId: server.id),
+        _TrafficChip(
+          colors: colors,
+          up: traffic?.$1 ?? 0,
+          down: traffic?.$2 ?? 0,
+        ),
+      ],
     );
   }
 }
@@ -587,40 +579,3 @@ TextStyle _chipTextStyle(Color color) => TextStyle(
   fontWeight: .w600,
   color: color,
 );
-
-class _MemoryChip extends StatelessWidget {
-  const _MemoryChip({required this.colors});
-
-  final AppColors colors;
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<MemoryUsageCubit, MemoryUsage>(
-      bloc: getIt<MemoryUsageCubit>(),
-      builder: (context, usage) {
-        final bytes = usage.bytes;
-        if (bytes == null) {
-          return _Chip(
-            colors: colors,
-            label: 'RAM — MB',
-            dotColor: colors.textMuted,
-          );
-        }
-
-        final dotColor = switch (usage.health) {
-          MemoryHealth.ok => colors.ok,
-          MemoryHealth.warn => colors.warn,
-          MemoryHealth.danger => colors.danger,
-        };
-        // The budget only matters on iOS, where it's a real jetsam kill
-        // threshold worth showing headroom against; Android has none.
-        final label = Platform.isIOS
-            ? 'RAM ${_mb(bytes)}/${_mb(memoryBudgetBytes)} MB'
-            : 'RAM ${_mb(bytes)} MB';
-        return _Chip(colors: colors, label: label, dotColor: dotColor);
-      },
-    );
-  }
-
-  static int _mb(int bytes) => (bytes / (1024 * 1024)).round();
-}

@@ -11,6 +11,7 @@ import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
 import 'package:slipstream/core/ui/widgets/custom_icon_button.dart';
 import 'package:slipstream/features/appearance/cubit/home_layout_cubit.dart';
 import 'package:slipstream/features/appearance/data/home_layout.dart';
+import 'package:slipstream/features/diagnostics/ui/memory_monitor_line.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/add_actions_row.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/add_subscription_sheet.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list.dart';
@@ -71,11 +72,17 @@ class _HomePageState extends State<HomePage> {
                             controller: _search,
                           ),
                         ),
-                        if (!compact)
+                        if (!compact) ...[
                           const Padding(
                             padding: .fromLTRB(20, 2, 20, 12),
                             child: ConnectionCard(),
                           ),
+                          // Under the card; the 12 above is its gap to the
+                          // list, so the line takes 10 and keeps 2 below.
+                          const MemoryMonitorLine(
+                            padding: .fromLTRB(26, 0, 20, 10),
+                          ),
+                        ],
                         // The key keeps the list's element (scroll offset,
                         // expanded subscriptions) when the layout switches:
                         // without it the Column re-creates its unkeyed
@@ -104,7 +111,13 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
                         ),
-                        if (compact) const CompactConnectionBar(),
+                        if (compact) ...[
+                          // Above the bar, which has its own 8 on top.
+                          const MemoryMonitorLine(
+                            padding: .fromLTRB(26, 6, 20, 0),
+                          ),
+                          const CompactConnectionBar(),
+                        ],
                       ],
                     ),
                   ),
