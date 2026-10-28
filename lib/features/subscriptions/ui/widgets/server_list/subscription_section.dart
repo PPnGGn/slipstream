@@ -145,13 +145,12 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
             builder: (context, autoUpdate) => _Header(
               colors: colors,
               name: sub.name,
-              meta: subscriptionMetaLine(
+              meta: subscriptionMeta(
                 sub,
                 serverCount: widget.stored.servers.length,
                 refreshing: widget.refreshing,
                 autoUpdate: autoUpdate,
               ),
-              refreshing: widget.refreshing,
               isUrl: sub.url != null,
               expanded: _effectiveExpanded,
               descriptionShown: _descriptionShown,
@@ -215,7 +214,6 @@ class _Header extends StatelessWidget {
     required this.colors,
     required this.name,
     required this.meta,
-    required this.refreshing,
     required this.isUrl,
     required this.expanded,
     required this.descriptionShown,
@@ -225,8 +223,7 @@ class _Header extends StatelessWidget {
 
   final AppColors colors;
   final String name;
-  final String meta;
-  final bool refreshing;
+  final SubscriptionMeta meta;
   final bool isUrl;
   final bool expanded;
   final bool descriptionShown;
@@ -269,17 +266,7 @@ class _Header extends StatelessWidget {
                       color: colors.textPrimary,
                     ),
                   ),
-                  Text(
-                    meta,
-                    maxLines: 1,
-                    overflow: .ellipsis,
-                    style: TextStyle(
-                      fontFamily: 'monospace',
-                      fontSize: 10.5,
-                      fontWeight: .w500,
-                      color: refreshing ? colors.warn : colors.textMuted,
-                    ),
-                  ),
+                  _MetaLine(colors: colors, meta: meta),
                 ],
               ),
             ),
@@ -292,6 +279,57 @@ class _Header extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// `↻ 12h · 29.10.26, 01:11 · 40 ▤` 
+class _MetaLine extends StatelessWidget {
+  const _MetaLine({required this.colors, required this.meta});
+
+  final AppColors colors;
+  final SubscriptionMeta meta;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = TextStyle(
+      fontFamily: 'monospace',
+      fontSize: 10.5,
+      fontWeight: .w500,
+      color: meta.refreshing ? colors.warn : colors.textMuted,
+    );
+    if (meta.refreshing) return Text('UPDATING…', style: style, maxLines: 1);
+
+    Widget icon(String path) => SvgPicture.asset(
+      path,
+      width: 11,
+      height: 11,
+      colorFilter: .mode(colors.textMuted, .srcIn),
+    );
+    final interval = meta.interval;
+
+    return Row(
+      spacing: 5,
+      children: [
+        if (interval != null) ...[
+          icon(AppAssets.refresh),
+          Text(interval, style: style),
+          Text('·', style: style),
+        ],
+        Flexible(
+          child: Text(
+            meta.updated,
+            style: style,
+            maxLines: 1,
+            overflow: .ellipsis,
+          ),
+        ),
+        Text('·', style: style),
+        Text('${meta.serverCount}', style: style),
+        icon(AppAssets.server),
+        if (meta.failed)
+          Text('FAILED', style: style.copyWith(color: colors.warn)),
+      ],
     );
   }
 }

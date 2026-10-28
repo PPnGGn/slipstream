@@ -2,6 +2,22 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:slipstream/core/utils/formatters.dart';
 
 void main() {
+  group('formatUpdatedAtShort', () {
+    test('two-digit year, comma before the time', () {
+      expect(
+        formatUpdatedAtShort(DateTime(2026, 10, 29, 1, 11)),
+        '29.10.26, 01:11',
+      );
+    });
+
+    test('pads day, month and time', () {
+      expect(
+        formatUpdatedAtShort(DateTime(2027, 1, 5, 9, 3)),
+        '05.01.27, 09:03',
+      );
+    });
+  });
+
   group('countryCodeFromFlag', () {
     test(
       'extracts country code from a flag emoji at the start of the string',

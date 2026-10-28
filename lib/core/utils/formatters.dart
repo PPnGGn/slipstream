@@ -43,11 +43,11 @@ String formatDate(DateTime dateTime) {
   return '${two(local.day)}.${two(local.month)}.${local.year}';
 }
 
-/// Update timestamp for display, e.g. "21.07.2026 14:03".
-String formatUpdatedAt(DateTime dateTime) {
+/// `29.10.26, 01:11`
+String formatUpdatedAtShort(DateTime dateTime) {
   final local = dateTime.toLocal();
   String two(int n) => n.toString().padLeft(2, '0');
-  return '${two(local.day)}.${two(local.month)}.${local.year} '
+  return '${two(local.day)}.${two(local.month)}.${two(local.year % 100)}, '
       '${two(local.hour)}:${two(local.minute)}';
 }
 

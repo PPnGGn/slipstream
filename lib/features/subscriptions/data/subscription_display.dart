@@ -3,29 +3,43 @@ import 'package:slipstream/core/utils/formatters.dart';
 import 'package:slipstream/features/subscriptions/data/auto_update/auto_update_interval.dart';
 import 'package:slipstream/features/subscriptions/data/auto_update/subscription_update_policy.dart';
 
-/// The mono line under a subscription's name:
-/// `7 SERVERS · UPD 21.07.2026 14:03 · EVERY 12H`, or `UPDATING…` while a
-/// refresh is running. The interval is the one auto-update actually uses
-/// (the provider's, else [autoUpdate]); `UPDATE FAILED` follows when the
-/// last attempt did not get through.
-String subscriptionMetaLine(
+/// What the line under a subscription's name shows, as data: the widget turns
+/// it into icons (↻ 12h · 29.10.26, 01:11 · 40 ▤) and decides what to cut on
+/// a narrow screen.
+class SubscriptionMeta {
+  const SubscriptionMeta({
+    required this.updated,
+    required this.serverCount,
+    required this.interval,
+    required this.failed,
+    required this.refreshing,
+  });
+
+  final String updated;
+  final int serverCount;
+  final String? interval;
+  final bool failed;
+  final bool refreshing;
+}
+
+/// The interval is the one auto-update actually uses (the provider's, else
+/// [autoUpdate]).
+SubscriptionMeta subscriptionMeta(
   Subscription subscription, {
   required int serverCount,
   required bool refreshing,
   required AutoUpdateInterval autoUpdate,
 }) {
-  if (refreshing) return 'UPDATING…';
-
   final interval = effectiveUpdateInterval(subscription, autoUpdate);
-  return [
-    '$serverCount ${serverCount == 1 ? 'SERVER' : 'SERVERS'}',
-    'UPD ${formatUpdatedAt(subscription.lastUpdatedAt)}',
-    if (subscription.url == null)
-      'MANUAL'
-    else if (interval == null)
-      'AUTO OFF'
-    else
-      'EVERY ${interval.inHours}H',
-    if (subscription.lastError != null) 'UPDATE FAILED',
-  ].join(' · ');
+  return SubscriptionMeta(
+    updated: formatUpdatedAtShort(subscription.lastUpdatedAt),
+    serverCount: serverCount,
+    interval: subscription.url == null
+        ? null
+        : interval == null
+        ? 'off'
+        : '${interval.inHours}h',
+    failed: subscription.lastError != null,
+    refreshing: refreshing,
+  );
 }
