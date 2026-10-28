@@ -8,6 +8,7 @@ import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/core/models/result.dart';
 import 'package:slipstream/core/service/vpn_service/vpn_service_cubit.dart';
 import 'package:slipstream/features/subscriptions/cubit/refresh_outcome.dart';
+import 'package:slipstream/features/subscriptions/data/favorite_servers.dart';
 import 'package:slipstream/features/subscriptions/data/selected_server_store.dart';
 import 'package:slipstream/features/subscriptions/data/server_identity.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_factory.dart';
@@ -164,6 +165,35 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
       ),
     );
     await _saveOrder();
+  }
+
+  /// Pins the server to the top of its subscription, or unpins it. The id is
+  /// saved with the subscription, so a refresh keeps it (see
+  /// `SubscriptionFactory.refresh`). Returns true when it was pinned, false
+  /// when unpinned, null when there is no such subscription or server.
+  Future<bool?> toggleFavorite(String subscriptionId, String serverId) async {
+    final stored = _findSubscription(subscriptionId);
+    if (stored == null || !stored.servers.any((s) => s.id == serverId)) {
+      return null;
+    }
+
+    final subscription = stored.subscription;
+    final ids = toggleFavoriteId(subscription.favoriteServerIds, serverId);
+    final updated = stored.copyWith(
+      subscription: subscription.copyWith(favoriteServerIds: ids),
+    );
+    await _storage.save(updated);
+    // Looked up again after the save, as in refreshSubscription: the list
+    // may have changed meanwhile.
+    emit(
+      state.copyWith(
+        subscriptions: [
+          for (final s in state.subscriptions)
+            s.subscription.id == subscriptionId ? updated : s,
+        ],
+      ),
+    );
+    return ids.contains(serverId);
   }
 
   Future<void> _saveOrder() => _orderStore.save([

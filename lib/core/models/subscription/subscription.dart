@@ -21,6 +21,11 @@ abstract class Subscription with _$Subscription {
 
     /// Why the last refresh attempt failed; null after a successful one.
     String? lastError,
+
+    /// Ids of the servers the user pinned. Kept here, not on the servers: a
+    /// refresh replaces them all, and the subscription stays (the factory
+    /// carries the ids over, see `remapFavoriteIds`).
+    @Default(<String>[]) List<String> favoriteServerIds,
   }) = _Subscription;
 
   factory Subscription.fromJson(Map<String, dynamic> json) =>

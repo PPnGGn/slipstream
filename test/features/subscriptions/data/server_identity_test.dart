@@ -11,6 +11,23 @@ VpnServer _server(String id) => VpnServer(
 );
 
 void main() {
+  group('serverKey', () {
+    test('drops the position the provider gave the server', () {
+      expect(serverKey('a.example:443:uuid:#7'), 'a.example:443:uuid');
+    });
+
+    test('is the same wherever the server stands', () {
+      expect(
+        serverKey('a.example:443:uuid:#0'),
+        serverKey('a.example:443:uuid:#12'),
+      );
+    });
+
+    test('leaves an id without a position as it is', () {
+      expect(serverKey('plain'), 'plain');
+    });
+  });
+
   group('remapServerId', () {
     test('keeps an id that is still there', () {
       expect(

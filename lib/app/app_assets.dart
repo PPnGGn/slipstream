@@ -58,6 +58,9 @@ class AppAssets {
   static const String home = 'assets/svg/home.svg';
   static const String database = 'assets/svg/database.svg';
 
+  // Favorite server badge.
+  static const String heart = 'assets/svg/heart.svg';
+
   // Toast icons (design v3): check, "!" and "i" on a colored circle.
   static const String toastOk = 'assets/svg/toast_ok.svg';
   static const String toastError = 'assets/svg/toast_error.svg';

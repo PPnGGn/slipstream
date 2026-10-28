@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:slipstream/app/app_assets.dart';
@@ -14,9 +15,13 @@ import 'package:slipstream/features/qr/ui/qr_share_sheet.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscription_auto_update_cubit.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
 import 'package:slipstream/features/subscriptions/data/auto_update/auto_update_interval.dart';
+import 'package:slipstream/features/subscriptions/data/auto_server.dart';
+import 'package:slipstream/features/subscriptions/data/favorite_servers.dart';
 import 'package:slipstream/features/subscriptions/data/search.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_description_store.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_display.dart';
+import 'package:slipstream/features/subscriptions/data/vpn_server_display.dart';
+import 'package:slipstream/features/subscriptions/ui/favorite_toasts.dart';
 import 'package:slipstream/features/subscriptions/ui/subscription_menu_toasts.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/server_tile.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/subscription_info.dart';
@@ -95,6 +100,20 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
     if (toast != null) showToastSpec(toast);
   }
 
+  // A long press on a server pins or unpins it. The vibration answers the
+  // press at once; the toast says which of the two happened.
+  // The automatic server is always first already: nothing to pin.
+  Future<void> _toggleFavorite(VpnServer server) async {
+    if (isAutoTitle(server.title)) return;
+    unawaited(HapticFeedback.mediumImpact());
+    final added = await getIt<SubscriptionsCubit>().toggleFavorite(
+      widget.stored.subscription.id,
+      server.id,
+    );
+    if (added == null) return;
+    showToastSpec(favoriteToast(added: added, serverName: server.displayTitle));
+  }
+
   // The name is taken before the delete: afterwards the section is gone.
   Future<void> _delete(SubscriptionsCubit cubit, String id, String name) async {
     await cubit.removeSubscription(id);
@@ -131,6 +150,7 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
     final colors = widget.colors;
     final sub = widget.stored.subscription;
     final servers = filterServers(widget.stored.servers, widget.query);
+    final favoriteIds = sub.favoriteServerIds;
 
     return Container(
       clipBehavior: .antiAlias,
@@ -195,6 +215,12 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
                     if (ping.sortByPing && !ping.isRunning) {
                       ordered = sortServersByPing(ordered, ping.entries);
                     }
+                    // After the sort: favorites are sorted among themselves
+                    // and still stand on top, and the provider's automatic
+                    // server stands above them all.
+                    ordered = pinAutoServers(
+                      pinFavorites(ordered, favoriteIds),
+                    );
                     return Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -205,7 +231,10 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
                             colors: colors,
                             server: server,
                             selected: server.id == widget.selectedServerId,
+                            favorite: isFavorite(server, favoriteIds),
                             onTap: () => widget.onSelect(server),
+                            onLongPress: () =>
+                                unawaited(_toggleFavorite(server)),
                           ),
                         const SizedBox(height: 5),
                       ],

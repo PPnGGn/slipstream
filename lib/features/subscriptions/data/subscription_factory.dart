@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 import 'package:slipstream/core/models/stored_subscription/stored_subscription.dart';
 import 'package:slipstream/core/models/subscription/subscription.dart';
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
+import 'package:slipstream/features/subscriptions/data/favorite_servers.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_parser_service.dart';
 
 @lazySingleton
@@ -46,6 +47,7 @@ class SubscriptionFactory {
   }) {
     final id = existing.subscription.id;
     final now = at ?? DateTime.now();
+    final servers = _reassign(parsed.servers, id);
     return StoredSubscription(
       subscription: existing.subscription.copyWith(
         lastUpdatedAt: now,
@@ -56,8 +58,13 @@ class SubscriptionFactory {
         updateIntervalHours: parsed.updateIntervalHours,
         usedBytes: parsed.usedBytes,
         dataLimitBytes: parsed.dataLimitBytes,
+        favoriteServerIds: remapFavoriteIds(
+          existing.subscription.favoriteServerIds,
+          existing.servers,
+          servers,
+        ),
       ),
-      servers: _reassign(parsed.servers, id),
+      servers: servers,
     );
   }
 

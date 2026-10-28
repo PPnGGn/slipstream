@@ -9,6 +9,7 @@ import 'package:slipstream/core/models/subscription/subscription.dart';
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/features/subscriptions/cubit/refresh_outcome.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
+import 'package:slipstream/features/subscriptions/data/favorite_servers.dart';
 import 'package:slipstream/features/subscriptions/data/selected_server_store.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_factory.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_order_store.dart';
@@ -383,6 +384,95 @@ void main() {
       await cubit.moveSubscription(1, 1);
 
       expect(orderStore.load(), isEmpty);
+    });
+  });
+
+  group('toggleFavorite', () {
+    test('pins a server and saves it', () async {
+      final cubit = await cubitWith(
+        FakeParser((_) async => _parsed(['x'])),
+        initial: [
+          _stored('a', ['h:443:u:#0', 'g:443:u:#1']),
+        ],
+      );
+
+      final added = await cubit.toggleFavorite('a', 'g:443:u:#1');
+
+      expect(added, isTrue);
+      expect(cubit.state.subscriptions.single.subscription.favoriteServerIds, [
+        'g:443:u:#1',
+      ]);
+      expect(storage.items['a']!.subscription.favoriteServerIds, [
+        'g:443:u:#1',
+      ]);
+    });
+
+    test('pins one of two servers that share an address, not both', () async {
+      // The same host, port and credential: only the position tells them
+      // apart ("Auto" and a real server of one panel).
+      final cubit = await cubitWith(
+        FakeParser((_) async => _parsed(['x'])),
+        initial: [
+          _stored('a', ['h:443:u:#0', 'h:443:u:#1']),
+        ],
+      );
+
+      await cubit.toggleFavorite('a', 'h:443:u:#0');
+
+      final stored = cubit.state.subscriptions.single;
+      expect(
+        [
+          for (final s in stored.servers)
+            isFavorite(s, stored.subscription.favoriteServerIds),
+        ],
+        [true, false],
+      );
+    });
+
+    test('a second toggle unpins it', () async {
+      final cubit = await cubitWith(
+        FakeParser((_) async => _parsed(['x'])),
+        initial: [
+          _stored('a', ['h:443:u:#0']),
+        ],
+      );
+
+      await cubit.toggleFavorite('a', 'h:443:u:#0');
+      final added = await cubit.toggleFavorite('a', 'h:443:u:#0');
+
+      expect(added, isFalse);
+      expect(
+        cubit.state.subscriptions.single.subscription.favoriteServerIds,
+        isEmpty,
+      );
+    });
+
+    test('an unknown subscription or server does nothing', () async {
+      final cubit = await cubitWith(
+        FakeParser((_) async => _parsed(['x'])),
+        initial: [
+          _stored('a', ['h:443:u:#0']),
+        ],
+      );
+
+      expect(await cubit.toggleFavorite('nope', 'h:443:u:#0'), isNull);
+      expect(await cubit.toggleFavorite('a', 'nope'), isNull);
+      expect(storage.saved, isEmpty);
+    });
+
+    test('a favorite survives the subscription refresh, even moved', () async {
+      final cubit = await cubitWith(
+        FakeParser((_) async => _parsed(['new:1:u:#0', 'h:443:u:#1'])),
+        initial: [
+          _stored('a', ['h:443:u:#0']),
+        ],
+      );
+      await cubit.toggleFavorite('a', 'h:443:u:#0');
+
+      await cubit.refreshSubscription('a');
+
+      final sub = cubit.state.subscriptions.single.subscription;
+      expect(sub.favoriteServerIds, ['h:443:u:#1']);
     });
   });
 

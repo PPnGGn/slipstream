@@ -23,6 +23,11 @@ _Subscription _$SubscriptionFromJson(Map<String, dynamic> json) =>
           ? null
           : DateTime.parse(json['lastAttemptAt'] as String),
       lastError: json['lastError'] as String?,
+      favoriteServerIds:
+          (json['favoriteServerIds'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const <String>[],
     );
 
 Map<String, dynamic> _$SubscriptionToJson(_Subscription instance) =>
@@ -38,4 +43,5 @@ Map<String, dynamic> _$SubscriptionToJson(_Subscription instance) =>
       'dataLimitBytes': instance.dataLimitBytes,
       'lastAttemptAt': instance.lastAttemptAt?.toIso8601String(),
       'lastError': instance.lastError,
+      'favoriteServerIds': instance.favoriteServerIds,
     };

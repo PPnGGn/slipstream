@@ -14,40 +14,47 @@ class ServerTile extends StatelessWidget {
     required this.colors,
     required this.server,
     required this.selected,
+    required this.favorite,
     required this.onTap,
+    required this.onLongPress,
   });
 
   final AppColors colors;
   final VpnServer server;
   final bool selected;
+
+  /// Pinned by the user: a heart on the flag.
+  final bool favorite;
   final VoidCallback onTap;
+
+  /// Pins or unpins the server.
+  final VoidCallback onLongPress;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
+      onLongPress: onLongPress,
       behavior: .opaque,
-      // The selected row gets a soft background and a 3 px edge on the
-      // left; unselected rows keep a transparent edge so text stays aligned.
+      // The selected row is a rounded, softly lit frame. Unselected rows keep
+      // a transparent frame of the same size, so text stays aligned.
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        padding: const .fromLTRB(10, 11, 10, 11),
+        margin: const .symmetric(horizontal: 6, vertical: 2),
+        padding: const .fromLTRB(10, 9, 8, 9),
         decoration: BoxDecoration(
           color: selected ? colors.selectedRow : Colors.transparent,
-          border: Border(
-            left: BorderSide(
-              color: selected ? colors.primary : Colors.transparent,
-              width: 3,
-            ),
+          borderRadius: .circular(14),
+          border: .all(
+            color: selected
+                ? colors.primary.withValues(alpha: 0.55)
+                : Colors.transparent,
           ),
         ),
         child: Row(
           spacing: 11,
           children: [
-            Text(
-              server.flagEmoji,
-              style: const TextStyle(fontSize: 19, height: 1),
-            ),
+            _Flag(colors: colors, server: server, favorite: favorite),
             Expanded(
               child: Column(
                 crossAxisAlignment: .start,
@@ -88,6 +95,57 @@ class ServerTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// The country flag; a favorite server gets a small heart in its corner.
+class _Flag extends StatelessWidget {
+  const _Flag({
+    required this.colors,
+    required this.server,
+    required this.favorite,
+  });
+
+  final AppColors colors;
+  final VpnServer server;
+  final bool favorite;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.square(
+      dimension: 26,
+      child: Stack(
+        clipBehavior: .none,
+        alignment: .center,
+        children: [
+          Text(
+            server.flagEmoji,
+            style: const TextStyle(fontSize: 19, height: 1),
+          ),
+          if (favorite)
+            Positioned(
+              right: -5,
+              bottom: -4,
+              child: Container(
+                width: 14,
+                height: 14,
+                alignment: .center,
+                decoration: BoxDecoration(
+                  shape: .circle,
+                  color: colors.surface,
+                  border: .all(color: colors.border),
+                ),
+                child: SvgPicture.asset(
+                  AppAssets.heart,
+                  width: 8,
+                  height: 8,
+                  colorFilter: .mode(colors.danger, .srcIn),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
