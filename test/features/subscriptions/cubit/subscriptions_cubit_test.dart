@@ -11,6 +11,7 @@ import 'package:slipstream/features/subscriptions/cubit/refresh_outcome.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
 import 'package:slipstream/features/subscriptions/data/selected_server_store.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_factory.dart';
+import 'package:slipstream/features/subscriptions/data/subscription_order_store.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_exceptions.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_parser_service.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_refresher.dart';
@@ -43,21 +44,27 @@ Success<ParsedSubscription> _parsed(List<String> serverIds) => Success(
 void main() {
   late InMemoryStorage storage;
   late SelectedServerStore selection;
+  late SubscriptionOrderStore orderStore;
 
   Future<SubscriptionsCubit> cubitWith(
     FakeParser parser, {
     List<StoredSubscription> initial = const [],
     (String, String)? selected,
+    List<String> order = const [],
   }) async {
     SharedPreferences.setMockInitialValues({});
-    selection = SelectedServerStore(await SharedPreferences.getInstance());
+    final prefs = await SharedPreferences.getInstance();
+    selection = SelectedServerStore(prefs);
+    orderStore = SubscriptionOrderStore(prefs);
     if (selected != null) await selection.save(selected.$1, selected.$2);
+    if (order.isNotEmpty) await orderStore.save(order);
     storage = InMemoryStorage(initial);
     final factory = SubscriptionFactory();
     final cubit = SubscriptionsCubit(
       parser: parser,
       storage: storage,
       selectedServerStore: selection,
+      orderStore: orderStore,
       factory: factory,
       refresher: SubscriptionRefresher(parser, factory),
       vpnServiceCubit: FakeVpnCubit(),
@@ -101,7 +108,9 @@ void main() {
         const Failure('bad', InvalidInputFormatException()),
         _parsed(['x']),
       ];
-      final cubit = await cubitWith(FakeParser((_) async => answers.removeAt(0)));
+      final cubit = await cubitWith(
+        FakeParser((_) async => answers.removeAt(0)),
+      );
 
       await cubit.addFromInput('first');
       await cubit.addFromInput('second');
@@ -122,10 +131,10 @@ void main() {
 
       final outcome = await cubit.refreshSubscription('a');
 
-      expect(
-        (outcome as Refreshed).subscription.servers.map((s) => s.id),
-        ['x:1:u:#0', 'x:2:u:#1'],
-      );
+      expect((outcome as Refreshed).subscription.servers.map((s) => s.id), [
+        'x:1:u:#0',
+        'x:2:u:#1',
+      ]);
     });
 
     test('RefreshFailed carries the reason, the old servers stay', () async {
@@ -312,6 +321,71 @@ void main() {
     });
   });
 
+  group('order of subscriptions', () {
+    List<String> ids(SubscriptionsCubit c) => [
+      for (final s in c.state.subscriptions) s.subscription.id,
+    ];
+
+    test('loads in the saved order', () async {
+      final cubit = await cubitWith(
+        FakeParser((_) async => _parsed(['x'])),
+        initial: [_stored('a', []), _stored('b', []), _stored('c', [])],
+        order: ['c', 'a', 'b'],
+      );
+
+      expect(ids(cubit), ['c', 'a', 'b']);
+    });
+
+    test('moveSubscription changes the order and saves it', () async {
+      final cubit = await cubitWith(
+        FakeParser((_) async => _parsed(['x'])),
+        initial: [_stored('a', []), _stored('b', []), _stored('c', [])],
+      );
+
+      await cubit.moveSubscription(0, 2);
+
+      expect(ids(cubit), ['b', 'c', 'a']);
+      expect(orderStore.load(), ['b', 'c', 'a']);
+    });
+
+    test('a new subscription goes to the end of the order', () async {
+      final cubit = await cubitWith(
+        FakeParser((_) async => _parsed(['x:1:u:#0'])),
+        initial: [_stored('b', []), _stored('a', [])],
+        order: ['b', 'a'],
+      );
+
+      await cubit.addFromInput('https://example.com/new');
+
+      expect(ids(cubit).take(2), ['b', 'a']);
+      expect(orderStore.load(), ids(cubit));
+      expect(orderStore.load(), hasLength(3));
+    });
+
+    test('a deleted subscription leaves the order', () async {
+      final cubit = await cubitWith(
+        FakeParser((_) async => _parsed(['x'])),
+        initial: [_stored('a', []), _stored('b', [])],
+        order: ['b', 'a'],
+      );
+
+      await cubit.removeSubscription('b');
+
+      expect(orderStore.load(), ['a']);
+    });
+
+    test('moving to the same place saves nothing', () async {
+      final cubit = await cubitWith(
+        FakeParser((_) async => _parsed(['x'])),
+        initial: [_stored('a', []), _stored('b', [])],
+      );
+
+      await cubit.moveSubscription(1, 1);
+
+      expect(orderStore.load(), isEmpty);
+    });
+  });
+
   group('refreshAll', () {
     test('re-fetches every URL subscription and skips the rest', () async {
       final local = _stored('c', ['c:1:u:#0']);
@@ -321,18 +395,16 @@ void main() {
         initial: [
           _stored('a', ['a:1:u:#0']),
           _stored('b', ['b:1:u:#0']),
-          local.copyWith(
-            subscription: local.subscription.copyWith(url: null),
-          ),
+          local.copyWith(subscription: local.subscription.copyWith(url: null)),
         ],
       );
 
       final outcomes = await cubit.refreshAll();
 
-      expect(parser.inputs, unorderedEquals([
-        'https://example.com/a',
-        'https://example.com/b',
-      ]));
+      expect(
+        parser.inputs,
+        unorderedEquals(['https://example.com/a', 'https://example.com/b']),
+      );
       expect(outcomes, hasLength(2));
       expect(outcomes, everyElement(isA<Refreshed>()));
     });

@@ -11,6 +11,8 @@ import 'package:slipstream/features/subscriptions/cubit/refresh_outcome.dart';
 import 'package:slipstream/features/subscriptions/data/selected_server_store.dart';
 import 'package:slipstream/features/subscriptions/data/server_identity.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_factory.dart';
+import 'package:slipstream/features/subscriptions/data/subscription_order.dart';
+import 'package:slipstream/features/subscriptions/data/subscription_order_store.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_exceptions.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_parser_service.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_refresher.dart';
@@ -25,6 +27,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
     required SubscriptionParserService parser,
     required SubscriptionStorage storage,
     required SelectedServerStore selectedServerStore,
+    required SubscriptionOrderStore orderStore,
     required SubscriptionFactory factory,
     required SubscriptionRefresher refresher,
     required VpnServiceCubit vpnServiceCubit,
@@ -32,6 +35,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
   }) : _parser = parser,
        _storage = storage,
        _selectedServerStore = selectedServerStore,
+       _orderStore = orderStore,
        _factory = factory,
        _refresher = refresher,
        _vpnServiceCubit = vpnServiceCubit,
@@ -43,6 +47,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
   final SubscriptionParserService _parser;
   final SubscriptionStorage _storage;
   final SelectedServerStore _selectedServerStore;
+  final SubscriptionOrderStore _orderStore;
   final SubscriptionFactory _factory;
   final SubscriptionRefresher _refresher;
   final VpnServiceCubit _vpnServiceCubit;
@@ -53,7 +58,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
     final selected = _selectedServerStore.load();
     emit(
       state.copyWith(
-        subscriptions: subs,
+        subscriptions: orderSubscriptions(subs, _orderStore.load()),
         selectedSubscriptionId: selected?.$1,
         selectedServerId: selected?.$2,
         isLoaded: true,
@@ -99,6 +104,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
             isAdding: false,
           ),
         );
+        await _saveOrder();
         return true;
       case Failure(:final message, :final exception):
         _talker.warning('Subscriptions: failed to add -> $message');
@@ -144,7 +150,25 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
         selectedServerId: selectedServerId,
       ),
     );
+    await _saveOrder();
   }
+
+  /// Drag and drop: moves the card at [oldIndex] to [newIndex] (counted
+  /// after it is taken out, as `ReorderableListView.onReorderItem` gives it)
+  /// and remembers the order.
+  Future<void> moveSubscription(int oldIndex, int newIndex) async {
+    if (oldIndex == newIndex) return;
+    emit(
+      state.copyWith(
+        subscriptions: moveItem(state.subscriptions, oldIndex, newIndex),
+      ),
+    );
+    await _saveOrder();
+  }
+
+  Future<void> _saveOrder() => _orderStore.save([
+    for (final stored in state.subscriptions) stored.subscription.id,
+  ]);
 
   Future<void> selectServer(String subscriptionId, String serverId) async {
     await _selectedServerStore.save(subscriptionId, serverId);

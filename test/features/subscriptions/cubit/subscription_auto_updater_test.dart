@@ -11,6 +11,7 @@ import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart
 import 'package:slipstream/features/subscriptions/data/auto_update/auto_update_interval.dart';
 import 'package:slipstream/features/subscriptions/data/auto_update/subscription_update_settings_store.dart';
 import 'package:slipstream/features/subscriptions/data/selected_server_store.dart';
+import 'package:slipstream/features/subscriptions/data/subscription_order_store.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_factory.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_parser_service.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_refresher.dart';
@@ -75,6 +76,7 @@ void main() {
       parser: parser,
       storage: InMemoryStorage(initial),
       selectedServerStore: SelectedServerStore(prefs),
+      orderStore: SubscriptionOrderStore(prefs),
       factory: factory,
       refresher: SubscriptionRefresher(parser, factory, now: () => _now),
       vpnServiceCubit: vpn,

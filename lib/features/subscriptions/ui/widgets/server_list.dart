@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:slipstream/app/app_assets.dart';
@@ -50,35 +51,47 @@ class ServerList extends StatelessWidget {
                 getIt<SubscriptionsCubit>(),
                 getIt<PingCubit>(),
               ),
-              child: SingleChildScrollView(
-                // Without it a list shorter than the screen can't be pulled:
-                // there is nothing to scroll, so the indicator never sees
-                // the drag.
+              child: ReorderableListView.builder(
                 physics: const AlwaysScrollableScrollPhysics(),
                 padding: const .only(bottom: 28),
-                child: Column(
-                  spacing: AppDims.gapM,
-                  children: [
-                    for (final stored in state.subscriptions)
-                      SubscriptionSection(
-                        key: ValueKey(stored.subscription.id),
-                        colors: colors,
-                        stored: stored,
-                        query: normalizedQuery,
-                        refreshing: state.refreshingIds.contains(
-                          stored.subscription.id,
-                        ),
-                        selectedServerId:
-                            state.selectedSubscriptionId ==
-                                stored.subscription.id
-                            ? state.selectedServerId
-                            : null,
-                        onSelect: (server) => getIt<SubscriptionsCubit>()
-                            .selectServer(stored.subscription.id, server.id),
-                      ),
-                    ?footer,
-                  ],
+                buildDefaultDragHandles: false,
+                itemCount: state.subscriptions.length,
+                onReorderStart: (_) => HapticFeedback.mediumImpact(),
+                onReorderItem: getIt<SubscriptionsCubit>().moveSubscription,
+                proxyDecorator: (child, _, animation) => AnimatedBuilder(
+                  animation: animation,
+                  builder: (context, child) => Material(
+                    color: Colors.transparent,
+                    borderRadius: .circular(20),
+                    elevation: Curves.easeOut.transform(animation.value) * 8,
+                    shadowColor: const Color(0x66000000),
+                    child: child,
+                  ),
+                  child: child,
                 ),
+                footer: footer,
+                itemBuilder: (context, index) {
+                  final stored = state.subscriptions[index];
+                  return Padding(
+                    key: ValueKey(stored.subscription.id),
+                    padding: const .only(bottom: AppDims.gapM),
+                    child: SubscriptionSection(
+                      index: index,
+                      colors: colors,
+                      stored: stored,
+                      query: normalizedQuery,
+                      refreshing: state.refreshingIds.contains(
+                        stored.subscription.id,
+                      ),
+                      selectedServerId:
+                          state.selectedSubscriptionId == stored.subscription.id
+                          ? state.selectedServerId
+                          : null,
+                      onSelect: (server) => getIt<SubscriptionsCubit>()
+                          .selectServer(stored.subscription.id, server.id),
+                    ),
+                  );
+                },
               ),
             );
           },

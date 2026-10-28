@@ -77,6 +77,8 @@ import '../../features/subscriptions/data/selected_server_store.dart' as _i830;
 import '../../features/subscriptions/data/subscription_description_store.dart'
     as _i811;
 import '../../features/subscriptions/data/subscription_factory.dart' as _i179;
+import '../../features/subscriptions/data/subscription_order_store.dart'
+    as _i583;
 import '../../features/subscriptions/data/subscription_parser/subscription_fetcher.dart'
     as _i746;
 import '../../features/subscriptions/data/subscription_parser/subscription_parser_service.dart'
@@ -211,6 +213,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i811.SubscriptionDescriptionStore>(
       () => _i811.SubscriptionDescriptionStore(gh<_i460.SharedPreferences>()),
+    );
+    gh.lazySingleton<_i583.SubscriptionOrderStore>(
+      () => _i583.SubscriptionOrderStore(gh<_i460.SharedPreferences>()),
     );
     gh.lazySingleton<_i871.VpnSessionStore>(
       () => _i871.VpnSessionStore(gh<_i460.SharedPreferences>()),
@@ -351,18 +356,11 @@ extension GetItInjectableX on _i174.GetIt {
         parser: gh<_i302.SubscriptionParserService>(),
         storage: gh<_i505.SubscriptionStorage>(),
         selectedServerStore: gh<_i830.SelectedServerStore>(),
+        orderStore: gh<_i583.SubscriptionOrderStore>(),
         factory: gh<_i179.SubscriptionFactory>(),
         refresher: gh<_i944.SubscriptionRefresher>(),
         vpnServiceCubit: gh<_i202.VpnServiceCubit>(),
         talker: gh<_i207.Talker>(),
-      ),
-    );
-    gh.lazySingleton<_i474.SubscriptionSyncJob>(
-      () => _i474.SubscriptionSyncJob(
-        gh<_i505.SubscriptionStorage>(),
-        gh<_i944.SubscriptionRefresher>(),
-        gh<_i331.SubscriptionUpdateSettingsStore>(),
-        gh<_i207.Talker>(),
       ),
     );
     gh.lazySingleton<_i918.PingAutoRunner>(
@@ -381,6 +379,14 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i207.Talker>(),
       ),
       dispose: (i) => i.dispose(),
+    );
+    gh.lazySingleton<_i474.SubscriptionSyncJob>(
+      () => _i474.SubscriptionSyncJob(
+        gh<_i505.SubscriptionStorage>(),
+        gh<_i944.SubscriptionRefresher>(),
+        gh<_i331.SubscriptionUpdateSettingsStore>(),
+        gh<_i207.Talker>(),
+      ),
     );
     gh.lazySingleton<_i3.SubscriptionAutoUpdateCubit>(
       () => _i3.SubscriptionAutoUpdateCubit(

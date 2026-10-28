@@ -26,6 +26,7 @@ enum _SectionAction { refresh, share, delete, pingAll, toggleDescription }
 class SubscriptionSection extends StatefulWidget {
   const SubscriptionSection({
     super.key,
+    required this.index,
     required this.colors,
     required this.stored,
     required this.query,
@@ -34,6 +35,8 @@ class SubscriptionSection extends StatefulWidget {
     required this.onSelect,
   });
 
+  /// Position in the list: the drag of the header needs it.
+  final int index;
   final AppColors colors;
   final StoredSubscription stored;
   final String query;
@@ -142,21 +145,28 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
         children: [
           BlocBuilder<SubscriptionAutoUpdateCubit, AutoUpdateInterval>(
             bloc: getIt<SubscriptionAutoUpdateCubit>(),
-            builder: (context, autoUpdate) => _Header(
-              colors: colors,
-              name: sub.name,
-              meta: subscriptionMeta(
-                sub,
-                serverCount: widget.stored.servers.length,
-                refreshing: widget.refreshing,
-                autoUpdate: autoUpdate,
-              ),
-              isUrl: sub.url != null,
-              expanded: _effectiveExpanded,
-              descriptionShown: _descriptionShown,
-              onTap: _toggle,
-              onAction: _runAction,
-            ),
+            // A long press on the header lifts the whole card; a tap still
+            // folds it. The servers below have no drag listener, so a long
+            // press on a server stays free for its own action.
+            builder: (context, autoUpdate) =>
+                ReorderableDelayedDragStartListener(
+                  index: widget.index,
+                  child: _Header(
+                    colors: colors,
+                    name: sub.name,
+                    meta: subscriptionMeta(
+                      sub,
+                      serverCount: widget.stored.servers.length,
+                      refreshing: widget.refreshing,
+                      autoUpdate: autoUpdate,
+                    ),
+                    isUrl: sub.url != null,
+                    expanded: _effectiveExpanded,
+                    descriptionShown: _descriptionShown,
+                    onTap: _toggle,
+                    onAction: _runAction,
+                  ),
+                ),
           ),
           SubscriptionInfo(
             colors: colors,
@@ -283,7 +293,7 @@ class _Header extends StatelessWidget {
   }
 }
 
-/// `↻ 12h · 29.10.26, 01:11 · 40 ▤` 
+/// `↻ 12h · 29.10.26, 01:11 · 40 ▤`
 class _MetaLine extends StatelessWidget {
   const _MetaLine({required this.colors, required this.meta});
 
