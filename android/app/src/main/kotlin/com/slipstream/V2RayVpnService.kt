@@ -31,6 +31,9 @@ class V2RayVpnService : VpnService() {
     private val mainHandler = Handler(Looper.getMainLooper())
     private var trafficPollRunnable: Runnable? = null
 
+    // The server's name for the notification's title; set with every start.
+    private var serverTitle: String? = null
+
     companion object {
         private const val NOTIFICATION_CHANNEL_ID = "slipstream_vpn_status"
         private const val NOTIFICATION_ID = 1
@@ -124,7 +127,8 @@ class V2RayVpnService : VpnService() {
 
         Log.d("VPN_SERVICE", "Starting service and core...")
         isStopping = false
-        startForegroundWithNotification(buildNotification("Подключение…"))
+        serverTitle = intent.getStringExtra("SERVER_TITLE")
+        startForegroundWithNotification(buildNotification(connected = false))
         VpnEventBridge.notifyStatus(VpnStatus.CONNECTING)
         Android.setHandler(VpnEventBridge)
         setupVpn(configJson, geoDir, hijackDns, splitMode, splitPackages)
@@ -198,7 +202,7 @@ class V2RayVpnService : VpnService() {
 
             val connectedAtMs = System.currentTimeMillis()
             VpnEventBridge.notifyStatus(VpnStatus.CONNECTED, connectedAtEpochMs = connectedAtMs)
-            updateNotification(buildNotification("Подключено"))
+            updateNotification(buildNotification(connected = true))
             startTrafficPolling()
         } catch (e: Exception) {
             Log.e("VPN_SERVICE", "Critical error in setupVpn: ${e.message}")
@@ -251,15 +255,11 @@ class V2RayVpnService : VpnService() {
                                     null
                                 }
                         if (stats != null) {
+                            // The notification does not show traffic: only the app does.
                             VpnEventBridge.notifyTraffic(
                                     stats.uplinkBytes,
                                     stats.downlinkBytes,
                                     sampleMemoryBytes(),
-                            )
-                            updateNotification(
-                                    buildNotification(
-                                            "↑ ${formatBytes(stats.uplinkBytes)} · ↓ ${formatBytes(stats.downlinkBytes)}",
-                                    ),
                             )
                         }
                         mainHandler.postDelayed(this, TRAFFIC_POLL_INTERVAL_MS)
@@ -363,7 +363,8 @@ class V2RayVpnService : VpnService() {
         )
     }
 
-    private fun buildNotification(statusText: String): Notification {
+    private fun buildNotification(connected: Boolean): Notification {
+        val content = notificationContent(connected, serverTitle)
         val stopIntent = Intent(this, V2RayVpnService::class.java).setAction(ACTION_STOP_VPN)
         val stopPendingIntent =
                 PendingIntent.getService(
@@ -373,39 +374,30 @@ class V2RayVpnService : VpnService() {
                         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 )
         return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-                .setContentTitle("Slipstream")
-                .setContentText(statusText)
+                .setContentTitle(content.title)
+                .setContentText(content.text)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentIntent(openAppPendingIntent())
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
-                .addAction(0, "Отключить", stopPendingIntent)
+                .addAction(0, "Disconnect", stopPendingIntent)
                 .build()
     }
 
     private fun ensureNotificationChannel() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = getSystemService(NotificationManager::class.java) ?: return
-        if (manager.getNotificationChannel(NOTIFICATION_CHANNEL_ID) != null) return
+        // Created on every start, not only the first: creating a channel that
+        // exists changes its name (what the user sees in the system settings)
+        // and leaves its importance alone. That is how the old Russian name of
+        // an installed app becomes English.
         val channel =
                 NotificationChannel(
                         NOTIFICATION_CHANNEL_ID,
-                        "Статус VPN",
+                        "VPN status",
                         NotificationManager.IMPORTANCE_LOW,
                 )
         manager.createNotificationChannel(channel)
-    }
-
-    private fun formatBytes(bytes: Long): String {
-        if (bytes < 1024) return "$bytes Б"
-        val units = arrayOf("КБ", "МБ", "ГБ", "ТБ")
-        var value = bytes / 1024.0
-        var unitIndex = 0
-        while (value >= 1024.0 && unitIndex < units.size - 1) {
-            value /= 1024.0
-            unitIndex++
-        }
-        return String.format("%.1f %s", value, units[unitIndex])
     }
 }

@@ -123,6 +123,7 @@ class MainActivity : FlutterActivity(), VpnConnection, UpdateInstaller {
         serviceIntent.putExtra("XRAY_CONFIG", config.configJson)
         serviceIntent.putExtra("GEO_DIR", config.geoAssetDir ?: geoDir())
         serviceIntent.putExtra("HIJACK_DNS", config.hijackDns == true)
+        serviceIntent.putExtra("SERVER_TITLE", config.title)
         // Both or neither: the service reads a missing mode as "no split".
         val splitMode = config.splitMode
         val splitPackages = config.splitPackages
