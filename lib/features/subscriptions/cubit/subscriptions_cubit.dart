@@ -193,16 +193,16 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
     );
     final refreshed = await _refresher.refreshDetailed(stored);
     final updated = refreshed.stored;
-    final refreshing = {...state.refreshingIds}..remove(subscriptionId);
 
     // Looked up again by id: the list may have changed during the fetch,
     // and a subscription deleted meanwhile must not come back.
-    final index = state.subscriptions.indexWhere(
-      (s) => s.subscription.id == subscriptionId,
-    );
-    if (index == -1) {
+    if (_findSubscription(subscriptionId) == null) {
       _talker.debug('Subscriptions: $subscriptionId deleted mid-refresh');
-      emit(state.copyWith(refreshingIds: refreshing));
+      emit(
+        state.copyWith(
+          refreshingIds: {...state.refreshingIds}..remove(subscriptionId),
+        ),
+      );
       return const RefreshIgnored();
     }
 
@@ -216,14 +216,30 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
       _talker.warning('Subscriptions: failed to refresh -> $error');
     }
 
-    final subscriptions = [...state.subscriptions];
-    subscriptions[index] = updated;
+    // State is read again only now, after the save: refreshes running side
+    // by side (refreshAll) emit in the meantime, and a copy taken before the
+    // await would undo their changes.
     emit(
-      state.copyWith(subscriptions: subscriptions, refreshingIds: refreshing),
+      state.copyWith(
+        subscriptions: [
+          for (final s in state.subscriptions)
+            s.subscription.id == subscriptionId ? updated : s,
+        ],
+        refreshingIds: {...state.refreshingIds}..remove(subscriptionId),
+      ),
     );
     await _followSelectedServer();
     return error == null ? Refreshed(updated) : RefreshFailed(refreshed.cause);
   }
+
+  /// [refreshSubscription] for every subscription with a URL, all at once:
+  /// the list's pull down. One failure does not stop the others. Outcomes
+  /// come in list order; subscriptions without a URL get none.
+  Future<List<RefreshOutcome>> refreshAll() => Future.wait([
+    for (final stored in state.subscriptions)
+      if (stored.subscription.url != null)
+        refreshSubscription(stored.subscription.id),
+  ]);
 
   /// Re-reads every subscription from disk, for when the background job
   /// refreshed them while the UI was away. Known subscriptions keep their

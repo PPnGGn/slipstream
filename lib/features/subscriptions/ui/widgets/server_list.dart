@@ -9,6 +9,7 @@ import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
 import 'package:slipstream/core/ui/widgets/accent_button.dart';
 import 'package:slipstream/features/ping/presentation/ping_cubit.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
+import 'package:slipstream/features/subscriptions/ui/pull_to_refresh.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/subscription_section.dart';
 
 class ServerList extends StatelessWidget {
@@ -43,18 +44,17 @@ class ServerList extends StatelessWidget {
 
             final normalizedQuery = query.trim().toLowerCase();
 
-            // Pull-to-refresh pings the current (selected) subscription
-            // — the spec's first trigger; a full-list run happens on
-            // app start and via the per-subscription ping button.
+            // Pull down updates every subscription (see pullToRefresh).
             return RefreshIndicator(
-              onRefresh: () {
-                final current = state.subscriptions.firstWhere(
-                  (s) => s.subscription.id == state.selectedSubscriptionId,
-                  orElse: () => state.subscriptions.first,
-                );
-                return getIt<PingCubit>().runForServers(current.servers);
-              },
+              onRefresh: () => pullToRefresh(
+                getIt<SubscriptionsCubit>(),
+                getIt<PingCubit>(),
+              ),
               child: SingleChildScrollView(
+                // Without it a list shorter than the screen can't be pulled:
+                // there is nothing to scroll, so the indicator never sees
+                // the drag.
+                physics: const AlwaysScrollableScrollPhysics(),
                 padding: const .only(bottom: 28),
                 child: Column(
                   spacing: AppDims.gapM,

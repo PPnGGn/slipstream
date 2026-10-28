@@ -21,5 +21,31 @@ ToastSpec? refreshToast(RefreshOutcome outcome) => switch (outcome) {
   RefreshIgnored() => null,
 };
 
+/// The toast for the list's pull down, which refreshes every URL
+/// subscription at once. One subscription reads like [refreshToast]; for
+/// several it sums up, and each failed one is marked in its own header.
+ToastSpec? refreshAllToast(List<RefreshOutcome> outcomes) {
+  final done = outcomes.where((o) => o is! RefreshIgnored).toList();
+  if (done.isEmpty) return null;
+  if (done.length == 1) return refreshToast(done.single);
+
+  final failed = done.whereType<RefreshFailed>().length;
+  if (failed > 0) {
+    return ToastSpec(
+      "Couldn't update $failed of ${done.length}",
+      subtitle: 'MARKED IN THE LIST',
+      kind: ToastKind.error,
+    );
+  }
+  final servers = done.whereType<Refreshed>().fold(
+    0,
+    (sum, r) => sum + r.subscription.servers.length,
+  );
+  return ToastSpec(
+    'Subscriptions updated',
+    subtitle: '${done.length} SUBSCRIPTIONS · $servers SERVERS',
+  );
+}
+
 ToastSpec subscriptionDeletedToast(String name) =>
     ToastSpec('Subscription deleted', subtitle: name.toUpperCase());

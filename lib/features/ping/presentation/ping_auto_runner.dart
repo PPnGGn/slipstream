@@ -17,7 +17,8 @@ import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart
 ///    refresh (manual, automatic or from the background job) may bring
 ///    servers that were never measured.
 ///
-/// Manual runs (pull-to-refresh, the ⋯ menu) stay in the UI.
+/// Manual runs (the ⋯ menu, the pull down for subscriptions without a URL)
+/// stay in the UI. The pull down's refreshed subscriptions are pinged here.
 @lazySingleton
 class PingAutoRunner {
   PingAutoRunner(

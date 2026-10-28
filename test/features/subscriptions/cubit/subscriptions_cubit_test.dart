@@ -312,6 +312,62 @@ void main() {
     });
   });
 
+  group('refreshAll', () {
+    test('re-fetches every URL subscription and skips the rest', () async {
+      final local = _stored('c', ['c:1:u:#0']);
+      final parser = FakeParser((_) async => _parsed(['x:1:u:#0']));
+      final cubit = await cubitWith(
+        parser,
+        initial: [
+          _stored('a', ['a:1:u:#0']),
+          _stored('b', ['b:1:u:#0']),
+          local.copyWith(
+            subscription: local.subscription.copyWith(url: null),
+          ),
+        ],
+      );
+
+      final outcomes = await cubit.refreshAll();
+
+      expect(parser.inputs, unorderedEquals([
+        'https://example.com/a',
+        'https://example.com/b',
+      ]));
+      expect(outcomes, hasLength(2));
+      expect(outcomes, everyElement(isA<Refreshed>()));
+    });
+
+    test('one failure does not stop the others', () async {
+      const reason = HttpStatusException(502);
+      final cubit = await cubitWith(
+        FakeParser(
+          (input) async => input.endsWith('/a')
+              ? Failure(reason.toString(), reason)
+              : _parsed(['b:9:u:#0']),
+        ),
+        initial: [
+          _stored('a', ['a:1:u:#0']),
+          _stored('b', ['b:1:u:#0']),
+        ],
+      );
+
+      final outcomes = await cubit.refreshAll();
+
+      expect(outcomes, [isA<RefreshFailed>(), isA<Refreshed>()]);
+      final b = cubit.state.subscriptions.last;
+      expect(b.servers.single.id, 'b:9:u:#0');
+      expect(cubit.state.refreshingIds, isEmpty);
+    });
+
+    test('with nothing to fetch it returns no outcomes', () async {
+      final parser = FakeParser((_) async => _parsed(['x']));
+      final cubit = await cubitWith(parser);
+
+      expect(await cubit.refreshAll(), isEmpty);
+      expect(parser.inputs, isEmpty);
+    });
+  });
+
   group('reloadFromStorage', () {
     test(
       'picks up what the background job saved, keeping the list order',

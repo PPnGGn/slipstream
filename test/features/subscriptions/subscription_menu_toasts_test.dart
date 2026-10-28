@@ -82,6 +82,54 @@ void main() {
     });
   });
 
+  group('refreshAllToast', () {
+    test('nothing fetched says nothing', () {
+      expect(refreshAllToast(const []), isNull);
+      expect(refreshAllToast(const [RefreshIgnored()]), isNull);
+    });
+
+    test('a single subscription reads like the menu refresh', () {
+      final outcome = Refreshed(_stored('Home', 3));
+      expect(
+        refreshAllToast([outcome, const RefreshIgnored()]),
+        refreshToast(outcome),
+      );
+      expect(
+        refreshAllToast(const [RefreshFailed(HttpStatusException(404))]),
+        refreshToast(const RefreshFailed(HttpStatusException(404))),
+      );
+    });
+
+    test('several updated count subscriptions and servers', () {
+      expect(
+        refreshAllToast([
+          Refreshed(_stored('A', 12)),
+          Refreshed(_stored('B', 1)),
+        ]),
+        const ToastSpec(
+          'Subscriptions updated',
+          subtitle: '2 SUBSCRIPTIONS · 13 SERVERS',
+        ),
+      );
+    });
+
+    test('a failure among several says how many failed', () {
+      expect(
+        refreshAllToast([
+          Refreshed(_stored('A', 12)),
+          const RefreshFailed(HttpStatusException(502)),
+          const RefreshIgnored(),
+          RefreshFailed(TimeoutException('slow')),
+        ]),
+        const ToastSpec(
+          "Couldn't update 2 of 3",
+          subtitle: 'MARKED IN THE LIST',
+          kind: ToastKind.error,
+        ),
+      );
+    });
+  });
+
   test('a deleted subscription is named in caps', () {
     expect(
       subscriptionDeletedToast('Nebula Premium'),
