@@ -92,4 +92,7 @@ dependencies {
     // Background subscription refresh (sync/SubscriptionSyncWorker.kt).
     implementation("androidx.work:work-runtime:2.11.0")
     testImplementation("junit:junit:4.13.2")
+    // The org.json in unit tests is the Android stub that throws: VpnLaunchConfig's
+    // JSON needs the real one (the phone has its own).
+    testImplementation("org.json:json:20240303")
 }

@@ -34,10 +34,17 @@ class V2RayVpnService : VpnService() {
     // The server's name for the notification's title; set with every start.
     private var serverTitle: String? = null
 
+    private val launchStore by lazy { VpnLaunchStore.of(this) }
+
     companion object {
         private const val NOTIFICATION_CHANNEL_ID = "slipstream_vpn_status"
         private const val NOTIFICATION_ID = 1
-        private const val ACTION_STOP_VPN = "ACTION_STOP_VPN"
+        // The two the quick settings tile sends (VpnTileService).
+        internal const val ACTION_STOP_VPN = "ACTION_STOP_VPN"
+
+        // "Start the last launch again": no config in the intent, it is read from
+        // VpnLaunchStore. The caller must use startForegroundService.
+        internal const val ACTION_START_LAST = "com.slipstream.START_LAST"
         private const val ACTION_DUMP_HEAP = "com.slipstream.DUMP_HEAP"
         private const val ACTION_SET_GC = "com.slipstream.SET_GC"
         private const val ACTION_MEM_LOG = "com.slipstream.MEM_LOG"
@@ -111,29 +118,74 @@ class V2RayVpnService : VpnService() {
             return START_NOT_STICKY
         }
 
-        val configJson = intent?.getStringExtra("XRAY_CONFIG")
-        if (configJson == null) {
-            Log.e("VPN_SERVICE", "Config is missing. Aborting.")
+        val launch = launchFor(intent)
+        if (launch == null) {
+            if (intent?.action == ACTION_START_LAST) {
+                // Started with startForegroundService, which owes the system a
+                // startForeground within seconds, launch or no launch.
+                startForegroundWithNotification(buildNotification(connected = false))
+                stopForeground(STOP_FOREGROUND_REMOVE)
+                stopSelf()
+            }
             return START_NOT_STICKY
         }
-        val geoDir = intent.getStringExtra("GEO_DIR")
-                ?: java.io.File(filesDir, "geo").apply { mkdirs() }.absolutePath
-        val hijackDns = intent.getBooleanExtra("HIJACK_DNS", false)
-        val splitMode =
-                intent.getStringExtra("SPLIT_MODE")?.let {
-                    runCatching { VpnSplitMode.valueOf(it) }.getOrNull()
-                }
-        val splitPackages = intent.getStringArrayListExtra("SPLIT_PACKAGES") ?: emptyList<String>()
 
         Log.d("VPN_SERVICE", "Starting service and core...")
         isStopping = false
-        serverTitle = intent.getStringExtra("SERVER_TITLE")
+        serverTitle = launch.serverTitle
         startForegroundWithNotification(buildNotification(connected = false))
         VpnEventBridge.notifyStatus(VpnStatus.CONNECTING)
         Android.setHandler(VpnEventBridge)
-        setupVpn(configJson, geoDir, hijackDns, splitMode, splitPackages)
+        setupVpn(
+                launch.configJson,
+                launch.geoDir,
+                launch.hijackDns,
+                launch.splitMode,
+                launch.splitPackages,
+        )
 
         return START_STICKY
+    }
+
+    // What to start with, from either way in: the app's intent carries the whole
+    // launch (and it is kept as the last one), the tile's only says "the same
+    // again" and the launch comes from disk. Null: nothing to start.
+    // The launch holds the server's credentials: log what it is, never what it says.
+    private fun launchFor(intent: Intent?): VpnLaunchConfig? {
+        if (intent?.action == ACTION_START_LAST) {
+            val saved = launchStore.load()
+            if (saved == null) Log.w("VPN_SERVICE", "No saved launch to start again")
+            return saved
+        }
+
+        val configJson = intent?.getStringExtra("XRAY_CONFIG")
+        if (configJson == null) {
+            Log.e("VPN_SERVICE", "Config is missing. Aborting.")
+            return null
+        }
+        val launch =
+                VpnLaunchConfig(
+                        configJson = configJson,
+                        geoDir = intent.getStringExtra("GEO_DIR")
+                                        ?: java.io.File(filesDir, "geo")
+                                                .apply { mkdirs() }
+                                                .absolutePath,
+                        hijackDns = intent.getBooleanExtra("HIJACK_DNS", false),
+                        splitMode =
+                                intent.getStringExtra("SPLIT_MODE")?.let {
+                                    runCatching { VpnSplitMode.valueOf(it) }.getOrNull()
+                                },
+                        splitPackages =
+                                intent.getStringArrayListExtra("SPLIT_PACKAGES") ?: emptyList(),
+                        serverTitle = intent.getStringExtra("SERVER_TITLE"),
+                )
+        // A failed save must not stop this start: only the tile loses by it.
+        try {
+            launchStore.save(launch)
+        } catch (e: Exception) {
+            Log.w("VPN_SERVICE", "Could not save the launch: ${e.javaClass.simpleName}")
+        }
+        return launch
     }
 
     private fun setupVpn(
