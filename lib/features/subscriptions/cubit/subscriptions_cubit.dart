@@ -270,6 +270,10 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
       _talker.warning('Subscriptions: failed to refresh -> $error');
     }
 
+    // Taken before the list is replaced: it tells the automatic server from
+    // the real one that shares its address.
+    final selectedTitle = state.selectedServer?.title;
+
     // State is read again only now, after the save: refreshes running side
     // by side (refreshAll) emit in the meantime, and a copy taken before the
     // await would undo their changes.
@@ -282,7 +286,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
         refreshingIds: {...state.refreshingIds}..remove(subscriptionId),
       ),
     );
-    await _followSelectedServer();
+    await _followSelectedServer(selectedTitle);
     return error == null ? Refreshed(updated) : RefreshFailed(refreshed.cause);
   }
 
@@ -306,21 +310,27 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
       for (final s in state.subscriptions) ?loaded.remove(s.subscription.id),
       ...loaded.values,
     ];
+    final selectedTitle = state.selectedServer?.title;
     emit(state.copyWith(subscriptions: subscriptions));
-    await _followSelectedServer();
+    await _followSelectedServer(selectedTitle);
   }
 
   /// Keeps the selection on the same server when a refresh shifted its id
-  /// (see [remapServerId]). A server that is really gone stays selected by
-  /// its old id — nothing is picked silently in its place.
-  Future<void> _followSelectedServer() async {
+  /// (see [remapServerId]); [oldTitle] is the selected server's title before
+  /// the refresh. A server that is really gone stays selected by its old id —
+  /// nothing is picked silently in its place.
+  Future<void> _followSelectedServer(String? oldTitle) async {
     final subscriptionId = state.selectedSubscriptionId;
     final serverId = state.selectedServerId;
     if (subscriptionId == null || serverId == null) return;
     final stored = _findSubscription(subscriptionId);
     if (stored == null) return;
 
-    final remapped = remapServerId(serverId, stored.servers);
+    final remapped = remapServerId(
+      serverId,
+      stored.servers,
+      oldTitle: oldTitle,
+    );
     if (remapped == null || remapped == serverId) return;
     _talker.debug('Subscriptions: selected server moved -> $remapped');
     await _selectedServerStore.save(subscriptionId, remapped);

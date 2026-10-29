@@ -306,6 +306,85 @@ void main() {
       expect(selection.load(), ('a', 'sel:1:u:#1'));
     });
 
+    test('keeps the automatic server selected when it shares its address '
+        'with a real one', () async {
+      VpnServer titled(String id, String title) => VpnServer(
+        id: id,
+        subscriptionId: 'a',
+        countryCode: 'DE',
+        title: title,
+        configJson: '{}',
+      );
+      final cubit = await cubitWith(
+        FakeParser(
+          (_) async => Success(
+            ParsedSubscription(
+              servers: [
+                titled('de:1:u:#0', '🇩🇪 Germany'),
+                titled('de:1:u:#1', '🚀 Авто | Лучший сервер'),
+              ],
+            ),
+          ),
+        ),
+        initial: [
+          StoredSubscription(
+            subscription: _stored('a', []).subscription,
+            servers: [
+              titled('de:1:u:#0', '🚀 Авто | Лучший сервер'),
+              titled('de:1:u:#1', '🇩🇪 Germany'),
+            ],
+          ),
+        ],
+        selected: ('a', 'de:1:u:#0'),
+      );
+
+      await cubit.refreshSubscription('a');
+
+      expect(cubit.state.selectedServerId, 'de:1:u:#1');
+      expect(cubit.state.selectedServer?.title, '🚀 Авто | Лучший сервер');
+      expect(selection.load(), ('a', 'de:1:u:#1'));
+    });
+
+    test('follows the automatic server to its new address, not the real one '
+        'it used to point at', () async {
+      VpnServer titled(String id, String title) => VpnServer(
+        id: id,
+        subscriptionId: 'a',
+        countryCode: 'DE',
+        title: title,
+        configJson: '{}',
+      );
+      final cubit = await cubitWith(
+        FakeParser(
+          (_) async => Success(
+            ParsedSubscription(
+              servers: [
+                titled('pl:1:u:#0', 'Авто'),
+                titled('pl:1:u:#1', 'Poland'),
+                titled('de:1:u:#2', 'Germany'),
+              ],
+            ),
+          ),
+        ),
+        initial: [
+          StoredSubscription(
+            subscription: _stored('a', []).subscription,
+            servers: [
+              titled('de:1:u:#0', 'Авто'),
+              titled('pl:1:u:#1', 'Poland'),
+              titled('de:1:u:#2', 'Germany'),
+            ],
+          ),
+        ],
+        selected: ('a', 'de:1:u:#0'),
+      );
+
+      await cubit.refreshSubscription('a');
+
+      expect(cubit.state.selectedServer?.title, 'Авто');
+      expect(selection.load(), ('a', 'pl:1:u:#0'));
+    });
+
     test('leaves the selection alone when the server is gone', () async {
       final cubit = await cubitWith(
         FakeParser((_) async => _parsed(['other:1:u:#0'])),
@@ -567,6 +646,43 @@ void main() {
 
       expect(cubit.state.selectedServerId, 'sel:1:u:#1');
       expect(selection.load(), ('a', 'sel:1:u:#1'));
+    });
+
+    test('keeps the automatic server selected after a background '
+        'refresh swapped it with a real one', () async {
+      VpnServer titled(String id, String title) => VpnServer(
+        id: id,
+        subscriptionId: 'a',
+        countryCode: 'DE',
+        title: title,
+        configJson: '{}',
+      );
+      StoredSubscription withServers(List<VpnServer> servers) =>
+          StoredSubscription(
+            subscription: _stored('a', []).subscription,
+            servers: servers,
+          );
+      final cubit = await cubitWith(
+        FakeParser((_) async => throw StateError('no fetch')),
+        initial: [
+          withServers([
+            titled('de:1:u:#0', 'Авто'),
+            titled('de:1:u:#1', 'Germany'),
+          ]),
+        ],
+        selected: ('a', 'de:1:u:#0'),
+      );
+      await storage.save(
+        withServers([
+          titled('de:1:u:#0', 'Germany'),
+          titled('de:1:u:#1', 'Авто'),
+        ]),
+      );
+
+      await cubit.reloadFromStorage();
+
+      expect(cubit.state.selectedServer?.title, 'Авто');
+      expect(selection.load(), ('a', 'de:1:u:#1'));
     });
   });
 }
