@@ -149,6 +149,52 @@ void main() {
       expect(servers, hasLength(1));
     });
 
+    test('falls back to the first real proxy protocol when no tag matches', () {
+      final json = jsonEncode([
+        {
+          'remarks': '🇩🇪GERMANY',
+          'outbounds': [
+            {
+              'tag': 'exit-germany-direct-vless-grpc-1-2-3-4-2443-29aae694',
+              'protocol': 'vless',
+              'settings': {
+                'vnext': [
+                  {
+                    'address': '1.2.3.4',
+                    'port': 2443,
+                    'users': [
+                      {'id': 'uuid-exit', 'encryption': 'none'},
+                    ],
+                  },
+                ],
+              },
+            },
+            {'tag': 'direct', 'protocol': 'freedom'},
+            {'tag': 'block', 'protocol': 'blackhole'},
+          ],
+          'routing': {
+            'rules': [
+              {
+                'type': 'field',
+                'inboundTag': ['socks', 'http'],
+                'balancerTag': 'balance-germany',
+              },
+            ],
+          },
+        },
+      ]);
+
+      final servers = parser.parse(json, 'my-subscription');
+
+      expect(servers, hasLength(1));
+      expect(servers.first.id, equals('1.2.3.4:2443:uuid-exit:#0'));
+      final outbounds =
+          (jsonDecode(servers.first.configJson)['outbounds'] as List)
+              .cast<Map<String, dynamic>>();
+      expect(outbounds.first['tag'], equals('proxy'));
+      expect(outbounds.where((o) => o['protocol'] == 'vless'), hasLength(1));
+    });
+
     test('skips an object with no proxy outbound at all', () {
       final json = jsonEncode([
         {

@@ -19,12 +19,9 @@ class CustomJsonParser {
         final title = config['remarks'] as String? ?? 'Unknown Server';
         final outbounds = config['outbounds'] as List<dynamic>;
 
-        final proxyOutbound = outbounds
-            .cast<Map<String, dynamic>>()
-            .firstWhereOrNull((o) {
-              final tag = o['tag'] as String? ?? '';
-              return tag == 'proxy' || tag.startsWith('proxy-');
-            });
+        final proxyOutbound = _findProxyOutbound(
+          outbounds.cast<Map<String, dynamic>>(),
+        );
 
         if (proxyOutbound == null) continue;
 
@@ -57,6 +54,31 @@ class CustomJsonParser {
       }
     }
     return result;
+  }
+
+  static const _utilityProtocols = {
+    'freedom',
+    'blackhole',
+    'dns',
+    'loopback',
+  };
+
+  // Prefers the conventional `proxy` / `proxy-*` tags; panels that name the
+  // exit differently (e.g. `exit-germany-...`) fall back to the first outbound
+  // with a real proxy protocol.
+  Map<String, dynamic>? _findProxyOutbound(
+    List<Map<String, dynamic>> outbounds,
+  ) {
+    final byTag = outbounds.firstWhereOrNull((o) {
+      final tag = o['tag'] as String? ?? '';
+      return tag == 'proxy' || tag.startsWith('proxy-');
+    });
+    if (byTag != null) return byTag;
+
+    return outbounds.firstWhereOrNull((o) {
+      final protocol = o['protocol'] as String?;
+      return protocol != null && !_utilityProtocols.contains(protocol);
+    });
   }
 
   Map<String, dynamic> _normalizeOutboundSettings(
