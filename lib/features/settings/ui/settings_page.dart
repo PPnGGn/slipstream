@@ -26,6 +26,7 @@ import 'package:slipstream/features/settings/ui/widgets/settings_card.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_row.dart';
 import 'package:slipstream/features/split_tunnel/cubit/split_tunnel_cubit.dart';
 import 'package:slipstream/features/split_tunnel/data/split_tunnel_settings.dart';
+import 'package:slipstream/features/security/data/security_support.dart';
 import 'package:slipstream/features/split_tunnel/data/split_tunnel_support.dart';
 import 'package:slipstream/features/split_tunnel/ui/split_tunnel_labels.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscription_auto_update_cubit.dart';
@@ -171,15 +172,15 @@ class _SettingsPageState extends State<SettingsPage> {
                                   onTap: () => context.push('/settings/split'),
                                 ),
                               ),
-                            SettingsRow(
-                              iconPath: AppAssets.shield,
-                              hue: TileHue.security,
-                              title: 'Security & tunnel',
-                              subtitle:
-                                  'Kill switch, Always-On VPN, LAN access',
-                              showChevron: true,
-                              onTap: () => context.push('/settings/security'),
-                            ),
+                            if (isSecuritySupported(defaultTargetPlatform))
+                              SettingsRow(
+                                iconPath: AppAssets.shield,
+                                hue: TileHue.security,
+                                title: 'Security & tunnel',
+                                subtitle: 'IPv6',
+                                showChevron: true,
+                                onTap: () => context.push('/settings/security'),
+                              ),
                             SettingsRow(
                               iconPath: AppAssets.globe,
                               hue: TileHue.dns,

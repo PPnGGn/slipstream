@@ -50,7 +50,7 @@ final GoRouter appRouter = GoRouter(
           path: 'appearance',
           builder: (context, state) => const AppearancePage(),
         ),
-        // Not built yet: laid-out pages with inactive controls.
+        // Android only; the settings page does not link to them elsewhere.
         appRoute(
           path: 'split',
           builder: (context, state) => const SplitTunnelingPage(),
@@ -59,6 +59,7 @@ final GoRouter appRouter = GoRouter(
           path: 'security',
           builder: (context, state) => const SecurityPage(),
         ),
+        // Not built yet: laid-out pages with inactive controls.
         appRoute(path: 'dns', builder: (context, state) => const DnsPage()),
         appRoute(
           path: 'backup',

@@ -1,81 +1,78 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:slipstream/app/app_assets.dart';
+import 'package:slipstream/app/di/injector.dart';
+import 'package:slipstream/core/service/vpn_service/vpn_service_cubit.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
-import 'package:slipstream/core/ui/widgets/segmented_pill.dart';
-import 'package:slipstream/features/settings/ui/widgets/coming_soon_page.dart';
+import 'package:slipstream/core/ui/widgets/page_header.dart';
+import 'package:slipstream/features/security/cubit/ipv6_cubit.dart';
+import 'package:slipstream/features/security/ui/security_labels.dart';
+import 'package:slipstream/features/settings/ui/widgets/reconnect_hint.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_card.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_row.dart';
 
-/// Settings → Security & tunnel. Not built yet: every control is inactive
-/// and shows a neutral value (off / nothing selected).
-class SecurityPage extends StatelessWidget {
+/// Settings → Security & tunnel (Android). The choices live in their cubits
+/// and reach the VPN service with the next connection.
+class SecurityPage extends StatefulWidget {
   const SecurityPage({super.key});
 
   @override
+  State<SecurityPage> createState() => _SecurityPageState();
+}
+
+class _SecurityPageState extends State<SecurityPage> {
+  final _ipv6 = getIt<Ipv6Cubit>();
+  final _vpn = getIt<VpnServiceCubit>();
+
+  @override
   Widget build(BuildContext context) {
-    return const ComingSoonPage(
-      title: 'Security & tunnel',
-      children: [
-        SizedBox(height: 14),
-        SettingsGroup(
+    final colors = AppColors.of(context);
+
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
           children: [
-            SettingsRow(
-              iconPath: AppAssets.kill,
-              hue: TileHue.red,
-              title: 'Kill switch',
-              subtitle: 'Block internet if the tunnel drops',
-              switchValue: false,
-              enabled: false,
-            ),
-            SettingsRow(
-              iconPath: AppAssets.refresh,
-              hue: TileHue.green,
-              title: 'Always-On VPN',
-              subtitle: 'Reconnect automatically, survive reboot',
-              switchValue: false,
-              enabled: false,
-            ),
-            SettingsRow(
-              iconPath: AppAssets.wifi,
-              hue: TileHue.teal,
-              title: 'Allow LAN connections',
-              subtitle: 'Share the proxy with devices on your network',
-              switchValue: false,
-              enabled: false,
-            ),
-            SettingsRow(
-              iconPath: AppAssets.ipv6,
-              hue: TileHue.blue,
-              title: 'IPv6',
-              subtitle: 'Route IPv6 traffic inside the tunnel',
-              switchValue: false,
-              enabled: false,
-            ),
-          ],
-        ),
-        SectionHeader('Xray memory limit', top: 18),
-        SettingsGroup(
-          children: [
-            SettingsRow(
-              iconPath: AppAssets.memory,
-              hue: TileHue.amber,
-              title: 'Memory limit',
-              subtitle: 'Lower saves battery; ∞ is fastest on heavy traffic',
-              enabled: false,
-              footer: SegmentedPill<String>(
-                options: [
-                  ('64', '64 MB'),
-                  ('128', '128 MB'),
-                  ('256', '256 MB'),
-                  ('unlimited', '∞'),
+            const PageHeader(title: 'Security & tunnel'),
+            Expanded(
+              child: ListView(
+                padding: const .fromLTRB(20, 6, 20, 28),
+                children: [
+                  SettingsGroup(
+                    children: [
+                      BlocBuilder<Ipv6Cubit, bool>(
+                        bloc: _ipv6,
+                        builder: (context, enabled) => SettingsRow(
+                          iconPath: AppAssets.ipv6,
+                          hue: TileHue.blue,
+                          title: 'IPv6',
+                          subtitle: ipv6Subtitle(enabled: enabled),
+                          switchValue: enabled,
+                          onSwitch: (value) {
+                            _ipv6.setEnabled(enabled: value);
+                            notifyIfTunnelActive(_vpn);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  Padding(
+                    padding: const .fromLTRB(2, 8, 2, 0),
+                    child: Text(
+                      'With IPv6 off the tunnel carries IPv4 only. Apps and '
+                      'sites that need IPv6 fall back to IPv4 on their own.',
+                      style: TextStyle(
+                        fontSize: 11,
+                        height: 1.5,
+                        color: colors.textMuted,
+                      ),
+                    ),
+                  ),
                 ],
-                selected: null,
-                onChanged: null,
               ),
             ),
           ],
         ),
-      ],
+      ),
     );
   }
 }

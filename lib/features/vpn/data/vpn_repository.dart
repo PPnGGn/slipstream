@@ -9,6 +9,7 @@ import 'package:slipstream/features/geo/data/geo_paths.dart';
 import 'package:slipstream/features/routing/cubit/ad_block_cubit.dart';
 import 'package:slipstream/features/routing/cubit/ru_bypass_cubit.dart';
 import 'package:slipstream/features/routing/data/routing_policy_gate.dart';
+import 'package:slipstream/features/security/cubit/ipv6_cubit.dart';
 import 'package:slipstream/features/split_tunnel/cubit/split_tunnel_cubit.dart';
 import 'package:slipstream/features/split_tunnel/data/split_tunnel_message.dart';
 import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
@@ -28,6 +29,7 @@ class VpnRepository {
   final RuBypassCubit _ruBypassCubit;
   final AdBlockCubit _adBlockCubit;
   final SplitTunnelCubit _splitTunnelCubit;
+  final Ipv6Cubit _ipv6Cubit;
   late final StreamSubscription<VpnLogMessage> _logSubscription;
 
   VpnRepository(
@@ -42,6 +44,7 @@ class VpnRepository {
     this._ruBypassCubit,
     this._adBlockCubit,
     this._splitTunnelCubit,
+    this._ipv6Cubit,
   ) {
     _logSubscription = _events.logs.listen(_xrayLogStore.add);
   }
@@ -78,6 +81,7 @@ class VpnRepository {
           hijackDns: policy.hijacksDns,
           splitMode: split.mode,
           splitPackages: split.packages,
+          ipv6: _ipv6Cubit.state,
         ),
       );
 

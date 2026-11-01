@@ -142,6 +142,7 @@ class V2RayVpnService : VpnService() {
                 launch.hijackDns,
                 launch.splitMode,
                 launch.splitPackages,
+                launch.ipv6,
         )
 
         return START_STICKY
@@ -178,6 +179,7 @@ class V2RayVpnService : VpnService() {
                         splitPackages =
                                 intent.getStringArrayListExtra("SPLIT_PACKAGES") ?: emptyList(),
                         serverTitle = intent.getStringExtra("SERVER_TITLE"),
+                        ipv6 = intent.getBooleanExtra("IPV6", false),
                 )
         // A failed save must not stop this start: only the tile loses by it.
         try {
@@ -194,6 +196,7 @@ class V2RayVpnService : VpnService() {
             hijackDns: Boolean,
             splitMode: VpnSplitMode?,
             splitPackages: List<String>,
+            ipv6: Boolean,
     ) {
         try {
             // A network of its own for every session: the same addresses every time
@@ -207,10 +210,18 @@ class V2RayVpnService : VpnService() {
             // getDNS4() and getMTU() are called as methods: Kotlin turns the all-capital
             // names gomobile makes from DNS4 and MTU into properties by its own rules.
             val dnsServers = if (hijackDns) listOf(network.getDNS4()) else PUBLIC_DNS
-            val builder =
-                    Builder()
-                            .addAddress(network.address4, network.prefix4.toInt())
-                            .addAddress(network.address6, network.prefix6.toInt())
+            // Without IPv6 the interface has no IPv6 address or route, and Android
+            // blocks the whole family (see tunnelShape).
+            val shape =
+                    tunnelShape(
+                            network.address4,
+                            network.prefix4.toInt(),
+                            network.address6,
+                            network.prefix6.toInt(),
+                            ipv6,
+                    )
+            val builder = Builder()
+            shape.addresses.forEach { builder.addAddress(it.address, it.prefix) }
             dnsServers.forEach { builder.addDnsServer(it) }
             // The app itself stays outside the tunnel: the core's own connections
             // must not loop back into it, server ping must measure the direct path,
@@ -225,10 +236,9 @@ class V2RayVpnService : VpnService() {
                             disallow = { pkg -> builder.tryDisallowApplication(pkg) },
                     )
             logSplitTunnel(splitMode, split)
+            shape.routes.forEach { builder.addRoute(it.address, it.prefix) }
             val tunnel =
                     builder
-                            .addRoute("0.0.0.0", 0)
-                            .addRoute("::", 0)
                             .setSession("Slipstream")
                             .setMtu(network.getMTU().toInt())
                             .establish()
@@ -250,7 +260,7 @@ class V2RayVpnService : VpnService() {
             // seconds (5 s of a blocked input), so it stays here: a thread would need
             // a guard for a stop that arrives before the start is done.
             Android.start(configJson, fd.toLong(), geoDir, VpnQueries.httpSocketPath(this))
-            Log.d("VPN_SERVICE", "Xray + tun2socks started, fd=$fd, hijackDns=$hijackDns, geoDir=$geoDir")
+            Log.d("VPN_SERVICE", "Xray + tun2socks started, fd=$fd, hijackDns=$hijackDns, ipv6=$ipv6, geoDir=$geoDir")
 
             val connectedAtMs = System.currentTimeMillis()
             VpnEventBridge.notifyStatus(VpnStatus.CONNECTED, connectedAtEpochMs = connectedAtMs)

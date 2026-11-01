@@ -17,6 +17,7 @@ class VpnLaunchConfigTest {
                     splitMode = VpnSplitMode.BYPASS,
                     splitPackages = listOf("org.telegram.messenger", "com.android.chrome"),
                     serverTitle = "🇩🇪 Germany",
+                    ipv6 = true,
             )
 
     @Test
@@ -80,5 +81,25 @@ class VpnLaunchConfigTest {
         assertNull(launch.splitMode)
         assertTrue(launch.splitPackages.isEmpty())
         assertNull(launch.serverTitle)
+        assertFalse(launch.ipv6)
+    }
+
+    @Test
+    fun aFileFromBeforeTheIpv6SwitchMeansNoIpv6() {
+        // vpn_launch.json written by 2.1.2 has no "ipv6" key.
+        val launch =
+                VpnLaunchConfig.fromJson(
+                        """{"configJson":"{}","geoDir":"/geo","hijackDns":true,"splitPackages":[]}""",
+                )!!
+
+        assertFalse(launch.ipv6)
+    }
+
+    @Test
+    fun theIpv6FlagIsKeptEitherWay() {
+        val off = full.copy(ipv6 = false)
+
+        assertTrue(VpnLaunchConfig.fromJson(full.toJson())!!.ipv6)
+        assertFalse(VpnLaunchConfig.fromJson(off.toJson())!!.ipv6)
     }
 }

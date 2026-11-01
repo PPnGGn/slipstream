@@ -139,6 +139,7 @@ class VpnConfigMessage {
     this.hijackDns,
     this.splitMode,
     this.splitPackages,
+    this.ipv6,
   });
 
   String configJson;
@@ -164,6 +165,11 @@ class VpnConfigMessage {
 
   List<String>? splitPackages;
 
+  /// True when the tunnel carries IPv6. False/null: the VPN gets no IPv6
+  /// address or route, so Android blocks IPv6 and apps use IPv4. Android only;
+  /// iOS ignores it.
+  bool? ipv6;
+
   List<Object?> _toList() {
     return <Object?>[
       configJson,
@@ -173,6 +179,7 @@ class VpnConfigMessage {
       hijackDns,
       splitMode,
       splitPackages,
+      ipv6,
     ];
   }
 
@@ -189,6 +196,7 @@ class VpnConfigMessage {
       hijackDns: result[4] as bool?,
       splitMode: result[5] as VpnSplitMode?,
       splitPackages: (result[6] as List<Object?>?)?.cast<String>(),
+      ipv6: result[7] as bool?,
     );
   }
 
@@ -201,7 +209,7 @@ class VpnConfigMessage {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(configJson, other.configJson) && _deepEquals(serverId, other.serverId) && _deepEquals(title, other.title) && _deepEquals(geoAssetDir, other.geoAssetDir) && _deepEquals(hijackDns, other.hijackDns) && _deepEquals(splitMode, other.splitMode) && _deepEquals(splitPackages, other.splitPackages);
+    return _deepEquals(configJson, other.configJson) && _deepEquals(serverId, other.serverId) && _deepEquals(title, other.title) && _deepEquals(geoAssetDir, other.geoAssetDir) && _deepEquals(hijackDns, other.hijackDns) && _deepEquals(splitMode, other.splitMode) && _deepEquals(splitPackages, other.splitPackages) && _deepEquals(ipv6, other.ipv6);
   }
 
   @override

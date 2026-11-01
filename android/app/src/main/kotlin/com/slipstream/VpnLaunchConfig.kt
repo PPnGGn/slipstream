@@ -15,6 +15,9 @@ data class VpnLaunchConfig(
         val splitMode: VpnSplitMode?,
         val splitPackages: List<String>,
         val serverTitle: String?,
+        // Whether the tunnel gets an IPv6 address and route. Off when absent: a
+        // file written before the switch existed means "no IPv6", like a fresh install.
+        val ipv6: Boolean = false,
 ) {
     fun toJson(): String =
             JSONObject()
@@ -24,6 +27,7 @@ data class VpnLaunchConfig(
                     .put("splitMode", splitMode?.name ?: JSONObject.NULL)
                     .put("splitPackages", JSONArray(splitPackages))
                     .put("serverTitle", serverTitle ?: JSONObject.NULL)
+                    .put("ipv6", ipv6)
                     .toString()
 
     companion object {
@@ -54,6 +58,7 @@ data class VpnLaunchConfig(
                                 serverTitle =
                                         if (json.isNull("serverTitle")) null
                                         else json.optString("serverTitle").ifEmpty { null },
+                                ipv6 = json.optBoolean("ipv6", false),
                         )
                     }
                 } catch (e: Exception) {

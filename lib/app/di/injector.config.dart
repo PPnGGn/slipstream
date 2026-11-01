@@ -56,6 +56,8 @@ import '../../features/routing/data/ad_block_store.dart' as _i117;
 import '../../features/routing/data/local_proxy_client.dart' as _i864;
 import '../../features/routing/data/routing_policy_gate.dart' as _i194;
 import '../../features/routing/data/ru_bypass_store.dart' as _i310;
+import '../../features/security/cubit/ipv6_cubit.dart' as _i500;
+import '../../features/security/data/ipv6_store.dart' as _i926;
 import '../../features/split_tunnel/cubit/installed_apps_cubit.dart' as _i998;
 import '../../features/split_tunnel/cubit/split_tunnel_cubit.dart' as _i277;
 import '../../features/split_tunnel/data/installed_apps_api.g.dart' as _i999;
@@ -201,6 +203,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i310.RuBypassStore>(
       () => _i310.RuBypassStore(gh<_i460.SharedPreferences>()),
     );
+    gh.lazySingleton<_i926.Ipv6Store>(
+      () => _i926.Ipv6Store(gh<_i460.SharedPreferences>()),
+    );
     gh.lazySingleton<_i43.SplitTunnelStore>(
       () => _i43.SplitTunnelStore(gh<_i460.SharedPreferences>()),
     );
@@ -256,6 +261,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i304.HomeLayoutCubit>(
       () => _i304.HomeLayoutCubit(store: gh<_i979.HomeLayoutStore>()),
     );
+    gh.lazySingleton<_i500.Ipv6Cubit>(
+      () => _i500.Ipv6Cubit(store: gh<_i926.Ipv6Store>()),
+    );
     gh.lazySingleton<_i1021.UpdateServiceCubit>(
       () => _i1021.UpdateServiceCubit(
         repository: gh<_i11.UpdateRepository>(),
@@ -305,6 +313,12 @@ extension GetItInjectableX on _i174.GetIt {
         talker: gh<_i207.Talker>(),
       ),
     );
+    gh.lazySingleton<_i302.SubscriptionParserService>(
+      () => _i302.SubscriptionParserService(
+        gh<_i207.Talker>(),
+        gh<_i746.SubscriptionFetcher>(),
+      ),
+    );
     gh.lazySingleton<_i1056.VpnRepository>(
       () => _i1056.VpnRepository(
         gh<_i207.Talker>(),
@@ -318,27 +332,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i1048.RuBypassCubit>(),
         gh<_i863.AdBlockCubit>(),
         gh<_i277.SplitTunnelCubit>(),
-      ),
-      dispose: (i) => i.dispose(),
-    );
-    gh.lazySingleton<_i202.VpnServiceCubit>(
-      () => _i202.VpnServiceCubit(
-        repository: gh<_i1056.VpnRepository>(),
-        sessionStore: gh<_i871.VpnSessionStore>(),
-        talker: gh<_i207.Talker>(),
-      ),
-    );
-    gh.lazySingleton<_i302.SubscriptionParserService>(
-      () => _i302.SubscriptionParserService(
-        gh<_i207.Talker>(),
-        gh<_i746.SubscriptionFetcher>(),
-      ),
-    );
-    gh.lazySingleton<_i196.GeoUpdateService>(
-      () => _i196.GeoUpdateService(
-        gh<_i818.GeoCubit>(),
-        gh<_i202.VpnServiceCubit>(),
-        gh<_i207.Talker>(),
+        gh<_i500.Ipv6Cubit>(),
       ),
       dispose: (i) => i.dispose(),
     );
@@ -349,6 +343,29 @@ extension GetItInjectableX on _i174.GetIt {
       () => _i944.SubscriptionRefresher(
         gh<_i302.SubscriptionParserService>(),
         gh<_i179.SubscriptionFactory>(),
+      ),
+    );
+    gh.lazySingleton<_i202.VpnServiceCubit>(
+      () => _i202.VpnServiceCubit(
+        repository: gh<_i1056.VpnRepository>(),
+        sessionStore: gh<_i871.VpnSessionStore>(),
+        talker: gh<_i207.Talker>(),
+      ),
+    );
+    gh.lazySingleton<_i196.GeoUpdateService>(
+      () => _i196.GeoUpdateService(
+        gh<_i818.GeoCubit>(),
+        gh<_i202.VpnServiceCubit>(),
+        gh<_i207.Talker>(),
+      ),
+      dispose: (i) => i.dispose(),
+    );
+    gh.lazySingleton<_i474.SubscriptionSyncJob>(
+      () => _i474.SubscriptionSyncJob(
+        gh<_i505.SubscriptionStorage>(),
+        gh<_i944.SubscriptionRefresher>(),
+        gh<_i331.SubscriptionUpdateSettingsStore>(),
+        gh<_i207.Talker>(),
       ),
     );
     gh.lazySingleton<_i83.SubscriptionsCubit>(
@@ -379,14 +396,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i207.Talker>(),
       ),
       dispose: (i) => i.dispose(),
-    );
-    gh.lazySingleton<_i474.SubscriptionSyncJob>(
-      () => _i474.SubscriptionSyncJob(
-        gh<_i505.SubscriptionStorage>(),
-        gh<_i944.SubscriptionRefresher>(),
-        gh<_i331.SubscriptionUpdateSettingsStore>(),
-        gh<_i207.Talker>(),
-      ),
     );
     gh.lazySingleton<_i3.SubscriptionAutoUpdateCubit>(
       () => _i3.SubscriptionAutoUpdateCubit(
