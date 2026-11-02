@@ -74,10 +74,13 @@ class _SecurityPageState extends State<SecurityPage> {
                   Padding(
                     padding: const .fromLTRB(2, 8, 2, 0),
                     child: Text(
-                      'Kill switch: when a connection attempt fails, traffic '
-                      'stays blocked until you reconnect or turn the VPN off. '
-                      'If Android stops the app, traffic can leave the VPN for '
-                      'a few seconds while the tunnel comes back.\n\n'
+                      'Kill switch: if the tunnel is lost and cannot come back '
+                      '(Android stopped the app, or the system restarted the '
+                      'VPN), traffic stays blocked until you reconnect or turn '
+                      'the VPN off. A server that fails on the first connect '
+                      'only shows an error. When Android stops the app, '
+                      'traffic can leave the VPN for a few seconds while the '
+                      'tunnel comes back.\n\n'
                       'With IPv6 off the tunnel carries IPv4 only. Apps and '
                       'sites that need IPv6 fall back to IPv4 on their own.',
                       style: TextStyle(

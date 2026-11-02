@@ -14,17 +14,17 @@ void main() {
   });
 
   group('killSwitchSubtitle', () {
-    test('on: says traffic is blocked when the tunnel fails', () {
+    test('on: says traffic is blocked when the tunnel is lost', () {
       expect(
         killSwitchSubtitle(enabled: true),
-        'If the tunnel fails, traffic is blocked',
+        'Blocks traffic if the tunnel is lost',
       );
     });
 
-    test('off: says a failed tunnel just closes the VPN', () {
+    test('off: says a lost tunnel just closes the VPN', () {
       expect(
         killSwitchSubtitle(enabled: false),
-        'Off · a failed tunnel closes the VPN',
+        'Off · a lost tunnel just closes the VPN',
       );
     });
   });

@@ -2,10 +2,12 @@ import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/core/service/toast/toast_message.dart';
 import 'package:slipstream/core/service/vpn_service/vpn_service_cubit.dart';
 import 'package:slipstream/core/ui/toast/show_toast.dart';
+import 'package:slipstream/features/subscriptions/ui/server_problem_view.dart';
 
 /// What a tap on the connect ring / bar says when it cannot start anything:
-/// no server is picked. Null when the tap does its job (starts or stops the
-/// tunnel) or cannot do anything until the current change is over.
+/// no server is picked, or the picked one cannot connect. Null when the tap
+/// does its job (starts or stops the tunnel) or cannot do anything until the
+/// current change is over.
 ToastSpec? connectTapToast({
   required VpnState state,
   required VpnServer? server,
@@ -16,7 +18,8 @@ ToastSpec? connectTapToast({
     error: (_) => true,
     orElse: () => false,
   );
-  if (server != null || !startsTunnel) return null;
+  if (!startsTunnel) return null;
+  if (server != null) return serverTapToast(server);
 
   return ToastSpec(
     'No server selected',

@@ -6,6 +6,8 @@ import 'package:slipstream/features/auto_connect/data/auto_connect_support.dart'
 import 'package:slipstream/features/auto_connect/presentation/auto_connect_decision.dart';
 import 'package:slipstream/features/auto_connect/ui/auto_connect_labels.dart';
 
+import '../subscriptions/reality_fixtures.dart';
+
 void main() {
   const amsterdam = VpnServer(
     id: 'ams',
@@ -49,6 +51,12 @@ void main() {
       // Asking now would pop the system dialog at launch, or take the tunnel
       // from another VPN app.
       expect(decide(permissionGranted: false), isNull);
+    });
+
+    test('does nothing when the selected server cannot connect', () {
+      // An old selection may point at a server the provider sent without its
+      // key: starting it would fail in the core.
+      expect(decide(selected: realityServerWithoutKey()), isNull);
     });
 
     test('does nothing without a selected server', () {

@@ -6,6 +6,7 @@ import 'package:injectable/injectable.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/core/models/result.dart';
+import 'package:slipstream/features/subscriptions/data/server_problem.dart';
 import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
 import 'package:slipstream/features/vpn/data/vpn_repository.dart';
 import 'package:slipstream/features/vpn/data/vpn_session_store.dart';
@@ -64,6 +65,12 @@ class VpnServiceCubit extends Cubit<VpnState> {
   }
 
   Future<void> connect(VpnServer server) async {
+    // The core would refuse this config. Saying no here, before anything is
+    // stopped, leaves a working tunnel (or the kill switch's hold) as it is.
+    if (serverProblem(server) != null) {
+      _talker.warning('Cubit: ${server.id} cannot connect, not starting it');
+      return;
+    }
     switch (state) {
       case _Connected() || _Connecting():
         final activeId = _currentServer?.id;

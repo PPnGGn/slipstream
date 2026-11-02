@@ -1,6 +1,8 @@
 package com.slipstream
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class VpnStartRulesTest {
@@ -123,6 +125,47 @@ class VpnStartRulesTest {
                 StartDecision.NOTHING_TO_START,
                 decide(StartTrigger.RESTART, savedKillSwitch = true, interrupted = true),
         )
+    }
+
+    // --- shouldBlockOnFailure: what a failed start leads to ---
+
+    private fun blocks(
+            trigger: StartTrigger,
+            killSwitch: Boolean = true,
+            alreadyBlocked: Boolean = false,
+    ) = shouldBlockOnFailure(killSwitch, trigger, alreadyBlocked)
+
+    @Test
+    fun aFirstConnectThatFailsIsJustAnError() {
+        // Nothing was up, so nothing was lost: a broken server must not cut the
+        // phone off the internet.
+        assertFalse(blocks(StartTrigger.APP))
+        assertFalse(blocks(StartTrigger.START_LAST))
+        assertFalse(blocks(StartTrigger.OTHER))
+    }
+
+    @Test
+    fun aTunnelThatCannotComeBackAfterALossIsBlocked() {
+        // The process died, or the system started the VPN: a tunnel was there and
+        // is gone, and starting it again failed.
+        assertTrue(blocks(StartTrigger.RESTART))
+        assertTrue(blocks(StartTrigger.SYSTEM))
+    }
+
+    @Test
+    fun aFailedReconnectWhileBlockedStaysBlocked() {
+        // Closing the blocking interface here would open the traffic.
+        for (trigger in StartTrigger.values()) {
+            assertTrue(blocks(trigger, alreadyBlocked = true))
+        }
+    }
+
+    @Test
+    fun withTheKillSwitchOffNothingBlocks() {
+        for (trigger in StartTrigger.values()) {
+            assertFalse(blocks(trigger, killSwitch = false))
+            assertFalse(blocks(trigger, killSwitch = false, alreadyBlocked = true))
+        }
     }
 
     @Test

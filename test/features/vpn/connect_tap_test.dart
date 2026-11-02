@@ -2,7 +2,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/core/service/toast/toast_message.dart';
 import 'package:slipstream/core/service/vpn_service/vpn_service_cubit.dart';
+import 'package:slipstream/features/subscriptions/data/server_problem.dart';
+import 'package:slipstream/features/subscriptions/ui/server_problem_view.dart';
 import 'package:slipstream/features/vpn/presentation/connect_tap.dart';
+
+import '../subscriptions/reality_fixtures.dart';
 
 const _server = VpnServer(
   id: 'ams',
@@ -82,6 +86,38 @@ void main() {
         connectTapToast(
           state: const VpnState.connecting(),
           server: null,
+          hasSubscriptions: true,
+        ),
+        isNull,
+      );
+    });
+
+    test('a server that cannot connect says so instead of trying', () {
+      expect(
+        connectTapToast(
+          state: const VpnState.disconnected(),
+          server: realityServerWithoutKey(),
+          hasSubscriptions: true,
+        ),
+        serverProblemToast(ServerProblem.realityWithoutKey),
+      );
+    });
+
+    test('a tap that turns the tunnel off does not care about the server', () {
+      // The tunnel runs on another server; the selection is broken. Turning it
+      // off must still work.
+      expect(
+        connectTapToast(
+          state: VpnState.connected(_server, connectedAt: DateTime(2026)),
+          server: realityServerWithoutKey(),
+          hasSubscriptions: true,
+        ),
+        isNull,
+      );
+      expect(
+        connectTapToast(
+          state: const VpnState.blocked('x'),
+          server: realityServerWithoutKey(),
           hasSubscriptions: true,
         ),
         isNull,

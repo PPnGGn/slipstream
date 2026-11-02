@@ -34,6 +34,25 @@ internal fun startTriggerFor(action: String?, hasConfig: Boolean): StartTrigger 
             else -> StartTrigger.OTHER
         }
 
+// What a failed start leads to: true holds the blocking interface (the kill
+// switch), false closes the VPN and reports an error, as it always did.
+//
+// The kill switch answers a LOSS of the tunnel, not a tunnel that never came up:
+//  - an unattended start (the process died and Android restarts the service, or the
+//    system starts the VPN) means a tunnel was up and is gone: block;
+//  - a start the user asked for, from cold (a tap on the ring, the tile) that fails
+//    is a server or config that does not work, and cutting the phone off for it
+//    would punish a mistake nobody could have prevented: an ordinary error;
+//  - but once the traffic is blocked, a failed reconnect stays blocked, because
+//    closing the blocking interface would open the traffic.
+internal fun shouldBlockOnFailure(
+        killSwitch: Boolean,
+        trigger: StartTrigger,
+        alreadyBlocked: Boolean,
+): Boolean =
+        killSwitch &&
+                (alreadyBlocked || trigger == StartTrigger.RESTART || trigger == StartTrigger.SYSTEM)
+
 // savedKillSwitch: the kill switch of the saved launch, null when nothing is saved.
 // startInterrupted: the last start never finished (the process died while starting),
 // so starting by ourselves again could be a crash loop. Only starts nobody asked

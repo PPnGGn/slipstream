@@ -10,6 +10,8 @@ import 'package:slipstream/features/vpn/data/vpn_repository.dart';
 import 'package:slipstream/features/vpn/data/vpn_session_store.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
+import '../../../features/subscriptions/reality_fixtures.dart';
+
 /// Only what the cubit calls. A Fake throws on anything else, so a new
 /// dependency of the cubit shows up here instead of passing unnoticed.
 class _FakeRepository extends Fake implements VpnRepository {
@@ -75,6 +77,42 @@ void main() {
     );
     await Future<void>.delayed(Duration.zero);
   }
+
+  group('a server that cannot connect', () {
+    // The core would refuse its config. Refusing it here, before anything is
+    // stopped, keeps a working tunnel (or the kill switch's hold) untouched.
+    test('is not started', () async {
+      await cubit.connect(realityServerWithoutKey());
+
+      expect(repository.startCalls, 0);
+      expect(cubit.state, const VpnState.disconnected());
+    });
+
+    test('does not stop the tunnel that runs', () async {
+      repository.statusController.add(
+        VpnStatusMessage(status: VpnStatus.blocked, error: 'x'),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      await cubit.connect(realityServerWithoutKey());
+
+      expect(repository.stopCalls, 0);
+      expect(repository.startCalls, 0);
+      expect(cubit.state, const VpnState.blocked('x'));
+    });
+
+    test('does not take part in switching the server', () async {
+      repository.statusController.add(
+        VpnStatusMessage(status: VpnStatus.blocked, error: 'x'),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      cubit.switchServerIfActive(realityServerWithoutKey());
+      await Future<void>.delayed(Duration.zero);
+
+      expect(repository.startCalls, 0);
+    });
+  });
 
   group('firstSync', () {
     // A cubit whose first status read the test controls.

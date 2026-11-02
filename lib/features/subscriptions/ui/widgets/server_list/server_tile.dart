@@ -4,7 +4,9 @@ import 'package:slipstream/app/app_assets.dart';
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/features/ping/presentation/ui/ping_badge.dart';
+import 'package:slipstream/features/subscriptions/data/server_problem.dart';
 import 'package:slipstream/features/subscriptions/data/vpn_server_display.dart';
+import 'package:slipstream/features/subscriptions/ui/server_problem_view.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/protocol_tags.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/server_info_sheet.dart';
 
@@ -17,6 +19,7 @@ class ServerTile extends StatelessWidget {
     required this.favorite,
     required this.onTap,
     required this.onLongPress,
+    this.problem,
   });
 
   final AppColors colors;
@@ -27,11 +30,22 @@ class ServerTile extends StatelessWidget {
   final bool favorite;
   final VoidCallback onTap;
 
-  /// Pins or unpins the server.
-  final VoidCallback onLongPress;
+  /// Pins or unpins the server. Null for a server that cannot connect.
+  final VoidCallback? onLongPress;
+
+  /// Why the server cannot connect, when it cannot: the row is dimmed and says so.
+  final ServerProblem? problem;
 
   @override
   Widget build(BuildContext context) {
+    final problem = this.problem;
+    return Opacity(
+      opacity: problem == null ? 1 : 0.5,
+      child: _row(context, problem),
+    );
+  }
+
+  Widget _row(BuildContext context, ServerProblem? problem) {
     return GestureDetector(
       onTap: onTap,
       onLongPress: onLongPress,
@@ -73,7 +87,17 @@ class ServerTile extends StatelessWidget {
                           : colors.textSecondary,
                     ),
                   ),
-                  ProtocolTags(meta: server.meta),
+                  if (problem != null)
+                    Text(
+                      serverProblemLabel(problem),
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: .w600,
+                        color: colors.danger,
+                      ),
+                    )
+                  else
+                    ProtocolTags(meta: server.meta),
                 ],
               ),
             ),

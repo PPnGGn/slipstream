@@ -174,11 +174,11 @@ class V2RayVpnService : VpnService() {
             return START_NOT_STICKY
         }
 
-        startSession(launch)
+        startSession(launch, trigger)
         return START_STICKY
     }
 
-    private fun startSession(launch: VpnLaunchConfig) {
+    private fun startSession(launch: VpnLaunchConfig, trigger: StartTrigger) {
         Log.d("VPN_SERVICE", "Starting service and core...")
         isStopping = false
         serverTitle = launch.serverTitle
@@ -194,7 +194,7 @@ class V2RayVpnService : VpnService() {
         startForegroundWithNotification(buildNotification(NotificationPhase.CONNECTING))
         VpnEventBridge.notifyStatus(VpnStatus.CONNECTING)
         Android.setHandler(VpnEventBridge)
-        setupVpn(launch)
+        setupVpn(launch, trigger)
     }
 
     // The launch the app's intent carries; it is kept as the last one, for the tile
@@ -284,7 +284,7 @@ class V2RayVpnService : VpnService() {
                 ?: throw Exception("Failed to establish the VPN interface")
     }
 
-    private fun setupVpn(launch: VpnLaunchConfig) {
+    private fun setupVpn(launch: VpnLaunchConfig, trigger: StartTrigger) {
         try {
             val tunnel = establishInterface(launch)
             localTunnel = tunnel
@@ -330,7 +330,9 @@ class V2RayVpnService : VpnService() {
             finishStartMark()
             localTunnel = null
             val reason = e.message ?: "setupVpn failed"
-            if (launch.killSwitch) {
+            // A tunnel lost and not coming back is held; a server that never worked
+            // is just an error (see shouldBlockOnFailure).
+            if (shouldBlockOnFailure(launch.killSwitch, trigger, alreadyBlocked = blockingTunnel != null)) {
                 holdBlockingTunnel(launch, reason)
             } else {
                 VpnEventBridge.notifyStatus(VpnStatus.ERROR, reason)

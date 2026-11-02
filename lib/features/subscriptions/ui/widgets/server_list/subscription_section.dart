@@ -18,10 +18,12 @@ import 'package:slipstream/features/subscriptions/data/auto_update/auto_update_i
 import 'package:slipstream/features/subscriptions/data/auto_server.dart';
 import 'package:slipstream/features/subscriptions/data/favorite_servers.dart';
 import 'package:slipstream/features/subscriptions/data/search.dart';
+import 'package:slipstream/features/subscriptions/data/server_problem.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_description_store.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_display.dart';
 import 'package:slipstream/features/subscriptions/data/vpn_server_display.dart';
 import 'package:slipstream/features/subscriptions/ui/favorite_toasts.dart';
+import 'package:slipstream/features/subscriptions/ui/server_problem_view.dart';
 import 'package:slipstream/features/subscriptions/ui/subscription_menu_toasts.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/server_tile.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/subscription_info.dart';
@@ -103,6 +105,17 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
   // A long press on a server pins or unpins it. The vibration answers the
   // press at once; the toast says which of the two happened.
   // The automatic server is always first already: nothing to pin.
+  // A server that cannot connect is not selected: the toast says why, and the
+  // current selection and tunnel stay as they are.
+  void _onServerTap(VpnServer server) {
+    final toast = serverTapToast(server);
+    if (toast != null) {
+      showToastSpec(toast);
+      return;
+    }
+    widget.onSelect(server);
+  }
+
   Future<void> _toggleFavorite(VpnServer server) async {
     if (isAutoTitle(server.title)) return;
     unawaited(HapticFeedback.mediumImpact());
@@ -217,9 +230,10 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
                     }
                     // After the sort: favorites are sorted among themselves
                     // and still stand on top, and the provider's automatic
-                    // server stands above them all.
-                    ordered = pinAutoServers(
-                      pinFavorites(ordered, favoriteIds),
+                    // server stands above them all. Servers that cannot
+                    // connect go to the very end, whatever they are.
+                    ordered = sinkBrokenServers(
+                      pinAutoServers(pinFavorites(ordered, favoriteIds)),
                     );
                     return Column(
                       mainAxisSize: MainAxisSize.min,
@@ -232,9 +246,12 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
                             server: server,
                             selected: server.id == widget.selectedServerId,
                             favorite: isFavorite(server, favoriteIds),
-                            onTap: () => widget.onSelect(server),
-                            onLongPress: () =>
-                                unawaited(_toggleFavorite(server)),
+                            problem: serverProblem(server),
+                            onTap: () => _onServerTap(server),
+                            // A server that cannot connect is not pinned.
+                            onLongPress: serverProblem(server) != null
+                                ? null
+                                : () => unawaited(_toggleFavorite(server)),
                           ),
                         const SizedBox(height: 5),
                       ],
