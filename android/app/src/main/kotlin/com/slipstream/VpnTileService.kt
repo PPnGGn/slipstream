@@ -42,8 +42,10 @@ class VpnTileService : TileService() {
         val action =
                 tileTapAction(
                         status = status,
-                        // null means the permission is already granted.
-                        permissionGranted = VpnService.prepare(this) == null,
+                        // null means the permission is already granted. Asked only when the
+                        // service is idle: prepare() would tear down our own running VPN.
+                        permissionGranted =
+                                !shouldAskPermission(status) || VpnService.prepare(this) == null,
                         hasSavedLaunch = VpnLaunchStore.of(this).exists(),
                 )
         Log.d("VPN_TILE", "Tap: status=$status action=$action")

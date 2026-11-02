@@ -102,12 +102,22 @@ class MainActivity : FlutterActivity(), VpnConnection, UpdateInstaller {
 
     // prepare() returns null when the permission is already granted (and nothing
     // else holds the VPN); asking it shows no dialog, only starting does.
-    override fun vpnPermissionGranted(): Boolean = VpnService.prepare(this) == null
+    override fun vpnPermissionGranted(): Boolean =
+            !shouldAskPermission(VpnEventBridge.currentStatus().status) ||
+                    VpnService.prepare(this) == null
 
     override fun start(config: VpnConfigMessage, callback: (Result<VpnResult>) -> Unit) {
         Log.d("VPN_BRIDGE", "Requesting VPN start with dynamic config...")
 
-        val intent = VpnService.prepare(this)
+        // Not while our own VPN is active: prepare() would unprepare it (see
+        // shouldAskPermission), and a start from the kill switch's hold would
+        // open the traffic. An active service has the permission already.
+        val intent =
+                if (shouldAskPermission(VpnEventBridge.currentStatus().status)) {
+                    VpnService.prepare(this)
+                } else {
+                    null
+                }
 
         if (intent != null) {
             pendingVpnCallback = callback

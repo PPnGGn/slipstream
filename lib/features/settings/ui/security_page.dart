@@ -78,9 +78,12 @@ class _SecurityPageState extends State<SecurityPage> {
                       '(Android stopped the app, or the system restarted the '
                       'VPN), traffic stays blocked until you reconnect or turn '
                       'the VPN off. A server that fails on the first connect '
-                      'only shows an error. When Android stops the app, '
-                      'traffic can leave the VPN for a few seconds while the '
-                      'tunnel comes back.\n\n'
+                      'only shows an error. It does not cover everything: '
+                      'when Android stops the app, traffic can leave the VPN '
+                      'for a few seconds while the tunnel comes back, and if '
+                      'the app itself crashes the VPN is simply gone. With '
+                      "Android's own Always-on VPN turned on, the system "
+                      'brings the VPN back when you turn it off from the app.\n\n'
                       'With IPv6 off the tunnel carries IPv4 only. Apps and '
                       'sites that need IPv6 fall back to IPv4 on their own.',
                       style: TextStyle(
