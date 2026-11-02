@@ -126,6 +126,7 @@ class MainActivity : FlutterActivity(), VpnConnection, UpdateInstaller {
         serviceIntent.putExtra("SERVER_TITLE", config.title)
         // Null from an older Dart build counts as off, like the Dart default.
         serviceIntent.putExtra("IPV6", config.ipv6 == true)
+        serviceIntent.putExtra("KILL_SWITCH", config.killSwitch == true)
         // Both or neither: the service reads a missing mode as "no split".
         val splitMode = config.splitMode
         val splitPackages = config.splitPackages

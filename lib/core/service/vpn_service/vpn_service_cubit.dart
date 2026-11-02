@@ -45,7 +45,8 @@ class VpnServiceCubit extends Cubit<VpnState> {
 
   Future<void> toggle(VpnServer? server) async {
     switch (state) {
-      case _Connected() || _Connecting():
+      // Blocked: the ring lets the user out of the kill switch.
+      case _Connected() || _Connecting() || _Blocked():
         await disconnect();
       case _Disconnecting():
         break;
@@ -76,7 +77,8 @@ class VpnServiceCubit extends Cubit<VpnState> {
   }
 
   void switchServerIfActive(VpnServer server) {
-    final isActive = state is _Connected || state is _Connecting;
+    final isActive =
+        state is _Connected || state is _Connecting || state is _Blocked;
     if (isActive) unawaited(connect(server));
   }
 
@@ -183,6 +185,13 @@ class VpnServiceCubit extends Cubit<VpnState> {
         _pendingServer = null;
         _clearSession();
         emit(VpnState.error(message.error ?? 'VPN error'));
+      case VpnStatus.blocked:
+        // The server stays known: Reconnect and a switch start it again, and
+        // starting from here must not stop first (that would open the traffic).
+        _connectTimer?.cancel();
+        _pendingServer = null;
+        _connectedAt = null;
+        emit(VpnState.blocked(message.error ?? 'Connection lost'));
     }
   }
 

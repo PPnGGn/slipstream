@@ -57,7 +57,9 @@ import '../../features/routing/data/local_proxy_client.dart' as _i864;
 import '../../features/routing/data/routing_policy_gate.dart' as _i194;
 import '../../features/routing/data/ru_bypass_store.dart' as _i310;
 import '../../features/security/cubit/ipv6_cubit.dart' as _i500;
+import '../../features/security/cubit/kill_switch_cubit.dart' as _i925;
 import '../../features/security/data/ipv6_store.dart' as _i926;
+import '../../features/security/data/kill_switch_store.dart' as _i921;
 import '../../features/split_tunnel/cubit/installed_apps_cubit.dart' as _i998;
 import '../../features/split_tunnel/cubit/split_tunnel_cubit.dart' as _i277;
 import '../../features/split_tunnel/data/installed_apps_api.g.dart' as _i999;
@@ -206,6 +208,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i926.Ipv6Store>(
       () => _i926.Ipv6Store(gh<_i460.SharedPreferences>()),
     );
+    gh.lazySingleton<_i921.KillSwitchStore>(
+      () => _i921.KillSwitchStore(gh<_i460.SharedPreferences>()),
+    );
     gh.lazySingleton<_i43.SplitTunnelStore>(
       () => _i43.SplitTunnelStore(gh<_i460.SharedPreferences>()),
     );
@@ -260,6 +265,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i304.HomeLayoutCubit>(
       () => _i304.HomeLayoutCubit(store: gh<_i979.HomeLayoutStore>()),
+    );
+    gh.lazySingleton<_i925.KillSwitchCubit>(
+      () => _i925.KillSwitchCubit(store: gh<_i921.KillSwitchStore>()),
     );
     gh.lazySingleton<_i500.Ipv6Cubit>(
       () => _i500.Ipv6Cubit(store: gh<_i926.Ipv6Store>()),
@@ -333,6 +341,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i863.AdBlockCubit>(),
         gh<_i277.SplitTunnelCubit>(),
         gh<_i500.Ipv6Cubit>(),
+        gh<_i925.KillSwitchCubit>(),
       ),
       dispose: (i) => i.dispose(),
     );

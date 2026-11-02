@@ -117,12 +117,15 @@ int _deepHash(Object? value) {
 }
 
 
+/// [blocked] is last on purpose: the numbers of the older values must not move.
+/// The kill switch holds the traffic (Android only; iOS never reports it).
 enum VpnStatus {
   disconnected,
   connecting,
   connected,
   disconnecting,
   error,
+  blocked,
 }
 
 enum VpnSplitMode {
@@ -140,6 +143,7 @@ class VpnConfigMessage {
     this.splitMode,
     this.splitPackages,
     this.ipv6,
+    this.killSwitch,
   });
 
   String configJson;
@@ -158,9 +162,6 @@ class VpnConfigMessage {
   /// (provider configs route DNS their own way).
   bool? hijackDns;
 
-  /// Per-app split tunneling (Android only; iOS ignores both fields). Null
-  /// means "tunnel every app". [splitPackages] is never empty when [splitMode]
-  /// is set: the client treats an empty list as "off" before it gets here.
   VpnSplitMode? splitMode;
 
   List<String>? splitPackages;
@@ -169,6 +170,12 @@ class VpnConfigMessage {
   /// address or route, so Android blocks IPv6 and apps use IPv4. Android only;
   /// iOS ignores it.
   bool? ipv6;
+
+  /// True when a failed start (or a restart after the process died) must not
+  /// leave the phone with no VPN and open traffic: the service then holds a
+  /// blocking interface until the user reconnects or disconnects. False/null:
+  /// a failure closes the VPN, as before. Android only; iOS ignores it.
+  bool? killSwitch;
 
   List<Object?> _toList() {
     return <Object?>[
@@ -180,6 +187,7 @@ class VpnConfigMessage {
       splitMode,
       splitPackages,
       ipv6,
+      killSwitch,
     ];
   }
 
@@ -197,6 +205,7 @@ class VpnConfigMessage {
       splitMode: result[5] as VpnSplitMode?,
       splitPackages: (result[6] as List<Object?>?)?.cast<String>(),
       ipv6: result[7] as bool?,
+      killSwitch: result[8] as bool?,
     );
   }
 
@@ -209,7 +218,7 @@ class VpnConfigMessage {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(configJson, other.configJson) && _deepEquals(serverId, other.serverId) && _deepEquals(title, other.title) && _deepEquals(geoAssetDir, other.geoAssetDir) && _deepEquals(hijackDns, other.hijackDns) && _deepEquals(splitMode, other.splitMode) && _deepEquals(splitPackages, other.splitPackages) && _deepEquals(ipv6, other.ipv6);
+    return _deepEquals(configJson, other.configJson) && _deepEquals(serverId, other.serverId) && _deepEquals(title, other.title) && _deepEquals(geoAssetDir, other.geoAssetDir) && _deepEquals(hijackDns, other.hijackDns) && _deepEquals(splitMode, other.splitMode) && _deepEquals(splitPackages, other.splitPackages) && _deepEquals(ipv6, other.ipv6) && _deepEquals(killSwitch, other.killSwitch);
   }
 
   @override

@@ -21,7 +21,8 @@ internal fun tileTapAction(
         hasSavedLaunch: Boolean,
 ): TileTapAction =
         when (status) {
-            VpnStatus.CONNECTED -> TileTapAction.STOP
+            // Blocked: the kill switch holds the traffic, a tap turns the VPN off.
+            VpnStatus.CONNECTED, VpnStatus.BLOCKED -> TileTapAction.STOP
             VpnStatus.CONNECTING, VpnStatus.DISCONNECTING -> TileTapAction.NONE
             // After an error the next tap tries again, like a tap in the app.
             VpnStatus.DISCONNECTED, VpnStatus.ERROR ->
@@ -42,6 +43,7 @@ internal fun tileView(status: VpnStatus, serverTitle: String?): TileView =
                             TileLook.ACTIVE,
                             serverTitle?.trim()?.takeIf { it.isNotEmpty() } ?: "Connected",
                     )
+            VpnStatus.BLOCKED -> TileView(TileLook.ACTIVE, "Traffic blocked")
             VpnStatus.CONNECTING -> TileView(TileLook.INACTIVE, "Connecting…")
             VpnStatus.DISCONNECTING -> TileView(TileLook.INACTIVE, "Disconnecting…")
             VpnStatus.DISCONNECTED, VpnStatus.ERROR -> TileView(TileLook.INACTIVE, null)

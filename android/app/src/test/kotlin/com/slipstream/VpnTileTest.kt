@@ -20,6 +20,22 @@ class VpnTileTest {
     }
 
     @Test
+    fun aTapWhileTrafficIsBlockedTurnsTheVpnOff() {
+        // The kill switch is holding the traffic: a tap lets the user out of it, as the
+        // ring in the app does.
+        assertEquals(TileTapAction.STOP, tap(VpnStatus.BLOCKED))
+        assertEquals(TileTapAction.STOP, tap(VpnStatus.BLOCKED, permission = false, saved = false))
+    }
+
+    @Test
+    fun theTileIsActiveWhileTrafficIsBlocked() {
+        val view = tileView(VpnStatus.BLOCKED, "🇩🇪 Germany")
+
+        assertEquals(TileLook.ACTIVE, view.look)
+        assertEquals("Traffic blocked", view.subtitle)
+    }
+
+    @Test
     fun aTapOnAnInactiveTileTurnsTheVpnOn() {
         assertEquals(TileTapAction.START, tap(VpnStatus.DISCONNECTED))
     }

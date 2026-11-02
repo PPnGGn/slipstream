@@ -18,6 +18,10 @@ data class VpnLaunchConfig(
         // Whether the tunnel gets an IPv6 address and route. Off when absent: a
         // file written before the switch existed means "no IPv6", like a fresh install.
         val ipv6: Boolean = false,
+        // A failed start holds a blocking interface instead of closing the VPN, and a
+        // restart after the process died brings the tunnel back. Off when absent: a
+        // file from before the switch keeps the old behavior.
+        val killSwitch: Boolean = false,
 ) {
     fun toJson(): String =
             JSONObject()
@@ -28,6 +32,7 @@ data class VpnLaunchConfig(
                     .put("splitPackages", JSONArray(splitPackages))
                     .put("serverTitle", serverTitle ?: JSONObject.NULL)
                     .put("ipv6", ipv6)
+                    .put("killSwitch", killSwitch)
                     .toString()
 
     companion object {
@@ -59,6 +64,7 @@ data class VpnLaunchConfig(
                                         if (json.isNull("serverTitle")) null
                                         else json.optString("serverTitle").ifEmpty { null },
                                 ipv6 = json.optBoolean("ipv6", false),
+                                killSwitch = json.optBoolean("killSwitch", false),
                         )
                     }
                 } catch (e: Exception) {

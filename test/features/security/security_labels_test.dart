@@ -13,6 +13,22 @@ void main() {
     });
   });
 
+  group('killSwitchSubtitle', () {
+    test('on: says traffic is blocked when the tunnel fails', () {
+      expect(
+        killSwitchSubtitle(enabled: true),
+        'If the tunnel fails, traffic is blocked',
+      );
+    });
+
+    test('off: says a failed tunnel just closes the VPN', () {
+      expect(
+        killSwitchSubtitle(enabled: false),
+        'Off · a failed tunnel closes the VPN',
+      );
+    });
+  });
+
   group('ipv6Subtitle', () {
     test('on: says IPv6 goes through the tunnel', () {
       expect(ipv6Subtitle(enabled: true), 'IPv6 goes through the tunnel');

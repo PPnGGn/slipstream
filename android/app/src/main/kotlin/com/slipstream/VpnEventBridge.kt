@@ -40,7 +40,8 @@ object VpnEventBridge : CoreLogHandler {
                 when (status) {
                     VpnStatus.CONNECTED -> connectedAtEpochMs
                                     ?: lastConnectedAtEpochMs ?: System.currentTimeMillis()
-                    VpnStatus.DISCONNECTED, VpnStatus.ERROR -> null
+                    // Blocked: the tunnel is gone, so is its connection time.
+                    VpnStatus.DISCONNECTED, VpnStatus.ERROR, VpnStatus.BLOCKED -> null
                     else -> lastConnectedAtEpochMs
                 }
 

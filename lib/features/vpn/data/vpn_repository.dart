@@ -10,6 +10,7 @@ import 'package:slipstream/features/routing/cubit/ad_block_cubit.dart';
 import 'package:slipstream/features/routing/cubit/ru_bypass_cubit.dart';
 import 'package:slipstream/features/routing/data/routing_policy_gate.dart';
 import 'package:slipstream/features/security/cubit/ipv6_cubit.dart';
+import 'package:slipstream/features/security/cubit/kill_switch_cubit.dart';
 import 'package:slipstream/features/split_tunnel/cubit/split_tunnel_cubit.dart';
 import 'package:slipstream/features/split_tunnel/data/split_tunnel_message.dart';
 import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
@@ -30,6 +31,7 @@ class VpnRepository {
   final AdBlockCubit _adBlockCubit;
   final SplitTunnelCubit _splitTunnelCubit;
   final Ipv6Cubit _ipv6Cubit;
+  final KillSwitchCubit _killSwitchCubit;
   late final StreamSubscription<VpnLogMessage> _logSubscription;
 
   VpnRepository(
@@ -45,6 +47,7 @@ class VpnRepository {
     this._adBlockCubit,
     this._splitTunnelCubit,
     this._ipv6Cubit,
+    this._killSwitchCubit,
   ) {
     _logSubscription = _events.logs.listen(_xrayLogStore.add);
   }
@@ -82,6 +85,7 @@ class VpnRepository {
           splitMode: split.mode,
           splitPackages: split.packages,
           ipv6: _ipv6Cubit.state,
+          killSwitch: _killSwitchCubit.state,
         ),
       );
 

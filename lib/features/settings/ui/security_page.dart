@@ -6,6 +6,7 @@ import 'package:slipstream/core/service/vpn_service/vpn_service_cubit.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/ui/widgets/page_header.dart';
 import 'package:slipstream/features/security/cubit/ipv6_cubit.dart';
+import 'package:slipstream/features/security/cubit/kill_switch_cubit.dart';
 import 'package:slipstream/features/security/ui/security_labels.dart';
 import 'package:slipstream/features/settings/ui/widgets/reconnect_hint.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_card.dart';
@@ -21,6 +22,7 @@ class SecurityPage extends StatefulWidget {
 }
 
 class _SecurityPageState extends State<SecurityPage> {
+  final _killSwitch = getIt<KillSwitchCubit>();
   final _ipv6 = getIt<Ipv6Cubit>();
   final _vpn = getIt<VpnServiceCubit>();
 
@@ -39,6 +41,20 @@ class _SecurityPageState extends State<SecurityPage> {
                 children: [
                   SettingsGroup(
                     children: [
+                      BlocBuilder<KillSwitchCubit, bool>(
+                        bloc: _killSwitch,
+                        builder: (context, enabled) => SettingsRow(
+                          iconPath: AppAssets.kill,
+                          hue: TileHue.red,
+                          title: 'Kill switch',
+                          subtitle: killSwitchSubtitle(enabled: enabled),
+                          switchValue: enabled,
+                          onSwitch: (value) {
+                            _killSwitch.setEnabled(enabled: value);
+                            notifyIfTunnelActive(_vpn);
+                          },
+                        ),
+                      ),
                       BlocBuilder<Ipv6Cubit, bool>(
                         bloc: _ipv6,
                         builder: (context, enabled) => SettingsRow(
@@ -58,6 +74,10 @@ class _SecurityPageState extends State<SecurityPage> {
                   Padding(
                     padding: const .fromLTRB(2, 8, 2, 0),
                     child: Text(
+                      'Kill switch: when a connection attempt fails, traffic '
+                      'stays blocked until you reconnect or turn the VPN off. '
+                      'If Android stops the app, traffic can leave the VPN for '
+                      'a few seconds while the tunnel comes back.\n\n'
                       'With IPv6 off the tunnel carries IPv4 only. Apps and '
                       'sites that need IPv6 fall back to IPv4 on their own.',
                       style: TextStyle(

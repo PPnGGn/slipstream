@@ -23,7 +23,19 @@ import com.slipstream.android.Android
 
 class V2RayVpnService : VpnService() {
 
+    // The interface the core runs on. Non-null from the moment it is built until the
+    // session ends: that is what "a session is running" means (see startDecision).
     private var localTunnel: ParcelFileDescriptor? = null
+
+    // The kill switch's hold after a failed start: an interface with the tunnel's
+    // addresses and routes that nobody reads from, so whatever apps send into it goes
+    // nowhere. Replaced by the real interface on Reconnect, closed on Disconnect.
+    private var blockingTunnel: ParcelFileDescriptor? = null
+
+    // The launch being worked on: the blocking interface is built from the same one.
+    private var activeLaunch: VpnLaunchConfig? = null
+
+    private var notificationPhase = NotificationPhase.CONNECTING
 
     // guard duplicate stop (onRevoke + onDestroy)
     private var isStopping = false
@@ -118,47 +130,77 @@ class V2RayVpnService : VpnService() {
             return START_NOT_STICKY
         }
 
-        val launch = launchFor(intent)
+        // Who started us and what to do about it is decided by plain functions
+        // (VpnStartRules.kt); this only gathers their facts and carries it out.
+        val trigger =
+                startTriggerFor(intent?.action, hasConfig = intent?.hasExtra("XRAY_CONFIG") == true)
+        val saved = launchStore.load()
+        val decision =
+                startDecision(
+                        trigger,
+                        sessionRunning = localTunnel != null,
+                        savedKillSwitch = saved?.killSwitch,
+                        startInterrupted = launchStore.startInterrupted(),
+                )
+        Log.d("VPN_SERVICE", "Start: trigger=$trigger decision=$decision")
+
+        val launch =
+                when (decision) {
+                    StartDecision.IGNORE -> {
+                        // Started with startForegroundService, which owes the system a
+                        // startForeground within seconds, even for a start we ignore.
+                        if (trigger == StartTrigger.START_LAST) {
+                            startForegroundWithNotification(buildNotification(notificationPhase))
+                        }
+                        return START_STICKY
+                    }
+                    StartDecision.NOTHING_TO_START -> {
+                        if (trigger == StartTrigger.START_LAST) {
+                            startForegroundWithNotification(
+                                    buildNotification(NotificationPhase.CONNECTING),
+                            )
+                            stopForeground(STOP_FOREGROUND_REMOVE)
+                        }
+                        // Nothing runs and nothing is held: do not sit there started.
+                        if (localTunnel == null && blockingTunnel == null) stopSelf()
+                        return START_NOT_STICKY
+                    }
+                    StartDecision.START_SAVED -> saved
+                    StartDecision.START_FROM_APP -> launchFromIntent(intent)
+                }
         if (launch == null) {
-            if (intent?.action == ACTION_START_LAST) {
-                // Started with startForegroundService, which owes the system a
-                // startForeground within seconds, launch or no launch.
-                startForegroundWithNotification(buildNotification(connected = false))
-                stopForeground(STOP_FOREGROUND_REMOVE)
-                stopSelf()
-            }
+            Log.e("VPN_SERVICE", "No launch to start. Aborting.")
+            if (localTunnel == null && blockingTunnel == null) stopSelf()
             return START_NOT_STICKY
         }
 
-        Log.d("VPN_SERVICE", "Starting service and core...")
-        isStopping = false
-        serverTitle = launch.serverTitle
-        startForegroundWithNotification(buildNotification(connected = false))
-        VpnEventBridge.notifyStatus(VpnStatus.CONNECTING)
-        Android.setHandler(VpnEventBridge)
-        setupVpn(
-                launch.configJson,
-                launch.geoDir,
-                launch.hijackDns,
-                launch.splitMode,
-                launch.splitPackages,
-                launch.ipv6,
-        )
-
+        startSession(launch)
         return START_STICKY
     }
 
-    // What to start with, from either way in: the app's intent carries the whole
-    // launch (and it is kept as the last one), the tile's only says "the same
-    // again" and the launch comes from disk. Null: nothing to start.
-    // The launch holds the server's credentials: log what it is, never what it says.
-    private fun launchFor(intent: Intent?): VpnLaunchConfig? {
-        if (intent?.action == ACTION_START_LAST) {
-            val saved = launchStore.load()
-            if (saved == null) Log.w("VPN_SERVICE", "No saved launch to start again")
-            return saved
+    private fun startSession(launch: VpnLaunchConfig) {
+        Log.d("VPN_SERVICE", "Starting service and core...")
+        isStopping = false
+        serverTitle = launch.serverTitle
+        activeLaunch = launch
+        // Erased when the start ends, one way or the other we handle. If it is still
+        // there at the next start, the process died on the way (see startDecision).
+        try {
+            launchStore.markStarting()
+        } catch (e: Exception) {
+            Log.w("VPN_SERVICE", "Could not mark the start: ${e.javaClass.simpleName}")
         }
+        notificationPhase = NotificationPhase.CONNECTING
+        startForegroundWithNotification(buildNotification(NotificationPhase.CONNECTING))
+        VpnEventBridge.notifyStatus(VpnStatus.CONNECTING)
+        Android.setHandler(VpnEventBridge)
+        setupVpn(launch)
+    }
 
+    // The launch the app's intent carries; it is kept as the last one, for the tile
+    // and for a restart. Null when the intent has no usable config.
+    // The launch holds the server's credentials: log what it is, never what it says.
+    private fun launchFromIntent(intent: Intent?): VpnLaunchConfig? {
         val configJson = intent?.getStringExtra("XRAY_CONFIG")
         if (configJson == null) {
             Log.e("VPN_SERVICE", "Config is missing. Aborting.")
@@ -180,6 +222,7 @@ class V2RayVpnService : VpnService() {
                                 intent.getStringArrayListExtra("SPLIT_PACKAGES") ?: emptyList(),
                         serverTitle = intent.getStringExtra("SERVER_TITLE"),
                         ipv6 = intent.getBooleanExtra("IPV6", false),
+                        killSwitch = intent.getBooleanExtra("KILL_SWITCH", false),
                 )
         // A failed save must not stop this start: only the tile loses by it.
         try {
@@ -190,59 +233,60 @@ class V2RayVpnService : VpnService() {
         return launch
     }
 
-    private fun setupVpn(
-            configJson: String,
-            geoDir: String,
-            hijackDns: Boolean,
-            splitMode: VpnSplitMode?,
-            splitPackages: List<String>,
-            ipv6: Boolean,
-    ) {
+    // Builds the VPN interface for a launch: the tunnel's addresses, DNS, routes and
+    // split rules. The real tunnel and the kill switch's blocking interface are the
+    // same shape, so whichever replaces the other changes nothing for the apps
+    // except whether anyone reads their packets. A new interface replaces the one
+    // this service had before.
+    private fun establishInterface(launch: VpnLaunchConfig): ParcelFileDescriptor {
+        // A network of its own for every session: the same addresses every time
+        // are something another app can read off the interface and look for.
+        // Its MTU is the core's, take it as it is.
+        val network = Android.newTunnelNetwork()
+        // Inside the TUN subnet nothing answers on 853, so automatic Private DNS
+        // can't upgrade to DoT and the config's port-53 hijack sees every query.
+        // Only for configs that hijack DNS themselves: provider rules would send a
+        // private address direct, into nowhere.
+        // getDNS4() and getMTU() are called as methods: Kotlin turns the all-capital
+        // names gomobile makes from DNS4 and MTU into properties by its own rules.
+        val dnsServers = if (launch.hijackDns) listOf(network.getDNS4()) else PUBLIC_DNS
+        // Without IPv6 the interface has no IPv6 address or route, and Android
+        // blocks the whole family (see tunnelShape).
+        val shape =
+                tunnelShape(
+                        network.address4,
+                        network.prefix4.toInt(),
+                        network.address6,
+                        network.prefix6.toInt(),
+                        launch.ipv6,
+                )
+        val builder = Builder()
+        shape.addresses.forEach { builder.addAddress(it.address, it.prefix) }
+        dnsServers.forEach { builder.addDnsServer(it) }
+        // The app itself stays outside the tunnel: the core's own connections
+        // must not loop back into it, server ping must measure the direct path,
+        // and subscription/geo requests go direct unless they ask for the core's
+        // local proxy. applySplitTunnel keeps that true in every mode. Do not drop.
+        val split =
+                applySplitTunnel(
+                        launch.splitMode,
+                        launch.splitPackages,
+                        packageName,
+                        allow = { pkg -> builder.tryAllowApplication(pkg) },
+                        disallow = { pkg -> builder.tryDisallowApplication(pkg) },
+                )
+        logSplitTunnel(launch.splitMode, split)
+        shape.routes.forEach { builder.addRoute(it.address, it.prefix) }
+        return builder
+                .setSession("Slipstream")
+                .setMtu(network.getMTU().toInt())
+                .establish()
+                ?: throw Exception("Failed to establish the VPN interface")
+    }
+
+    private fun setupVpn(launch: VpnLaunchConfig) {
         try {
-            // A network of its own for every session: the same addresses every time
-            // are something another app can read off the interface and look for.
-            // Its MTU is the core's, take it as it is.
-            val network = Android.newTunnelNetwork()
-            // Inside the TUN subnet nothing answers on 853, so automatic Private DNS
-            // can't upgrade to DoT and the config's port-53 hijack sees every query.
-            // Only for configs that hijack DNS themselves: provider rules would send a
-            // private address direct, into nowhere.
-            // getDNS4() and getMTU() are called as methods: Kotlin turns the all-capital
-            // names gomobile makes from DNS4 and MTU into properties by its own rules.
-            val dnsServers = if (hijackDns) listOf(network.getDNS4()) else PUBLIC_DNS
-            // Without IPv6 the interface has no IPv6 address or route, and Android
-            // blocks the whole family (see tunnelShape).
-            val shape =
-                    tunnelShape(
-                            network.address4,
-                            network.prefix4.toInt(),
-                            network.address6,
-                            network.prefix6.toInt(),
-                            ipv6,
-                    )
-            val builder = Builder()
-            shape.addresses.forEach { builder.addAddress(it.address, it.prefix) }
-            dnsServers.forEach { builder.addDnsServer(it) }
-            // The app itself stays outside the tunnel: the core's own connections
-            // must not loop back into it, server ping must measure the direct path,
-            // and subscription/geo requests go direct unless they ask for the core's
-            // local proxy. applySplitTunnel keeps that true in every mode. Do not drop.
-            val split =
-                    applySplitTunnel(
-                            splitMode,
-                            splitPackages,
-                            packageName,
-                            allow = { pkg -> builder.tryAllowApplication(pkg) },
-                            disallow = { pkg -> builder.tryDisallowApplication(pkg) },
-                    )
-            logSplitTunnel(splitMode, split)
-            shape.routes.forEach { builder.addRoute(it.address, it.prefix) }
-            val tunnel =
-                    builder
-                            .setSession("Slipstream")
-                            .setMtu(network.getMTU().toInt())
-                            .establish()
-                            ?: throw Exception("Failed to establish the VPN interface")
+            val tunnel = establishInterface(launch)
             localTunnel = tunnel
 
             val fd = tunnel.detachFd()
@@ -259,17 +303,92 @@ class V2RayVpnService : VpnService() {
             // the geo databases were installed; Android.stop takes 50-90 ms. The limits are
             // seconds (5 s of a blocked input), so it stays here: a thread would need
             // a guard for a stop that arrives before the start is done.
-            Android.start(configJson, fd.toLong(), geoDir, VpnQueries.httpSocketPath(this))
-            Log.d("VPN_SERVICE", "Xray + tun2socks started, fd=$fd, hijackDns=$hijackDns, ipv6=$ipv6, geoDir=$geoDir")
+            Android.start(
+                    launch.configJson,
+                    fd.toLong(),
+                    launch.geoDir,
+                    VpnQueries.httpSocketPath(this),
+            )
+            Log.d(
+                    "VPN_SERVICE",
+                    "Xray + tun2socks started, fd=$fd, hijackDns=${launch.hijackDns}, " +
+                            "ipv6=${launch.ipv6}, killSwitch=${launch.killSwitch}, geoDir=${launch.geoDir}",
+            )
 
+            // The real interface replaced the blocking one when it was established;
+            // what is left of it is a stale handle.
+            releaseBlockingTunnel()
+            finishStartMark()
+            notificationPhase = NotificationPhase.CONNECTED
             val connectedAtMs = System.currentTimeMillis()
             VpnEventBridge.notifyStatus(VpnStatus.CONNECTED, connectedAtEpochMs = connectedAtMs)
-            updateNotification(buildNotification(connected = true))
+            updateNotification(buildNotification(NotificationPhase.CONNECTED))
             startTrafficPolling()
         } catch (e: Exception) {
             Log.e("VPN_SERVICE", "Critical error in setupVpn: ${e.message}")
-            VpnEventBridge.notifyStatus(VpnStatus.ERROR, e.message ?: "setupVpn failed")
+            // A start that failed in a way we caught is not a crash: the mark goes.
+            finishStartMark()
+            localTunnel = null
+            val reason = e.message ?: "setupVpn failed"
+            if (launch.killSwitch) {
+                holdBlockingTunnel(launch, reason)
+            } else {
+                VpnEventBridge.notifyStatus(VpnStatus.ERROR, reason)
+                stopVpn(dueToError = true)
+            }
+        }
+    }
+
+    // The kill switch's answer to a failed start: instead of closing the VPN, which
+    // would let every app's traffic out the moment the interface is gone, build the
+    // interface again and read nothing from it. The user ends it with Reconnect (a
+    // new interface replaces this one) or Disconnect (stopVpn closes it).
+    private fun holdBlockingTunnel(launch: VpnLaunchConfig, reason: String) {
+        try {
+            // Nothing of the core may keep running while the traffic is held. Safe to
+            // call whether or not a start got far.
+            try {
+                Android.stop()
+            } catch (e: Exception) {
+                Log.w("VPN_SERVICE", "Core stop before blocking failed: ${e.message}")
+            }
+            stopTrafficPolling()
+            val blocking = establishInterface(launch)
+            val previous = blockingTunnel
+            blockingTunnel = blocking
+            previous?.closeQuietly()
+
+            notificationPhase = NotificationPhase.BLOCKED
+            updateNotification(buildNotification(NotificationPhase.BLOCKED))
+            VpnEventBridge.notifyStatus(VpnStatus.BLOCKED, reason)
+            Log.w("VPN_SERVICE", "Kill switch: traffic is blocked, reason: $reason")
+        } catch (e: Exception) {
+            // Not even a blocking interface (the VPN permission is gone, say): the
+            // honest thing left is to close the VPN and say it failed.
+            Log.e("VPN_SERVICE", "Kill switch could not hold the traffic: ${e.message}")
+            VpnEventBridge.notifyStatus(VpnStatus.ERROR, reason)
             stopVpn(dueToError = true)
+        }
+    }
+
+    private fun releaseBlockingTunnel() {
+        blockingTunnel?.closeQuietly()
+        blockingTunnel = null
+    }
+
+    private fun ParcelFileDescriptor.closeQuietly() {
+        try {
+            close()
+        } catch (e: Exception) {
+            Log.w("VPN_SERVICE", "Closing an interface failed: ${e.message}")
+        }
+    }
+
+    private fun finishStartMark() {
+        try {
+            launchStore.markStarted()
+        } catch (e: Exception) {
+            Log.w("VPN_SERVICE", "Could not clear the start mark: ${e.javaClass.simpleName}")
         }
     }
 
@@ -374,6 +493,10 @@ class V2RayVpnService : VpnService() {
         }
 
         localTunnel = null
+        // The user turned the VPN off (or it failed with nothing left to hold): the
+        // blocking interface goes with it, and traffic flows as it does without a VPN.
+        releaseBlockingTunnel()
+        activeLaunch = null
 
         if (!dueToError) VpnEventBridge.notifyStatus(VpnStatus.DISCONNECTED)
 
@@ -399,14 +522,21 @@ class V2RayVpnService : VpnService() {
 
     private fun startForegroundWithNotification(notification: Notification) {
         ensureNotificationChannel()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(
-                    NOTIFICATION_ID,
-                    notification,
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED
-            )
-        } else {
-            startForeground(NOTIFICATION_ID, notification)
+        // From Android 12 the system may refuse a foreground start made from the
+        // background (a restart after the process died, say). The tunnel is worth more
+        // than the notification: log it and carry on.
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(
+                        NOTIFICATION_ID,
+                        notification,
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED
+                )
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
+        } catch (e: Exception) {
+            Log.w("VPN_SERVICE", "startForeground refused: ${e.javaClass.simpleName}")
         }
     }
 
@@ -425,8 +555,20 @@ class V2RayVpnService : VpnService() {
         )
     }
 
-    private fun buildNotification(connected: Boolean): Notification {
-        val content = notificationContent(connected, serverTitle)
+    // "Reconnect" starts the saved launch again. The service may be only started, not
+    // foreground, so from Android 8 it must be a foreground-service PendingIntent.
+    private fun reconnectPendingIntent(): PendingIntent {
+        val intent = Intent(this, V2RayVpnService::class.java).setAction(ACTION_START_LAST)
+        val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            PendingIntent.getForegroundService(this, 3, intent, flags)
+        } else {
+            PendingIntent.getService(this, 3, intent, flags)
+        }
+    }
+
+    private fun buildNotification(phase: NotificationPhase): Notification {
+        val content = notificationContent(phase, serverTitle)
         val stopIntent = Intent(this, V2RayVpnService::class.java).setAction(ACTION_STOP_VPN)
         val stopPendingIntent =
                 PendingIntent.getService(
@@ -435,16 +577,17 @@ class V2RayVpnService : VpnService() {
                         stopIntent,
                         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                 )
-        return NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-                .setContentTitle(content.title)
-                .setContentText(content.text)
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentIntent(openAppPendingIntent())
-                .setOngoing(true)
-                .setOnlyAlertOnce(true)
-                .setPriority(NotificationCompat.PRIORITY_LOW)
-                .addAction(0, "Disconnect", stopPendingIntent)
-                .build()
+        val builder =
+                NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+                        .setContentTitle(content.title)
+                        .setContentText(content.text)
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setContentIntent(openAppPendingIntent())
+                        .setOngoing(true)
+                        .setOnlyAlertOnce(true)
+                        .setPriority(NotificationCompat.PRIORITY_LOW)
+        if (content.canReconnect) builder.addAction(0, "Reconnect", reconnectPendingIntent())
+        return builder.addAction(0, "Disconnect", stopPendingIntent).build()
     }
 
     private fun ensureNotificationChannel() {

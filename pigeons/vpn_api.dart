@@ -1,6 +1,15 @@
 import 'package:pigeon/pigeon.dart';
 
-enum VpnStatus { disconnected, connecting, connected, disconnecting, error }
+/// [blocked] is last on purpose: the numbers of the older values must not move.
+/// The kill switch holds the traffic (Android only; iOS never reports it).
+enum VpnStatus {
+  disconnected,
+  connecting,
+  connected,
+  disconnecting,
+  error,
+  blocked,
+}
 
 enum VpnSplitMode { proxy, bypass }
 
@@ -24,6 +33,12 @@ class VpnConfigMessage {
   /// address or route, so Android blocks IPv6 and apps use IPv4. Android only;
   /// iOS ignores it.
   bool? ipv6;
+
+  /// True when a failed start (or a restart after the process died) must not
+  /// leave the phone with no VPN and open traffic: the service then holds a
+  /// blocking interface until the user reconnects or disconnects. False/null:
+  /// a failure closes the VPN, as before. Android only; iOS ignores it.
+  bool? killSwitch;
 }
 
 class VpnStatusMessage {

@@ -11,6 +11,7 @@ ConnectionPhase connectionPhaseOf(VpnState state) => state.when(
   connected: (_, _, _, _) => ConnectionPhase.on,
   disconnecting: () => ConnectionPhase.busy,
   error: (_) => ConnectionPhase.error,
+  blocked: (_) => ConnectionPhase.error,
 );
 
 /// What both home layouts say about the connection. The classic card and
@@ -76,6 +77,13 @@ class ConnectionStatusView {
         subtitle: message,
         server: server,
         compactLabel: 'failed',
+      ),
+      blocked: (_) => ConnectionStatusView(
+        phase: ConnectionPhase.error,
+        title: 'Traffic blocked',
+        subtitle: 'Kill switch · tap the ring to turn off',
+        server: server,
+        compactLabel: 'blocked',
       ),
     );
   }

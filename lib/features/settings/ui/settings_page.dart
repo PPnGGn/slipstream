@@ -177,7 +177,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 iconPath: AppAssets.shield,
                                 hue: TileHue.security,
                                 title: 'Security & tunnel',
-                                subtitle: 'IPv6',
+                                subtitle: 'Kill switch, IPv6',
                                 showChevron: true,
                                 onTap: () => context.push('/settings/security'),
                               ),

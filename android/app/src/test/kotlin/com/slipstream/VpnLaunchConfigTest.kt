@@ -18,6 +18,7 @@ class VpnLaunchConfigTest {
                     splitPackages = listOf("org.telegram.messenger", "com.android.chrome"),
                     serverTitle = "🇩🇪 Germany",
                     ipv6 = true,
+                    killSwitch = true,
             )
 
     @Test
@@ -82,6 +83,27 @@ class VpnLaunchConfigTest {
         assertTrue(launch.splitPackages.isEmpty())
         assertNull(launch.serverTitle)
         assertFalse(launch.ipv6)
+        assertFalse(launch.killSwitch)
+    }
+
+    @Test
+    fun aFileFromBeforeTheKillSwitchMeansNoKillSwitch() {
+        // vpn_launch.json written by 2.1.2 or earlier has no "killSwitch" key: the
+        // tile keeps closing the VPN on a failure, as it did.
+        val launch =
+                VpnLaunchConfig.fromJson(
+                        """{"configJson":"{}","geoDir":"/geo","ipv6":true,"splitPackages":[]}""",
+                )!!
+
+        assertFalse(launch.killSwitch)
+    }
+
+    @Test
+    fun theKillSwitchIsKeptEitherWay() {
+        val off = full.copy(killSwitch = false)
+
+        assertTrue(VpnLaunchConfig.fromJson(full.toJson())!!.killSwitch)
+        assertFalse(VpnLaunchConfig.fromJson(off.toJson())!!.killSwitch)
     }
 
     @Test

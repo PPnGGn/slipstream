@@ -12,4 +12,8 @@ abstract class VpnState with _$VpnState {
   }) = _Connected;
   const factory VpnState.disconnecting() = _Disconnecting;
   const factory VpnState.error(String message) = _Error;
+
+  /// The kill switch holds the traffic after the tunnel failed: no VPN and no
+  /// internet until the user reconnects or turns the VPN off.
+  const factory VpnState.blocked(String message) = _Blocked;
 }

@@ -97,4 +97,49 @@ class VpnLaunchStoreTest {
 
         assertEquals(launch(), store.load())
     }
+
+    @Test
+    fun aFreshStoreHasNoInterruptedStart() {
+        assertFalse(VpnLaunchStore(folder.root).startInterrupted())
+    }
+
+    @Test
+    fun aStartThatNeverFinishedIsInterrupted() {
+        VpnLaunchStore(folder.root).markStarting()
+
+        // Seen by a second store: after a crash the process is a new one.
+        assertTrue(VpnLaunchStore(folder.root).startInterrupted())
+    }
+
+    @Test
+    fun aFinishedStartIsNotInterrupted() {
+        val store = VpnLaunchStore(folder.root)
+        store.markStarting()
+
+        store.markStarted()
+
+        assertFalse(store.startInterrupted())
+    }
+
+    @Test
+    fun finishingWithoutStartingIsHarmless() {
+        val store = VpnLaunchStore(folder.root)
+
+        store.markStarted()
+
+        assertFalse(store.startInterrupted())
+    }
+
+    @Test
+    fun theMarkIsNotTheLaunch() {
+        val store = VpnLaunchStore(folder.root)
+        store.save(launch())
+
+        store.markStarting()
+
+        assertEquals(launch(), store.load())
+        store.clear()
+        // clear() is about the saved launch only; a mark left by a crash stays a fact.
+        assertTrue(store.startInterrupted())
+    }
 }

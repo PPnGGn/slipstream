@@ -49,6 +49,11 @@ void main() {
       ConnectionPhase.on,
     );
     expect(connectionPhaseOf(const VpnState.error('x')), ConnectionPhase.error);
+    expect(
+      connectionPhaseOf(const VpnState.blocked('x')),
+      ConnectionPhase.error,
+      reason: 'blocked is a failure with the traffic held: the danger accent',
+    );
   });
 
   group('disconnected', () {
@@ -113,5 +118,17 @@ void main() {
     expect(v.subtitle, 'Handshake timed out');
     expect(v.server, amsterdam);
     expect(v.compactLabel, 'failed');
+  });
+
+  test('blocked says the traffic is held and how to get out', () {
+    final v = view(
+      const VpnState.blocked('Connection lost'),
+      selected: amsterdam,
+    );
+    expect(v.phase, ConnectionPhase.error);
+    expect(v.title, 'Traffic blocked');
+    expect(v.subtitle, 'Kill switch · tap the ring to turn off');
+    expect(v.server, amsterdam);
+    expect(v.compactLabel, 'blocked');
   });
 }

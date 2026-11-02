@@ -14,6 +14,7 @@ class VpnLaunchStore(private val dir: File) {
 
     private val file = File(dir, "vpn_launch.json")
     private val tmp = File(dir, "vpn_launch.json.tmp")
+    private val startingMark = File(dir, "vpn_starting")
 
     // Written aside and renamed: a kill in the middle of the write leaves the
     // previous launch whole, never half of the new one.
@@ -39,6 +40,24 @@ class VpnLaunchStore(private val dir: File) {
 
     // Cheap enough for the tile to ask on every tap.
     fun exists(): Boolean = load() != null
+
+    // "A start is under way": written before the tunnel is built, erased once it is
+    // up (or failed in a way we handled). If it is still there at the next start the
+    // process died on the way, and starting again by ourselves could be a crash loop
+    // (see startDecision). An empty file; it lives apart from the launch.
+    @Synchronized
+    fun markStarting() {
+        dir.mkdirs()
+        startingMark.writeText("")
+    }
+
+    @Synchronized
+    fun markStarted() {
+        startingMark.delete()
+    }
+
+    @Synchronized
+    fun startInterrupted(): Boolean = startingMark.exists()
 
     @Synchronized
     fun clear() {
