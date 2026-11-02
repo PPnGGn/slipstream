@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:slipstream/features/split_tunnel/data/installed_apps_api.g.dart';
@@ -21,12 +22,17 @@ class FakeInstalledAppsApi extends InstalledAppsApi {
   Object? listError;
   Object? iconError;
 
+  /// When set, installedApps waits for it before answering: a test closes the
+  /// cubit meanwhile, like a page that is left while the list still loads.
+  Completer<void>? listGate;
+
   int listCalls = 0;
   int iconCalls = 0;
 
   @override
   Future<List<InstalledAppMessage>> installedApps() async {
     listCalls++;
+    await listGate?.future;
     final failure = listError;
     if (failure != null) throw failure;
     return apps;

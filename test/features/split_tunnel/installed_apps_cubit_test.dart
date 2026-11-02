@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -44,6 +45,51 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     await sub.cancel();
     expect(seen, [InstalledAppsLoading, InstalledAppsLoaded]);
+  });
+
+  group('a page left while the list still loads', () {
+    // The page closes its cubit in dispose. The load that is still waiting for
+    // the native side must end quietly: an emit on a closed cubit throws.
+    test('the list arriving after the close is dropped', () async {
+      final api = FakeInstalledAppsApi(apps: [app('p.a')])
+        ..listGate = Completer<void>();
+      final cubit = cubitOver(api);
+      final loading = cubit.load();
+      await Future<void>.delayed(Duration.zero);
+
+      await cubit.close();
+      api.listGate!.complete();
+
+      await expectLater(loading, completes);
+    });
+
+    test('a failure arriving after the close is dropped too', () async {
+      final api = FakeInstalledAppsApi()
+        ..listError = StateError('boom')
+        ..listGate = Completer<void>();
+      final cubit = cubitOver(api);
+      final loading = cubit.load();
+      await Future<void>.delayed(Duration.zero);
+
+      await cubit.close();
+      api.listGate!.complete();
+
+      await expectLater(loading, completes);
+    });
+
+    test('an open cubit still gets the list that was held', () async {
+      // The guard must not swallow the normal case.
+      final api = FakeInstalledAppsApi(apps: [app('p.a')])
+        ..listGate = Completer<void>();
+      final cubit = cubitOver(api);
+      final loading = cubit.load();
+      await Future<void>.delayed(Duration.zero);
+
+      api.listGate!.complete();
+      await loading;
+
+      expect(cubit.state, isA<InstalledAppsLoaded>());
+    });
   });
 
   test('setQuery keeps the apps and changes the query', () async {

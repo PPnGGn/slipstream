@@ -18,8 +18,14 @@ class InstalledAppsCubit extends Cubit<InstalledAppsState> {
   Future<void> load() async {
     emit(const InstalledAppsLoading());
     try {
-      emit(InstalledAppsLoaded(await _repository.load()));
+      final apps = await _repository.load();
+      // The page closes this cubit when it is left, and the list takes a while
+      // (hundreds of apps): an answer that arrives after that has nobody to
+      // tell, and an emit on a closed cubit throws.
+      if (isClosed) return;
+      emit(InstalledAppsLoaded(apps));
     } catch (e) {
+      if (isClosed) return;
       emit(InstalledAppsFailed(e.toString()));
     }
   }
