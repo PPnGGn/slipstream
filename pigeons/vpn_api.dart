@@ -113,6 +113,12 @@ abstract class VpnConnection {
   /// of the DoT server's own name — which a provider's `dns.hosts` may
   /// deliberately blackhole. Asked before the config is built. iOS: false.
   bool privateDnsStrict();
+
+  /// Whether the system has already given this app the VPN permission, so a
+  /// start needs no dialog (Android: VpnService.prepare returns null). Asked
+  /// before an unattended start (auto-connect): the dialog at launch would be
+  /// a surprise, and with another VPN app active the answer is false. iOS: false.
+  bool vpnPermissionGranted();
 }
 
 /// native -> Flutter

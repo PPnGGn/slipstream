@@ -36,4 +36,7 @@ class HeadlessVpnConnection(private val context: Context) : VpnConnection {
     override fun localProxy(): LocalProxyMessage? = VpnQueries.localProxy()
 
     override fun privateDnsStrict(): Boolean = VpnQueries.privateDnsStrict(context)
+
+    // The background job never starts a tunnel.
+    override fun vpnPermissionGranted(): Boolean = false
 }

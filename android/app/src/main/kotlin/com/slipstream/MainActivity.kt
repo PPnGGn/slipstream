@@ -100,6 +100,10 @@ class MainActivity : FlutterActivity(), VpnConnection, UpdateInstaller {
 
     override fun privateDnsStrict(): Boolean = VpnQueries.privateDnsStrict(this)
 
+    // prepare() returns null when the permission is already granted (and nothing
+    // else holds the VPN); asking it shows no dialog, only starting does.
+    override fun vpnPermissionGranted(): Boolean = VpnService.prepare(this) == null
+
     override fun start(config: VpnConfigMessage, callback: (Result<VpnResult>) -> Unit) {
         Log.d("VPN_BRIDGE", "Requesting VPN start with dynamic config...")
 

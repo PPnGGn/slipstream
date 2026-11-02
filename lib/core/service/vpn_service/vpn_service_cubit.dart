@@ -43,6 +43,14 @@ class VpnServiceCubit extends Cubit<VpnState> {
   Timer? _connectTimer;
   VpnServer? _pendingServer;
 
+  final _firstSync = Completer<void>();
+
+  /// Done once the first read of the native status has been applied. Until then
+  /// the state is only the initial guess (disconnected): something that acts on
+  /// it at launch (auto-connect) must wait, or it would start a second tunnel
+  /// next to one the tile already started. Completes on failure too.
+  Future<void> get firstSync => _firstSync.future;
+
   Future<void> toggle(VpnServer? server) async {
     switch (state) {
       // Blocked: the ring lets the user out of the kill switch.
@@ -145,6 +153,8 @@ class VpnServiceCubit extends Cubit<VpnState> {
       _onNativeStatus(status);
     } catch (e, st) {
       _talker.handle(e, st, 'Cubit: getStatus failed');
+    } finally {
+      if (!_firstSync.isCompleted) _firstSync.complete();
     }
   }
 

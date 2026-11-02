@@ -26,6 +26,9 @@ import 'package:slipstream/features/settings/ui/widgets/settings_card.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_row.dart';
 import 'package:slipstream/features/split_tunnel/cubit/split_tunnel_cubit.dart';
 import 'package:slipstream/features/split_tunnel/data/split_tunnel_settings.dart';
+import 'package:slipstream/features/auto_connect/cubit/auto_connect_cubit.dart';
+import 'package:slipstream/features/auto_connect/data/auto_connect_support.dart';
+import 'package:slipstream/features/auto_connect/ui/auto_connect_labels.dart';
 import 'package:slipstream/features/security/data/security_support.dart';
 import 'package:slipstream/features/split_tunnel/data/split_tunnel_support.dart';
 import 'package:slipstream/features/split_tunnel/ui/split_tunnel_labels.dart';
@@ -119,14 +122,21 @@ class _SettingsPageState extends State<SettingsPage> {
                         const SectionHeader('Connection'),
                         SettingsGroup(
                           children: [
-                            const SettingsRow(
-                              iconPath: AppAssets.bolt,
-                              hue: TileHue.auto,
-                              title: 'Auto-connect on launch',
-                              subtitle: 'Restore last session at startup',
-                              switchValue: false,
-                              enabled: false,
-                            ),
+                            if (isAutoConnectSupported(defaultTargetPlatform))
+                              BlocBuilder<AutoConnectCubit, bool>(
+                                bloc: getIt<AutoConnectCubit>(),
+                                builder: (context, enabled) => SettingsRow(
+                                  iconPath: AppAssets.bolt,
+                                  hue: TileHue.auto,
+                                  title: 'Auto-connect on launch',
+                                  subtitle: autoConnectSubtitle(
+                                    enabled: enabled,
+                                  ),
+                                  switchValue: enabled,
+                                  onSwitch: (value) => getIt<AutoConnectCubit>()
+                                      .setEnabled(enabled: value),
+                                ),
+                              ),
                             const _RoutingRow(),
                             BlocBuilder<PingCubit, PingViewState>(
                               bloc: getIt<PingCubit>(),

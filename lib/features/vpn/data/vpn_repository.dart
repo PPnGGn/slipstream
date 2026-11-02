@@ -115,6 +115,17 @@ class VpnRepository {
     }
   }
 
+  /// Whether a start needs no permission dialog. A channel failure counts as
+  /// "no": the caller (auto-connect) then does nothing rather than risk a dialog.
+  Future<bool> vpnPermissionGranted() async {
+    try {
+      return await _vpnConnection.vpnPermissionGranted();
+    } catch (e) {
+      _talker.warning('VPN: permission state unknown, assuming not granted: $e');
+      return false;
+    }
+  }
+
   Future<Result<void>> stop() async {
     try {
       _talker.debug('Stopping VPN...');

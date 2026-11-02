@@ -23,9 +23,12 @@ class _FakeRepository extends Fake implements VpnRepository {
   @override
   Stream<VpnTrafficMessage> get traffic => const Stream.empty();
 
-  @override
-  Future<VpnStatusMessage> getStatus() async =>
+  /// What getStatus answers; a test swaps it to hold or break the first read.
+  Future<VpnStatusMessage> Function() onGetStatus = () async =>
       VpnStatusMessage(status: VpnStatus.disconnected);
+
+  @override
+  Future<VpnStatusMessage> getStatus() => onGetStatus();
 
   @override
   Future<Result<void>> start(VpnServer server) async {
@@ -72,6 +75,55 @@ void main() {
     );
     await Future<void>.delayed(Duration.zero);
   }
+
+  group('firstSync', () {
+    // A cubit whose first status read the test controls.
+    Future<VpnServiceCubit> built(_FakeRepository repo) async {
+      final c = VpnServiceCubit(
+        repository: repo,
+        sessionStore: VpnSessionStore(await SharedPreferences.getInstance()),
+        talker: Talker(),
+      );
+      addTearDown(c.close);
+      return c;
+    }
+
+    test('is not done until the first native status is read', () async {
+      final gate = Completer<VpnStatusMessage>();
+      final repo = _FakeRepository()..onGetStatus = () => gate.future;
+      final c = await built(repo);
+
+      var done = false;
+      unawaited(c.firstSync.then((_) => done = true));
+      await Future<void>.delayed(Duration.zero);
+      expect(done, isFalse, reason: 'the state is still the initial guess');
+
+      gate.complete(VpnStatusMessage(status: VpnStatus.blocked, error: 'x'));
+      await c.firstSync;
+
+      expect(c.state, const VpnState.blocked('x'));
+    });
+
+    test('is done even when the status cannot be read', () async {
+      final repo = _FakeRepository()
+        ..onGetStatus = () async => throw StateError('no bridge');
+      final c = await built(repo);
+
+      await c.firstSync.timeout(const Duration(seconds: 2));
+
+      expect(c.state, const VpnState.disconnected());
+    });
+
+    test('later reads do not make it a different future', () async {
+      final c = await built(_FakeRepository());
+      await c.firstSync;
+
+      // Coming back to the app reads the status again.
+      await c.firstSync;
+
+      expect(c.state, const VpnState.disconnected());
+    });
+  });
 
   group('blocked', () {
     test('the native blocked status becomes the blocked state', () async {

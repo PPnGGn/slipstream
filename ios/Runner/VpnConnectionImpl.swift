@@ -178,6 +178,12 @@ final class VpnConnectionImpl: NSObject, VpnConnection {
         false
     }
 
+    func vpnPermissionGranted() throws -> Bool {
+        // Auto-connect is Android only: starting the tunnel here saves the VPN
+        // configuration and the system asks again every time.
+        false
+    }
+
     func getStatus(completion: @escaping (Result<VpnStatusMessage, Error>) -> Void) {
         guard manager != nil else {
             loadExistingManager { [weak self] in

@@ -24,6 +24,10 @@ import '../../core/theme/cubit/theme_cubit.dart' as _i12;
 import '../../core/theme/data/theme_store.dart' as _i802;
 import '../../features/appearance/cubit/home_layout_cubit.dart' as _i304;
 import '../../features/appearance/data/home_layout_store.dart' as _i979;
+import '../../features/auto_connect/cubit/auto_connect_cubit.dart' as _i314;
+import '../../features/auto_connect/data/auto_connect_store.dart' as _i699;
+import '../../features/auto_connect/presentation/auto_connect_runner.dart'
+    as _i22;
 import '../../features/client_identity/data/client_identity_repository.dart'
     as _i568;
 import '../../features/client_identity/data/client_identity_store.dart'
@@ -190,6 +194,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i979.HomeLayoutStore>(
       () => _i979.HomeLayoutStore(gh<_i460.SharedPreferences>()),
     );
+    gh.lazySingleton<_i699.AutoConnectStore>(
+      () => _i699.AutoConnectStore(gh<_i460.SharedPreferences>()),
+    );
     gh.lazySingleton<_i407.ClientIdentityStore>(
       () => _i407.ClientIdentityStore(gh<_i460.SharedPreferences>()),
     );
@@ -277,6 +284,9 @@ extension GetItInjectableX on _i174.GetIt {
         repository: gh<_i11.UpdateRepository>(),
         talker: gh<_i207.Talker>(),
       ),
+    );
+    gh.lazySingleton<_i314.AutoConnectCubit>(
+      () => _i314.AutoConnectCubit(store: gh<_i699.AutoConnectStore>()),
     );
     gh.lazySingleton<_i277.SplitTunnelCubit>(
       () => _i277.SplitTunnelCubit(store: gh<_i43.SplitTunnelStore>()),
@@ -405,6 +415,15 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i207.Talker>(),
       ),
       dispose: (i) => i.dispose(),
+    );
+    gh.lazySingleton<_i22.AutoConnectRunner>(
+      () => _i22.AutoConnectRunner(
+        gh<_i314.AutoConnectCubit>(),
+        gh<_i83.SubscriptionsCubit>(),
+        gh<_i202.VpnServiceCubit>(),
+        gh<_i1056.VpnRepository>(),
+        gh<_i207.Talker>(),
+      ),
     );
     gh.lazySingleton<_i3.SubscriptionAutoUpdateCubit>(
       () => _i3.SubscriptionAutoUpdateCubit(

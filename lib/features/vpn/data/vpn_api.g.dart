@@ -711,6 +711,29 @@ class VpnConnection {
     ;
     return pigeonVar_replyValue! as bool;
   }
+
+  /// Whether the system has already given this app the VPN permission, so a
+  /// start needs no dialog (Android: VpnService.prepare returns null). Asked
+  /// before an unattended start (auto-connect): the dialog at launch would be
+  /// a surprise, and with another VPN app active the answer is false. iOS: false.
+  Future<bool> vpnPermissionGranted() async {
+    final pigeonVar_channelName = 'dev.flutter.pigeon.slipstream.VpnConnection.vpnPermissionGranted$pigeonVar_messageChannelSuffix';
+    final pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(null);
+    final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
+
+    final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
+        pigeonVar_replyList,
+        pigeonVar_channelName,
+        isNullValid: false,
+    )
+    ;
+    return pigeonVar_replyValue! as bool;
+  }
 }
 
 /// native -> Flutter
