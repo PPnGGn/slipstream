@@ -10,10 +10,13 @@ void main() {
     return LanBypassStore(await SharedPreferences.getInstance());
   }
 
-  test('on by default: LAN was always sent direct before the switch existed', () async {
-    final store = await storeWith({});
-    expect(store.load(), isTrue);
-  });
+  test(
+    'on by default: LAN was always sent direct before the switch existed',
+    () async {
+      final store = await storeWith({});
+      expect(store.load(), isTrue);
+    },
+  );
 
   test('save round-trips', () async {
     final store = await storeWith({});

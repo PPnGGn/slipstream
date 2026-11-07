@@ -12,10 +12,16 @@ import 'package:slipstream/features/geo/cubit/geo_cubit.dart';
 import 'package:slipstream/features/geo/data/geo_update_service.dart';
 import 'package:slipstream/features/geo/presentation/geo_update_toast.dart';
 import 'package:slipstream/features/routing/cubit/ad_block_cubit.dart';
+import 'package:slipstream/features/routing/cubit/custom_rules_cubit.dart';
 import 'package:slipstream/features/routing/cubit/lan_bypass_cubit.dart';
 import 'package:slipstream/features/routing/cubit/ru_bypass_cubit.dart';
 import 'package:slipstream/features/routing/data/ad_block_mode.dart';
+import 'package:slipstream/features/routing/data/custom_rule.dart';
+import 'package:slipstream/features/routing/data/routing_applies.dart';
 import 'package:slipstream/features/routing/data/ru_bypass_mode.dart';
+import 'package:slipstream/features/routing/ui/custom_rule_labels.dart';
+import 'package:slipstream/features/routing/ui/custom_rule_sheet.dart';
+import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
 import 'package:slipstream/features/settings/ui/widgets/help_sheet.dart';
 import 'package:slipstream/features/settings/ui/widgets/reconnect_hint.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_card.dart';
@@ -29,6 +35,7 @@ class RoutingSettingsPage extends StatelessWidget {
     final ruBypassCubit = getIt<RuBypassCubit>();
     final adBlockCubit = getIt<AdBlockCubit>();
     final lanBypassCubit = getIt<LanBypassCubit>();
+    final customRulesCubit = getIt<CustomRulesCubit>();
     final geoCubit = getIt<GeoCubit>();
     final geoService = getIt<GeoUpdateService>();
     final vpn = getIt<VpnServiceCubit>();
@@ -51,6 +58,16 @@ class RoutingSettingsPage extends StatelessWidget {
               child: ListView(
                 padding: const .fromLTRB(20, 6, 20, 28),
                 children: [
+                  BlocBuilder<SubscriptionsCubit, SubscriptionsState>(
+                    bloc: getIt<SubscriptionsCubit>(),
+                    buildWhen: (a, b) =>
+                        routingAppliesTo(a.selectedServer) !=
+                        routingAppliesTo(b.selectedServer),
+                    builder: (context, state) =>
+                        routingAppliesTo(state.selectedServer)
+                        ? const SizedBox.shrink()
+                        : const _OwnRoutingNotice(),
+                  ),
                   const SectionHeader('Rule profiles', top: 4),
                   SettingsGroup(
                     children: [
@@ -119,16 +136,38 @@ class RoutingSettingsPage extends StatelessWidget {
                     ],
                   ),
                   const SectionHeader('Custom rules', top: 18),
-                  const SettingsGroup(
-                    children: [
-                      SettingsRow(
-                        iconPath: AppAssets.plus,
-                        hue: TileHue.slate,
-                        title: 'Add rule',
-                        subtitle: 'Domain or IP → proxy, direct or block',
-                        enabled: false,
-                      ),
-                    ],
+                  BlocBuilder<CustomRulesCubit, List<CustomRule>>(
+                    bloc: customRulesCubit,
+                    builder: (context, rules) => SettingsGroup(
+                      children: [
+                        for (final rule in rules)
+                          SettingsRow(
+                            iconPath: _ruleIcon(rule.action),
+                            hue: _ruleHue(rule.action),
+                            title: rule.value,
+                            subtitle: ruleKindLabel(rule),
+                            trailing: Text(
+                              ruleActionTitle(rule.action).toUpperCase(),
+                              style: TextStyle(
+                                fontFamily: 'monospace',
+                                fontSize: 10,
+                                fontWeight: .w700,
+                                letterSpacing: 1,
+                                color: colors.textMuted,
+                              ),
+                            ),
+                            onTap: () =>
+                                showCustomRuleSheet(context, rule: rule),
+                          ),
+                        SettingsRow(
+                          iconPath: AppAssets.plus,
+                          hue: TileHue.slate,
+                          title: 'Add rule',
+                          subtitle: 'Domain or IP → proxy, direct or block',
+                          onTap: () => showCustomRuleSheet(context),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -241,6 +280,16 @@ class RoutingSettingsPage extends StatelessWidget {
               'only .ru and .рф.',
         ),
         const HelpEntry(
+          title: 'Custom rules',
+          body:
+              'Your own rules for a domain (with its subdomains) or an IP '
+              'address or range. Proxy sends it through the VPN, Direct '
+              'sends it bypassing the VPN, Block drops it.\n'
+              'The most specific rule wins: mail.google.com beats '
+              'google.com. Your rules come before RU bypass, ad blocking '
+              'and LAN bypass.',
+        ),
+        const HelpEntry(
           title: 'When applied',
           body:
               'Changes take effect on reconnect.\n'
@@ -251,6 +300,18 @@ class RoutingSettingsPage extends StatelessWidget {
     );
   }
 
+  static String _ruleIcon(RuleAction action) => switch (action) {
+    RuleAction.proxy => AppAssets.shield,
+    RuleAction.direct => AppAssets.arrowRight,
+    RuleAction.block => AppAssets.block,
+  };
+
+  static TileHue _ruleHue(RuleAction action) => switch (action) {
+    RuleAction.proxy => TileHue.blue,
+    RuleAction.direct => TileHue.teal,
+    RuleAction.block => TileHue.red,
+  };
+
   static Future<void> _update(GeoUpdateService service) async {
     final outcome = await service.updateNow();
     showToastSpec(geoUpdateToast(outcome));
@@ -258,6 +319,48 @@ class RoutingSettingsPage extends StatelessWidget {
 
   static String _date(DateTime d) =>
       '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';
+}
+
+/// Shown while the selected server has a routing of its own: the switches
+/// and rules below do not act on it.
+class _OwnRoutingNotice extends StatelessWidget {
+  const _OwnRoutingNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    return Container(
+      margin: const .only(bottom: 14),
+      padding: const .all(12),
+      decoration: BoxDecoration(
+        color: colors.chip,
+        borderRadius: .circular(14),
+        border: .all(color: colors.border),
+      ),
+      child: Row(
+        crossAxisAlignment: .start,
+        spacing: 10,
+        children: [
+          SvgPicture.asset(
+            AppAssets.info,
+            width: 15,
+            height: 15,
+            colorFilter: .mode(colors.textMuted, .srcIn),
+          ),
+          Expanded(
+            child: Text(
+              routingOwnConfigNotice,
+              style: TextStyle(
+                fontSize: 11.5,
+                height: 1.45,
+                color: colors.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _Action {

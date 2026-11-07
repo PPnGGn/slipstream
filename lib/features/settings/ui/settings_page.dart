@@ -22,9 +22,12 @@ import 'package:slipstream/features/geo/cubit/geo_cubit.dart';
 import 'package:slipstream/features/ping/data/ping_settings_store.dart';
 import 'package:slipstream/features/ping/presentation/ping_cubit.dart';
 import 'package:slipstream/features/routing/cubit/ad_block_cubit.dart';
+import 'package:slipstream/features/routing/cubit/custom_rules_cubit.dart';
 import 'package:slipstream/features/routing/cubit/ru_bypass_cubit.dart';
 import 'package:slipstream/features/routing/data/ad_block_mode.dart';
+import 'package:slipstream/features/routing/data/custom_rule.dart';
 import 'package:slipstream/features/routing/data/ru_bypass_mode.dart';
+import 'package:slipstream/features/routing/ui/custom_rule_labels.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_card.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_row.dart';
 import 'package:slipstream/features/split_tunnel/cubit/split_tunnel_cubit.dart';
@@ -173,7 +176,10 @@ class _SettingsPageState extends State<SettingsPage> {
                               ),
                             ),
                             if (isSplitTunnelSupported(defaultTargetPlatform))
-                              BlocBuilder<SplitTunnelCubit, SplitTunnelSettings>(
+                              BlocBuilder<
+                                SplitTunnelCubit,
+                                SplitTunnelSettings
+                              >(
                                 bloc: getIt<SplitTunnelCubit>(),
                                 builder: (context, split) => SettingsRow(
                                   iconPath: AppAssets.split,
@@ -326,17 +332,26 @@ class _RoutingRow extends StatelessWidget {
       bloc: getIt<RuBypassCubit>(),
       builder: (context, ruBypass) => BlocBuilder<AdBlockCubit, AdBlockMode>(
         bloc: getIt<AdBlockCubit>(),
-        builder: (context, adBlock) => BlocBuilder<GeoCubit, GeoState>(
-          bloc: getIt<GeoCubit>(),
-          builder: (context, geo) => SettingsRow(
-            iconPath: AppAssets.routing,
-            hue: TileHue.routing,
-            title: 'Routing',
-            subtitle: _routingSubtitle(ruBypass, adBlock, geo),
-            showChevron: true,
-            onTap: () => context.push('/settings/routing'),
-          ),
-        ),
+        builder: (context, adBlock) =>
+            BlocBuilder<CustomRulesCubit, List<CustomRule>>(
+              bloc: getIt<CustomRulesCubit>(),
+              builder: (context, rules) => BlocBuilder<GeoCubit, GeoState>(
+                bloc: getIt<GeoCubit>(),
+                builder: (context, geo) => SettingsRow(
+                  iconPath: AppAssets.routing,
+                  hue: TileHue.routing,
+                  title: 'Routing',
+                  subtitle: _routingSubtitle(
+                    ruBypass,
+                    adBlock,
+                    rules.length,
+                    geo,
+                  ),
+                  showChevron: true,
+                  onTap: () => context.push('/settings/routing'),
+                ),
+              ),
+            ),
       ),
     );
   }
@@ -344,6 +359,7 @@ class _RoutingRow extends StatelessWidget {
   static String _routingSubtitle(
     RuBypassMode ruBypass,
     AdBlockMode adBlock,
+    int customRules,
     GeoState geo,
   ) {
     final parts = [
@@ -353,6 +369,7 @@ class _RoutingRow extends StatelessWidget {
         AdBlockMode.basic => 'реклама: базовая',
         AdBlockMode.full => 'реклама: полная',
       },
+      ?customRulesSummary(customRules),
       _geoSubtitle(geo),
     ];
     return parts.join(' · ');
