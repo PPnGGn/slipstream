@@ -106,6 +106,24 @@ class MainActivity : FlutterActivity(), VpnConnection, UpdateInstaller {
             !shouldAskPermission(VpnEventBridge.currentStatus().status) ||
                     VpnService.prepare(this) == null
 
+    // The tile starts the saved launch with no app around; this keeps it current while no
+    // session runs (see shouldSaveLaunch). The launch holds the server's credentials: log
+    // that it was saved, never what it says. A failed save only costs the tile an
+    // up-to-date launch, so it is not an error for Flutter.
+    override fun saveLaunch(config: VpnConfigMessage) {
+        val status = VpnEventBridge.currentStatus().status
+        if (!shouldSaveLaunch(status)) {
+            Log.d("VPN_BRIDGE", "Saved launch kept: a session is $status")
+            return
+        }
+        try {
+            VpnLaunchStore.of(this).save(config.toLaunch(geoDir()))
+            Log.d("VPN_BRIDGE", "Saved launch updated for the tile")
+        } catch (e: Exception) {
+            Log.w("VPN_BRIDGE", "Could not save the launch: ${e.javaClass.simpleName}")
+        }
+    }
+
     override fun start(config: VpnConfigMessage, callback: (Result<VpnResult>) -> Unit) {
         Log.d("VPN_BRIDGE", "Requesting VPN start with dynamic config...")
 

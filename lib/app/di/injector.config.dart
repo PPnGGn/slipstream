@@ -43,6 +43,8 @@ import '../../features/geo/data/geo_config_gate.dart' as _i951;
 import '../../features/geo/data/geo_paths.dart' as _i262;
 import '../../features/geo/data/geo_repository.dart' as _i236;
 import '../../features/geo/data/geo_update_service.dart' as _i196;
+import '../../features/launch_sync/presentation/launch_sync_runner.dart'
+    as _i348;
 import '../../features/ping/data/host_resolver.dart' as _i371;
 import '../../features/ping/data/ping_settings_store.dart' as _i384;
 import '../../features/ping/data/ping_target_resolver.dart' as _i142;
@@ -424,6 +426,23 @@ extension GetItInjectableX on _i174.GetIt {
         refresher: gh<_i944.SubscriptionRefresher>(),
         vpnServiceCubit: gh<_i202.VpnServiceCubit>(),
         talker: gh<_i207.Talker>(),
+      ),
+    );
+    gh.lazySingleton<_i348.LaunchSyncRunner>(
+      () => _i348.LaunchSyncRunner(
+        gh<_i83.SubscriptionsCubit>(),
+        gh<_i202.VpnServiceCubit>(),
+        gh<_i1056.VpnRepository>(),
+        gh<_i1048.RuBypassCubit>(),
+        gh<_i863.AdBlockCubit>(),
+        gh<_i964.LanBypassCubit>(),
+        gh<_i1022.CustomRulesCubit>(),
+        gh<_i518.DnsCubit>(),
+        gh<_i500.Ipv6Cubit>(),
+        gh<_i925.KillSwitchCubit>(),
+        gh<_i277.SplitTunnelCubit>(),
+        gh<_i818.GeoCubit>(),
+        gh<_i207.Talker>(),
       ),
     );
     gh.lazySingleton<_i918.PingAutoRunner>(

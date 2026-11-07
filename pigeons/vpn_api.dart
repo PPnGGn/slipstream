@@ -119,6 +119,15 @@ abstract class VpnConnection {
   /// before an unattended start (auto-connect): the dialog at launch would be
   /// a surprise, and with another VPN app active the answer is false. iOS: false.
   bool vpnPermissionGranted();
+
+  /// Saves [config] as the launch the quick settings tile (and the system's
+  /// Always-on VPN) start next, without starting anything. A start from the app
+  /// saves its own launch; this keeps the saved one in step with what the user
+  /// changes while no session runs (a rule, a switch, the selected server), so
+  /// the tile does not start with the settings of the last connect. Ignored
+  /// while a session is up, on its way or held by the kill switch: the saved
+  /// launch is the one a restart of that session reads. iOS: does nothing.
+  void saveLaunch(VpnConfigMessage config);
 }
 
 /// native -> Flutter

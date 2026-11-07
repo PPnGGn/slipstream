@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:slipstream/app/app.dart';
 import 'package:slipstream/app/di/injector.dart';
 import 'package:slipstream/features/auto_connect/presentation/auto_connect_runner.dart';
+import 'package:slipstream/features/launch_sync/presentation/launch_sync_runner.dart';
 import 'package:slipstream/features/geo/data/geo_update_service.dart';
 import 'package:slipstream/features/ping/presentation/ping_auto_runner.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscription_auto_updater.dart';
@@ -20,6 +21,9 @@ Future<void> main() async {
   // Not awaited: it waits for the subscriptions and the VPN status, the first
   // frame must not.
   unawaited(getIt<AutoConnectRunner>().init());
+  // Keeps the tile's saved launch in step with the settings (Android). Same
+  // reason not to await: it waits for the subscriptions and the VPN status.
+  unawaited(getIt<LaunchSyncRunner>().init());
   runApp(const MainApp());
 }
 

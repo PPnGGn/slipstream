@@ -184,6 +184,11 @@ final class VpnConnectionImpl: NSObject, VpnConnection {
         false
     }
 
+    func saveLaunch(config: VpnConfigMessage) throws {
+        // Android only: the saved launch is the quick settings tile's, and iOS has no
+        // tile. The tunnel here is always started from the app.
+    }
+
     func getStatus(completion: @escaping (Result<VpnStatusMessage, Error>) -> Void) {
         guard manager != nil else {
             loadExistingManager { [weak self] in

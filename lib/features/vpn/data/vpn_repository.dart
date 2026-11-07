@@ -66,43 +66,57 @@ class VpnRepository {
 
   Future<VpnStatusMessage> getStatus() => _vpnConnection.getStatus();
 
+  /// The message a start with [server] sends to the native side: the server's
+  /// config run through the client's policy and the geo gate, with the tunnel
+  /// switches. One place for it, used by [start] and by [saveLaunch], so the
+  /// tile's saved launch is exactly what a start from the app would send.
+  Future<VpnConfigMessage> buildConfigMessage(VpnServer server) async {
+    final geoDir = await _geoPaths.dir();
+
+    // Inbounds are not touched here: the core drops them and listens on no
+    // port, apart from the HTTP proxy on a Unix socket (see LocalProxyProvider).
+    // 1. client's own split policy (RU-bypass, ad-block, LAN bypass, custom
+    //    rules) and DNS (the resolvers of the DNS page; with IPv6 on they
+    //    answer AAAA too), for scaffold configs that carry no routing of
+    //    their own.
+    final policy = _routingPolicyGate.apply(
+      server.configJson,
+      split: _ruBypassCubit.state,
+      adBlock: _adBlockCubit.state,
+      privateDnsStrict: await _privateDnsStrict(),
+      dns: _dnsCubit.state,
+      ipv6: _ipv6Cubit.state,
+      lanBypass: _lanBypassCubit.state,
+      customRules: _customRulesCubit.state,
+    );
+    // 2. strip geo tokens the installed .dat can't resolve.
+    final configJson = _geoGate.prepare(policy.configJson, _geoCubit.state);
+    final split = splitTunnelMessage(_splitTunnelCubit.state);
+    return VpnConfigMessage(
+      configJson: configJson,
+      serverId: server.id,
+      title: server.title,
+      geoAssetDir: geoDir,
+      hijackDns: policy.hijacksDns,
+      splitMode: split.mode,
+      splitPackages: split.packages,
+      ipv6: _ipv6Cubit.state,
+      killSwitch: _killSwitchCubit.state,
+    );
+  }
+
+  /// Saves what a start with the message would send as the launch the quick
+  /// settings tile starts next, without starting anything (Android; ignored
+  /// by the native side while a session runs). The caller decides when:
+  /// see LaunchSync.
+  Future<void> saveLaunch(VpnConfigMessage message) =>
+      _vpnConnection.saveLaunch(message);
+
   Future<Result<void>> start(VpnServer server) async {
     try {
       _talker.debug('Starting VPN with server: ${server.title}');
-      final geoDir = await _geoPaths.dir();
-
-      // Inbounds are not touched here: the core drops them and listens on no
-      // port, apart from the HTTP proxy on a Unix socket (see LocalProxyProvider).
-      // 1. client's own split policy (RU-bypass, ad-block, LAN bypass, custom
-      //    rules) and DNS (the
-      //    resolvers of the DNS page; with IPv6 on they answer AAAA too), for
-      //    scaffold configs that carry no routing of their own.
-      final policy = _routingPolicyGate.apply(
-        server.configJson,
-        split: _ruBypassCubit.state,
-        adBlock: _adBlockCubit.state,
-        privateDnsStrict: await _privateDnsStrict(),
-        dns: _dnsCubit.state,
-        ipv6: _ipv6Cubit.state,
-        lanBypass: _lanBypassCubit.state,
-        customRules: _customRulesCubit.state,
-      );
-      // 2. strip geo tokens the installed .dat can't resolve.
-      final configJson = _geoGate.prepare(policy.configJson, _geoCubit.state);
-      final split = splitTunnelMessage(_splitTunnelCubit.state);
-      final result = await _vpnConnection.start(
-        VpnConfigMessage(
-          configJson: configJson,
-          serverId: server.id,
-          title: server.title,
-          geoAssetDir: geoDir,
-          hijackDns: policy.hijacksDns,
-          splitMode: split.mode,
-          splitPackages: split.packages,
-          ipv6: _ipv6Cubit.state,
-          killSwitch: _killSwitchCubit.state,
-        ),
-      );
+      final message = await buildConfigMessage(server);
+      final result = await _vpnConnection.start(message);
 
       if (result.successful) {
         _talker.info('Xray core started successfully');

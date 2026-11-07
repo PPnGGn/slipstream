@@ -39,4 +39,8 @@ class HeadlessVpnConnection(private val context: Context) : VpnConnection {
 
     // The background job never starts a tunnel.
     override fun vpnPermissionGranted(): Boolean = false
+
+    // Nor does it follow the user's settings: only the UI engine keeps the saved launch
+    // in step with them (LaunchSyncRunner), and the job never runs it.
+    override fun saveLaunch(config: VpnConfigMessage) {}
 }
