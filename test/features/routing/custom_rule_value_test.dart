@@ -36,12 +36,15 @@ void main() {
       expectValue('site.com:443', 'site.com');
     });
 
-    test('single labels, punycode and underscores are fine', () {
-      expectValue('localhost', 'localhost');
-      expectValue('router', 'router');
-      expectValue('xn--p1ai', 'xn--p1ai');
+    test('punycode, underscores and short zones are fine', () {
       expectValue('xn--80aswg.xn--p1ai', 'xn--80aswg.xn--p1ai');
       expectValue('my_host.example.com', 'my_host.example.com');
+      expectValue('t.me', 't.me');
+      expectValue('a.io', 'a.io');
+    });
+
+    test('localhost is the one name without a dot that is accepted', () {
+      expectValue('localhost', 'localhost');
     });
   });
 
@@ -99,6 +102,24 @@ void main() {
       expectError('a.b*', RuleInputError.invalid);
       expectError('*', RuleInputError.invalid);
       expectError('http://', RuleInputError.invalid);
+    });
+
+    test(
+      'a made-up word is not a domain: a name needs a dot and a real zone',
+      () {
+        expectError('hhshs', RuleInputError.invalid);
+        expectError('jjej22', RuleInputError.invalid);
+        expectError('router', RuleInputError.invalid);
+        expectError('xn--p1ai', RuleInputError.invalid);
+      },
+    );
+
+    test('the zone after the last dot is letters (or punycode), 2 or more', () {
+      expectError('foo.jjej22', RuleInputError.invalid);
+      expectError('foo.c0m', RuleInputError.invalid);
+      expectError('foo.a', RuleInputError.invalid);
+      expectError('foo.1', RuleInputError.invalid);
+      expectError('foo.xn--', RuleInputError.invalid);
     });
 
     test('geo tokens and other xray prefixes are not accepted', () {

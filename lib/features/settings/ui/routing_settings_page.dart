@@ -293,8 +293,10 @@ class RoutingSettingsPage extends StatelessWidget {
           title: 'When applied',
           body:
               'Changes take effect on reconnect.\n'
-              'Not applied to servers whose config has its own '
-              'routing rules (set by the VPN provider).',
+              'Servers whose config has its own routing rules (set by '
+              'the VPN provider or your panel) keep them: RU bypass, ad '
+              'blocking and LAN bypass do not apply to them. Custom rules '
+              'do, and stand ahead of the server\'s own.',
         ),
       ],
     );

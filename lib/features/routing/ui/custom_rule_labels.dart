@@ -46,5 +46,5 @@ String? customRulesSummary(int count) => switch (count) {
 /// The notice on the Routing page while the selected server has a routing of
 /// its own.
 const routingOwnConfigNotice =
-    'The selected server brings its own routing, so the switches and rules '
-    'below do not apply to it.';
+    'The selected server brings its own routing, so RU bypass, ad blocking '
+    'and LAN bypass do not apply to it. Your custom rules do.';

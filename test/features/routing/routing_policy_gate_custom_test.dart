@@ -281,16 +281,222 @@ void main() {
   });
 
   group('configs with a routing of their own', () {
-    test('left untouched, custom rules or not', () {
+    PolicyResult applyTo(
+      Map<String, dynamic> config, {
+      List<CustomRule> custom = const [],
+      bool privateDnsStrict = false,
+      AdBlockMode adBlock = AdBlockMode.full,
+    }) => gate.apply(
+      jsonEncode(config),
+      split: RuBypassMode.bypassRu,
+      adBlock: adBlock,
+      customRules: custom,
+      privateDnsStrict: privateDnsStrict,
+    );
+
+    // A panel's config as the user's own server sends it: routed resolver,
+    // its own domain / ip rules, tags `proxy` / `direct` / `block`.
+    Map<String, dynamic> panelConfig() => {
+      'dns': {
+        'servers': ['https://1.1.1.1/dns-query'],
+      },
+      'outbounds': [
+        {'tag': 'proxy', 'protocol': 'vless'},
+        {'tag': 'direct', 'protocol': 'freedom'},
+        {'tag': 'block', 'protocol': 'blackhole'},
+      ],
+      'routing': {
+        'rules': [
+          {
+            'type': 'field',
+            'domain': ['geosite:category-ads-all'],
+            'outboundTag': 'block',
+          },
+          {
+            'type': 'field',
+            'ip': ['geoip:ru'],
+            'outboundTag': 'direct',
+          },
+          {'type': 'field', 'network': 'tcp,udp', 'outboundTag': 'proxy'},
+        ],
+      },
+    };
+
+    test('no custom rules — left untouched, as before', () {
       final src = jsonEncode(providerConfig());
       final result = gate.apply(
         src,
         split: RuBypassMode.bypassRu,
         adBlock: AdBlockMode.off,
-        customRules: [r('grani.ru')],
       );
       expect(result.configJson, same(src));
       expect(result.hijacksDns, isFalse);
+    });
+
+    test(
+      'custom rules go right after the DNS hijack, before the panel\'s own',
+      () {
+        final result = applyTo(
+          panelConfig(),
+          custom: [
+            r('youtube.com', RuleAction.direct),
+            r('ya.ru', RuleAction.block),
+          ],
+        );
+        final config = decode(result.configJson);
+        final tags = tagsOf(config);
+        expect(tags.take(3), [
+          'dns-hijack',
+          'custom:youtube.com',
+          'custom:ya.ru',
+        ]);
+        // The panel's three rules follow, as they were.
+        expect(tags.skip(3), [null, null, null]);
+        expect(rulesOf(config)[3]['domain'], ['geosite:category-ads-all']);
+        expect(rulesOf(config).last['network'], 'tcp,udp');
+        expect(result.hijacksDns, isTrue);
+      },
+    );
+
+    test('the actions point at the panel\'s outbounds', () {
+      final config = decode(
+        applyTo(
+          panelConfig(),
+          custom: [
+            r('a.com', RuleAction.proxy),
+            r('b.com', RuleAction.direct),
+            r('c.com', RuleAction.block),
+          ],
+        ).configJson,
+      );
+      expect(rule(config, 'custom:a.com')['outboundTag'], 'proxy');
+      expect(rule(config, 'custom:b.com')['outboundTag'], 'direct');
+      expect(rule(config, 'custom:c.com')['outboundTag'], 'block');
+    });
+
+    test('proxy is the first outbound, whatever its tag', () {
+      final panel = panelConfig();
+      ((panel['outbounds'] as List).first as Map)['tag'] = 'my-vless';
+      final config = decode(applyTo(panel, custom: [r('a.com')]).configJson);
+      expect(rule(config, 'custom:a.com')['outboundTag'], 'my-vless');
+    });
+
+    test(
+      'no duplicate outbounds when the panel already has direct and block',
+      () {
+        final config = decode(
+          applyTo(
+            panelConfig(),
+            custom: [
+              r('a.com', RuleAction.direct),
+              r('b.com', RuleAction.block),
+            ],
+          ).configJson,
+        );
+        final tags = (config['outbounds'] as List).map(
+          (o) => (o as Map)['tag'],
+        );
+        expect(tags.where((t) => t == 'direct'), hasLength(1));
+        expect(tags.where((t) => t == 'block'), hasLength(1));
+      },
+    );
+
+    test('missing direct and block outbounds are added', () {
+      final panel = panelConfig();
+      panel['outbounds'] = [
+        {'tag': 'proxy', 'protocol': 'vless'},
+      ];
+      final config = decode(
+        applyTo(
+          panel,
+          custom: [r('a.com', RuleAction.direct), r('b.com', RuleAction.block)],
+        ).configJson,
+      );
+      final tags = (config['outbounds'] as List).map((o) => (o as Map)['tag']);
+      expect(tags, containsAll(['proxy', 'direct', 'block']));
+      expect((config['outbounds'] as List).first['tag'], 'proxy');
+    });
+
+    test('most specific first among them', () {
+      final config = decode(
+        applyTo(
+          panelConfig(),
+          custom: [
+            r('google.com', RuleAction.direct),
+            r('mail.google.com', RuleAction.proxy),
+          ],
+        ).configJson,
+      );
+      expect(tagsOf(config).skip(1).take(2), [
+        'custom:mail.google.com',
+        'custom:google.com',
+      ]);
+    });
+
+    test('no DNS hijack for this config — custom rules stand first', () {
+      // providerConfig() has no dns block: the hijack is not installed.
+      final result = applyTo(providerConfig(), custom: [r('grani.ru')]);
+      final config = decode(result.configJson);
+      expect(tagsOf(config), ['custom:grani.ru', null]);
+      expect(result.hijacksDns, isFalse);
+    });
+
+    test('strict Private DNS — no hijack, custom rules still added', () {
+      final result = applyTo(
+        panelConfig(),
+        custom: [r('grani.ru')],
+        privateDnsStrict: true,
+      );
+      final config = decode(result.configJson);
+      expect(tagsOf(config).first, 'custom:grani.ru');
+      expect(tagsOf(config), isNot(contains('dns-hijack')));
+      expect(result.hijacksDns, isFalse);
+    });
+
+    test('the switches still do not act on it', () {
+      final config = decode(
+        applyTo(panelConfig(), custom: [r('a.com')]).configJson,
+      );
+      final tags = tagsOf(config).whereType<String>();
+      for (final ours in [
+        'ad-block',
+        'ru-bypass-domain',
+        'ru-bypass-ip',
+        'private-direct',
+        'private-direct-domain',
+        'block-quic',
+      ]) {
+        expect(tags, isNot(contains(ours)), reason: ours);
+      }
+      // And its dns block is its own.
+      expect(config['dns']['servers'], ['https://1.1.1.1/dns-query']);
+    });
+
+    test('a config with rules but no outbounds is left alone', () {
+      final panel = panelConfig()..['outbounds'] = <dynamic>[];
+      final src = jsonEncode(panel);
+      final result = gate.apply(
+        src,
+        split: RuBypassMode.bypassRu,
+        adBlock: AdBlockMode.off,
+        customRules: [r('a.com')],
+        privateDnsStrict: true,
+      );
+      expect(result.configJson, same(src));
+    });
+
+    test('survives the geo gate: plain rules stay with no geo data', () {
+      final geoGate = GeoConfigGate(Talker());
+      final after = applyTo(
+        panelConfig(),
+        custom: [r('youtube.com', RuleAction.direct)],
+      );
+      final config = decode(
+        geoGate.prepare(after.configJson, const GeoState.absent()),
+      );
+      expect(rule(config, 'custom:youtube.com')['domain'], [
+        'domain:youtube.com',
+      ]);
     });
 
     test('ownsRouting: a scaffold has none, a provider config has', () {

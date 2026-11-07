@@ -16,8 +16,10 @@ typedef PolicyResult = ({String configJson, bool hijacksDns});
 /// immediately before it goes to the core — but only for servers that don't
 /// carry a routing policy of their own (a `vless://` link's built scaffold, a
 /// hand-pasted JSON with no rules). Provider subscriptions bring their own
-/// split policy and keep it; the one thing added to them is the port-53 hijack
-/// when they also bring resolvers of their own (see [_hijackProviderDns]).
+/// split policy and keep it; what is added to them is the port-53 hijack when
+/// they also bring resolvers of their own (see [_hijackProviderDns]) and the
+/// user's custom rules, in front of the provider's (see
+/// [_addCustomRulesToProvider]).
 ///
 /// For such configs the gate always installs:
 ///  - its own `dns` block: the remote resolver the user picked
@@ -134,8 +136,9 @@ class RoutingPolicyGate {
   /// no DNS at all. Our own configs have no such entries and keep the hijack.
   ///
   /// [customRules] are the user's own rules (any order; they are put most
-  /// specific first). Like the switches, they only act on configs without a
-  /// routing of their own.
+  /// specific first). Unlike the switches, they act on provider configs too:
+  /// there they stand ahead of the provider's own rules (see
+  /// [_addCustomRulesToProvider]).
   ///
   /// [dns] and [ipv6] shape the injected `dns` block only; a provider config
   /// keeps its own whatever they say. [ipv6] is the tunnel's IPv6 switch: with
@@ -161,16 +164,25 @@ class RoutingPolicyGate {
     }
 
     if (_hasOwnRouting(config)) {
-      if (privateDnsStrict || !_hijackProviderDns(config)) {
+      final hijacked = !privateDnsStrict && _hijackProviderDns(config);
+      // Right after the DNS hijack (when there is one), ahead of the rules of
+      // the provider: the user's rules are the one thing that acts on it.
+      final added = _addCustomRulesToProvider(
+        config,
+        customRules,
+        at: hijacked ? 1 : 0,
+      );
+      if (!hijacked && added == 0) {
         _talker.debug(
           'RoutingPolicy: config routes by destination, left as is',
         );
         return untouched;
       }
       _talker.debug(
-        'RoutingPolicy: provider routing kept, system DNS hijacked into its dns',
+        'RoutingPolicy: provider routing kept, '
+        'system DNS hijacked: $hijacked, custom rules added: $added',
       );
-      return (configJson: jsonEncode(config), hijacksDns: true);
+      return (configJson: jsonEncode(config), hijacksDns: hijacked);
     }
 
     final proxyTag = _ensureProxyTag(config);
@@ -251,6 +263,29 @@ class RoutingPolicyGate {
     final rules = (config['routing'] as Map)['rules'] as List;
     rules.insert(0, _dnsHijackRule(_ensureDnsOutboundTag(config)));
     return true;
+  }
+
+  /// Puts the user's rules into a provider config's rule list at [at], most
+  /// specific first, and makes sure the `direct` and `block` outbounds they
+  /// point at exist (proxy is the config's first outbound, as everywhere else).
+  /// Returns how many were added: 0 with no rules, or when the config has no
+  /// outbound to send "proxy" to, in which case nothing at all is changed.
+  int _addCustomRulesToProvider(
+    Map<String, dynamic> config,
+    List<CustomRule> customRules, {
+    required int at,
+  }) {
+    if (customRules.isEmpty) return 0;
+    final proxyTag = _ensureProxyTag(config);
+    if (proxyTag == null) return 0;
+    final rules = (config['routing'] as Map)['rules'] as List;
+    rules.insertAll(at, [
+      for (final rule in orderForConfig(customRules))
+        _customRule(rule, proxyTag),
+    ]);
+    _ensureOutbound(config, {'tag': 'direct', 'protocol': 'freedom'});
+    _ensureOutbound(config, {'tag': 'block', 'protocol': 'blackhole'});
+    return customRules.length;
   }
 
   static bool _hasRoutedResolver(Map<String, dynamic> config) {

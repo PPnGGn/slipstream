@@ -28,6 +28,7 @@ final _scheme = RegExp(r'^[a-z][a-z0-9+.-]*://');
 final _pathStart = RegExp(r'[/?#]');
 final _digits = RegExp(r'^\d+$');
 final _label = RegExp(r'^[a-z0-9_]([a-z0-9_-]*[a-z0-9_])?$');
+final _zone = RegExp(r'^([a-z]{2,63}|xn--[a-z0-9-]*[a-z0-9])$');
 
 /// Brings what the user typed to one form, so that the same site written two
 /// ways is one rule: a domain (`example.com`, written without scheme, path,
@@ -141,7 +142,11 @@ String? _domain(String host) {
 
   final labels = name.split('.');
   if (labels.any((l) => l.length > 63 || !_label.hasMatch(l))) return null;
-  // An all-digit last label means a mistyped IP address (`300.1.1.1`).
-  if (_digits.hasMatch(labels.last)) return null;
+  if (name == 'localhost') return name;
+  // A real site has a dot and ends in a zone: letters (`com`, `ru`) or the
+  // punycode form (`xn--p1ai`). That turns away a typed-in word (`hhshs`,
+  // `router`) and a mistyped IP address (`300.1.1.1`, `1.2.3`) alike. A zone
+  // list is not checked: it changes too often to ship in the app.
+  if (labels.length < 2 || !_zone.hasMatch(labels.last)) return null;
   return name;
 }
