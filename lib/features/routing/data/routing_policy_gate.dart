@@ -3,6 +3,8 @@ import 'package:injectable/injectable.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:slipstream/features/dns/data/dns_settings.dart';
 import 'package:slipstream/features/routing/data/ad_block_mode.dart';
+import 'package:slipstream/features/routing/data/custom_rule.dart';
+import 'package:slipstream/features/routing/data/custom_rule_order.dart';
 import 'package:slipstream/features/routing/data/ru_bypass_mode.dart';
 
 /// What [RoutingPolicyGate.apply] produced: the config, and whether it now
@@ -131,6 +133,10 @@ class RoutingPolicyGate {
   /// common anti-bypass trick) would answer 0.0.0.0 and leave the phone with
   /// no DNS at all. Our own configs have no such entries and keep the hijack.
   ///
+  /// [customRules] are the user's own rules (any order; they are put most
+  /// specific first). Like the switches, they only act on configs without a
+  /// routing of their own.
+  ///
   /// [dns] and [ipv6] shape the injected `dns` block only; a provider config
   /// keeps its own whatever they say. [ipv6] is the tunnel's IPv6 switch: with
   /// it on the resolvers answer AAAA records too, or an app would never learn
@@ -143,6 +149,7 @@ class RoutingPolicyGate {
     DnsSettings dns = const DnsSettings(),
     bool ipv6 = false,
     bool lanBypass = true,
+    List<CustomRule> customRules = const [],
   }) {
     final untouched = (configJson: configJson, hijacksDns: false);
 
@@ -191,6 +198,7 @@ class RoutingPolicyGate {
       bypassRu: bypassRu,
       adToken: adToken,
       lanBypass: lanBypass,
+      customRules: orderForConfig(customRules),
     );
     routing['rules'] = [...injected, ...rules];
     config['routing'] = routing;
@@ -201,12 +209,26 @@ class RoutingPolicyGate {
 
     _talker.debug(
       'RoutingPolicy: injected dns + ${injected.length} rule(s) '
-      '(bypassRu=$bypassRu, adBlock=${adBlock.name}, lanBypass=$lanBypass)',
+      '(bypassRu=$bypassRu, adBlock=${adBlock.name}, lanBypass=$lanBypass, '
+      'custom=${customRules.length})',
     );
     return (configJson: jsonEncode(config), hijacksDns: true);
   }
 
-  bool _hasOwnRouting(Map<String, dynamic> config) {
+  /// Whether [configJson] brings a routing policy of its own, i.e. whether
+  /// [apply] would leave its rules alone (and so the Routing page's switches
+  /// and Custom rules do not act on it). False for a config that fails to
+  /// parse: the core reports that on connect.
+  static bool ownsRouting(String configJson) {
+    try {
+      final config = jsonDecode(configJson);
+      return config is Map<String, dynamic> && _hasOwnRouting(config);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static bool _hasOwnRouting(Map<String, dynamic> config) {
     final rules = switch (config['routing']) {
       {'rules': final List<dynamic> l} => l,
       _ => const <dynamic>[],
@@ -337,6 +359,10 @@ class RoutingPolicyGate {
   ///    public-DNS block below would catch dns-remote's request to 8.8.8.8;
   ///  - the port-53 hijack comes before anything matching by IP, or a query to
   ///    a private address would be sent direct by the LAN rule;
+  ///  - the user's own rules come after all of that, so none of them can
+  ///    reopen a DNS or QUIC leak, and before the general lists, so
+  ///    `grani.ru → proxy` wins over the `.ru` bypass. They arrive already
+  ///    ordered most specific first ([orderForConfig]);
   ///  - blocks come before the direct rules, so an ad domain on a .ru site is
   ///    still blocked.
   static List<Map<String, dynamic>> _policyRules({
@@ -344,6 +370,7 @@ class RoutingPolicyGate {
     required bool bypassRu,
     required String? adToken,
     required bool lanBypass,
+    required List<CustomRule> customRules,
   }) => [
     if (bypassRu)
       {
@@ -388,6 +415,7 @@ class RoutingPolicyGate {
       'outboundTag': 'block',
       'ruleTag': 'block-doh',
     },
+    for (final custom in customRules) _customRule(custom, proxyTag),
     if (adToken != null)
       {
         'type': 'field',
@@ -430,6 +458,21 @@ class RoutingPolicyGate {
       },
     // Everything else: no rule, xray's default is the first outbound (proxy).
   ];
+
+  /// One rule of the user. A domain matches with its subdomains (`domain:`); an
+  /// address or range goes into `ip` as typed. Plain values only, no geo
+  /// tokens, so [GeoConfigGate] never strips it. The tag carries the value, so
+  /// the core's log says which rule caught a connection.
+  static Map<String, dynamic> _customRule(CustomRule rule, String proxyTag) => {
+    'type': 'field',
+    if (rule.isIp) 'ip': [rule.value] else 'domain': ['domain:${rule.value}'],
+    'outboundTag': switch (rule.action) {
+      RuleAction.proxy => proxyTag,
+      RuleAction.direct => 'direct',
+      RuleAction.block => 'block',
+    },
+    'ruleTag': 'custom:${rule.value}',
+  };
 
   /// The system's DNS (anything to port 53 coming from tun2socks) goes to the
   /// config's resolvers instead of wherever the OS sent it.

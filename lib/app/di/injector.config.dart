@@ -355,6 +355,12 @@ extension GetItInjectableX on _i174.GetIt {
         talker: gh<_i207.Talker>(),
       ),
     );
+    gh.lazySingleton<_i302.SubscriptionParserService>(
+      () => _i302.SubscriptionParserService(
+        gh<_i207.Talker>(),
+        gh<_i746.SubscriptionFetcher>(),
+      ),
+    );
     gh.lazySingleton<_i1056.VpnRepository>(
       () => _i1056.VpnRepository(
         gh<_i207.Talker>(),
@@ -372,17 +378,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i925.KillSwitchCubit>(),
         gh<_i518.DnsCubit>(),
         gh<_i964.LanBypassCubit>(),
+        gh<_i1022.CustomRulesCubit>(),
       ),
       dispose: (i) => i.dispose(),
-    );
-    gh.lazySingleton<_i302.SubscriptionParserService>(
-      () => _i302.SubscriptionParserService(
-        gh<_i207.Talker>(),
-        gh<_i746.SubscriptionFetcher>(),
-      ),
-    );
-    gh.lazySingleton<_i190.MemoryUsageCubit>(
-      () => _i190.MemoryUsageCubit(repository: gh<_i1056.VpnRepository>()),
     );
     gh.lazySingleton<_i944.SubscriptionRefresher>(
       () => _i944.SubscriptionRefresher(
@@ -412,6 +410,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i331.SubscriptionUpdateSettingsStore>(),
         gh<_i207.Talker>(),
       ),
+    );
+    gh.lazySingleton<_i190.MemoryUsageCubit>(
+      () => _i190.MemoryUsageCubit(repository: gh<_i1056.VpnRepository>()),
     );
     gh.lazySingleton<_i83.SubscriptionsCubit>(
       () => _i83.SubscriptionsCubit(
