@@ -339,12 +339,6 @@ extension GetItInjectableX on _i174.GetIt {
         talker: gh<_i207.Talker>(),
       ),
     );
-    gh.lazySingleton<_i302.SubscriptionParserService>(
-      () => _i302.SubscriptionParserService(
-        gh<_i207.Talker>(),
-        gh<_i746.SubscriptionFetcher>(),
-      ),
-    );
     gh.lazySingleton<_i1056.VpnRepository>(
       () => _i1056.VpnRepository(
         gh<_i207.Talker>(),
@@ -360,8 +354,15 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i277.SplitTunnelCubit>(),
         gh<_i500.Ipv6Cubit>(),
         gh<_i925.KillSwitchCubit>(),
+        gh<_i518.DnsCubit>(),
       ),
       dispose: (i) => i.dispose(),
+    );
+    gh.lazySingleton<_i302.SubscriptionParserService>(
+      () => _i302.SubscriptionParserService(
+        gh<_i207.Talker>(),
+        gh<_i746.SubscriptionFetcher>(),
+      ),
     );
     gh.lazySingleton<_i190.MemoryUsageCubit>(
       () => _i190.MemoryUsageCubit(repository: gh<_i1056.VpnRepository>()),

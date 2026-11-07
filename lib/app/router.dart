@@ -59,8 +59,8 @@ final GoRouter appRouter = GoRouter(
           path: 'security',
           builder: (context, state) => const SecurityPage(),
         ),
-        // Not built yet: laid-out pages with inactive controls.
         appRoute(path: 'dns', builder: (context, state) => const DnsPage()),
+        // Not built yet: laid-out pages with inactive controls.
         appRoute(
           path: 'backup',
           builder: (context, state) => const BackupPage(),

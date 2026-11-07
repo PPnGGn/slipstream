@@ -3,6 +3,7 @@ import 'package:injectable/injectable.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/core/models/result.dart';
+import 'package:slipstream/features/dns/cubit/dns_cubit.dart';
 import 'package:slipstream/features/geo/cubit/geo_cubit.dart';
 import 'package:slipstream/features/geo/data/geo_config_gate.dart';
 import 'package:slipstream/features/geo/data/geo_paths.dart';
@@ -32,6 +33,7 @@ class VpnRepository {
   final SplitTunnelCubit _splitTunnelCubit;
   final Ipv6Cubit _ipv6Cubit;
   final KillSwitchCubit _killSwitchCubit;
+  final DnsCubit _dnsCubit;
   late final StreamSubscription<VpnLogMessage> _logSubscription;
 
   VpnRepository(
@@ -48,6 +50,7 @@ class VpnRepository {
     this._splitTunnelCubit,
     this._ipv6Cubit,
     this._killSwitchCubit,
+    this._dnsCubit,
   ) {
     _logSubscription = _events.logs.listen(_xrayLogStore.add);
   }
@@ -64,13 +67,16 @@ class VpnRepository {
 
       // Inbounds are not touched here: the core drops them and listens on no
       // port, apart from the HTTP proxy on a Unix socket (see LocalProxyProvider).
-      // 1. client's own split policy (RU-bypass, ad-block), for scaffold
-      //    configs that carry no routing of their own.
+      // 1. client's own split policy (RU-bypass, ad-block) and DNS (the
+      //    resolvers of the DNS page; with IPv6 on they answer AAAA too), for
+      //    scaffold configs that carry no routing of their own.
       final policy = _routingPolicyGate.apply(
         server.configJson,
         split: _ruBypassCubit.state,
         adBlock: _adBlockCubit.state,
         privateDnsStrict: await _privateDnsStrict(),
+        dns: _dnsCubit.state,
+        ipv6: _ipv6Cubit.state,
       );
       // 2. strip geo tokens the installed .dat can't resolve.
       final configJson = _geoGate.prepare(policy.configJson, _geoCubit.state);

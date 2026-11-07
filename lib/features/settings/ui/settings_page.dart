@@ -13,6 +13,9 @@ import 'package:slipstream/core/ui/widgets/page_header.dart';
 import 'package:slipstream/features/appearance/cubit/home_layout_cubit.dart';
 import 'package:slipstream/features/appearance/data/home_layout.dart';
 import 'package:slipstream/features/appearance/ui/appearance_labels.dart';
+import 'package:slipstream/features/dns/cubit/dns_cubit.dart';
+import 'package:slipstream/features/dns/data/dns_settings.dart';
+import 'package:slipstream/features/dns/ui/dns_labels.dart';
 import 'package:slipstream/features/diagnostics/cubit/memory_monitor_cubit.dart';
 import 'package:slipstream/features/diagnostics/data/memory_monitor_mode.dart';
 import 'package:slipstream/features/geo/cubit/geo_cubit.dart';
@@ -191,14 +194,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                 showChevron: true,
                                 onTap: () => context.push('/settings/security'),
                               ),
-                            SettingsRow(
-                              iconPath: AppAssets.globe,
-                              hue: TileHue.dns,
-                              title: 'DNS',
-                              subtitle: 'Queries resolved through the tunnel',
-                              showChevron: true,
-                              onTap: () => context.push('/settings/dns'),
-                            ),
+                            const _DnsRow(),
                           ],
                         ),
                         const SectionHeader('General'),
@@ -299,6 +295,25 @@ class _SettingsPageState extends State<SettingsPage> {
       ping.displayMode == PingDisplayMode.dots ? 'dots' : 'numbers',
     ];
     return parts.join(' · ');
+  }
+}
+
+class _DnsRow extends StatelessWidget {
+  const _DnsRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<DnsCubit, DnsSettings>(
+      bloc: getIt<DnsCubit>(),
+      builder: (context, dns) => SettingsRow(
+        iconPath: AppAssets.globe,
+        hue: TileHue.dns,
+        title: 'DNS',
+        subtitle: dnsSummary(dns),
+        showChevron: true,
+        onTap: () => context.push('/settings/dns'),
+      ),
+    );
   }
 }
 
