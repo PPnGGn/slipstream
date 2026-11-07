@@ -57,9 +57,11 @@ import '../../features/ping/presentation/ping_cubit.dart' as _i629;
 import '../../features/qr/data/qr_image_import.dart' as _i543;
 import '../../features/qr/data/qr_share_service.dart' as _i698;
 import '../../features/routing/cubit/ad_block_cubit.dart' as _i863;
+import '../../features/routing/cubit/custom_rules_cubit.dart' as _i1022;
 import '../../features/routing/cubit/lan_bypass_cubit.dart' as _i964;
 import '../../features/routing/cubit/ru_bypass_cubit.dart' as _i1048;
 import '../../features/routing/data/ad_block_store.dart' as _i117;
+import '../../features/routing/data/custom_rules_store.dart' as _i278;
 import '../../features/routing/data/lan_bypass_store.dart' as _i1047;
 import '../../features/routing/data/local_proxy_client.dart' as _i864;
 import '../../features/routing/data/routing_policy_gate.dart' as _i194;
@@ -216,6 +218,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i117.AdBlockStore>(
       () => _i117.AdBlockStore(gh<_i460.SharedPreferences>()),
     );
+    gh.lazySingleton<_i278.CustomRulesStore>(
+      () => _i278.CustomRulesStore(gh<_i460.SharedPreferences>()),
+    );
     gh.lazySingleton<_i1047.LanBypassStore>(
       () => _i1047.LanBypassStore(gh<_i460.SharedPreferences>()),
     );
@@ -276,6 +281,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i497.Directory>(instanceName: 'updatesDir'),
       ),
       dispose: (i) => i.dispose(),
+    );
+    gh.lazySingleton<_i1022.CustomRulesCubit>(
+      () => _i1022.CustomRulesCubit(store: gh<_i278.CustomRulesStore>()),
     );
     gh.lazySingleton<_i12.AppThemeCubit>(
       () => _i12.AppThemeCubit(themeStore: gh<_i802.ThemeStore>()),
