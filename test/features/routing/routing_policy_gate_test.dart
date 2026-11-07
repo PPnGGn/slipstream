@@ -16,8 +16,15 @@ void main() {
     Map<String, dynamic> config, {
     RuBypassMode split = RuBypassMode.bypassRu,
     AdBlockMode adBlock = AdBlockMode.off,
-  }) =>
-      gate.apply(jsonEncode(config), split: split, adBlock: adBlock).configJson;
+    bool lanBypass = true,
+  }) => gate
+      .apply(
+        jsonEncode(config),
+        split: split,
+        adBlock: adBlock,
+        lanBypass: lanBypass,
+      )
+      .configJson;
 
   /// For the "left untouched" cases: same string back, DNS not hijacked.
   void expectUntouched(String src, PolicyResult result) {
@@ -78,10 +85,93 @@ void main() {
       'block-public-dns',
       'block-doh',
       'ru-bypass-domain',
+      'private-direct-domain',
       'private-direct',
       'ru-bypass-ip',
       null, // the scaffold's own bittorrent rule
     ]);
+  });
+
+  group('LAN bypass', () {
+    const lanRanges = [
+      '10.0.0.0/8',
+      '172.16.0.0/12',
+      '192.168.0.0/16',
+      '127.0.0.0/8',
+      '169.254.0.0/16',
+      '224.0.0.0/4',
+      '255.255.255.255/32',
+      '::1/128',
+      'fc00::/7',
+      'fe80::/10',
+      'ff00::/8',
+    ];
+
+    test('on — explicit ranges go direct, no geoip token needed', () {
+      final result = decode(run(scaffold()));
+      final lan = rule(result, 'private-direct');
+      expect(lan['ip'], lanRanges);
+      expect(lan['outboundTag'], 'direct');
+      expect(jsonEncode(lan), isNot(contains('geoip:')));
+    });
+
+    test('on — local names go direct through geosite:private', () {
+      final result = decode(run(scaffold()));
+      final names = rule(result, 'private-direct-domain');
+      expect(names['domain'], ['geosite:private']);
+      expect(names['outboundTag'], 'direct');
+    });
+
+    test('geosite:private belongs to LAN, not to the RU bypass', () {
+      final result = decode(run(scaffold()));
+      expect(
+        rule(result, 'ru-bypass-domain')['domain'],
+        isNot(contains('geosite:private')),
+      );
+    });
+
+    test('Fake DNS pool and CGNAT are not part of the LAN', () {
+      final lan = rule(decode(run(scaffold())), 'private-direct')['ip'] as List;
+      expect(lan, isNot(contains('198.18.0.0/15')));
+      expect(lan, isNot(contains('100.64.0.0/10')));
+    });
+
+    test('off — no private rules at all, DNS protection stays', () {
+      final result = decode(run(scaffold(), lanBypass: false));
+      expect(tagsOf(result), [
+        'dns-ru',
+        'dns-remote',
+        'dns-hijack',
+        'block-quic',
+        'bittorrent-direct',
+        'block-public-dns',
+        'block-doh',
+        'ru-bypass-domain',
+        'ru-bypass-ip',
+        null,
+      ]);
+    });
+
+    test('off with RU bypass off — nothing but the protection rules', () {
+      final result = decode(
+        run(scaffold(), split: RuBypassMode.off, lanBypass: false),
+      );
+      expect(tagsOf(result), [
+        'dns-remote',
+        'dns-hijack',
+        'block-quic',
+        'bittorrent-direct',
+        'block-public-dns',
+        'block-doh',
+        null,
+      ]);
+    });
+
+    test('works with the RU bypass off', () {
+      final result = decode(run(scaffold(), split: RuBypassMode.off));
+      expect(tagsOf(result), contains('private-direct'));
+      expect(tagsOf(result), contains('private-direct-domain'));
+    });
   });
 
   test('both toggles off — DNS protection still installed, no RU parts', () {
@@ -95,6 +185,7 @@ void main() {
       'bittorrent-direct',
       'block-public-dns',
       'block-doh',
+      'private-direct-domain',
       'private-direct',
       null,
     ]);
@@ -399,7 +490,7 @@ void main() {
       }),
     );
     expect(result['routing']['domainStrategy'], 'IPIfNonMatch');
-    expect(tagsOf(result), hasLength(10));
+    expect(tagsOf(result), hasLength(11));
   });
 
   test(
@@ -443,8 +534,11 @@ void main() {
         'domain:xn--p1ai',
       ]);
       // Rules left with nothing to match are dropped; plain-IP ones stay.
+      // That includes the LAN ranges: LAN bypass works without geo data.
       final tags = tagsOf(config);
-      expect(tags, isNot(contains('private-direct')));
+      expect(tags, contains('private-direct'));
+      expect(rule(config, 'private-direct')['ip'], contains('192.168.0.0/16'));
+      expect(tags, isNot(contains('private-direct-domain')));
       expect(tags, isNot(contains('ru-bypass-ip')));
       expect(tags, contains('block-public-dns'));
       // The Yandex resolver keeps its .ru/.рф scope, loses only expectIPs.

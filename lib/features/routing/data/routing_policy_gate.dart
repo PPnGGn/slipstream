@@ -26,10 +26,11 @@ typedef PolicyResult = ({String configJson, bool hijacksDns});
 ///    `socks` inbound) from that resolver, and drops HTTPS records (and AAAA
 ///    ones too, unless IPv6 is on);
 ///  - rules that stop apps from going around it (QUIC, public DNS by IP, DoH
-///    hostnames) and keep LAN traffic direct.
-/// Two settings add to that:
+///    hostnames).
+/// Three settings add to that:
 ///  - [RuBypassMode.bypassRu] — Russian domains / IPs go direct.
 ///  - [AdBlockMode] — the matching `geosite:category-ads*` token is blackholed.
+///  - `lanBypass` — the local network goes direct (on by default).
 ///
 /// Runs at connect time, right before [GeoConfigGate], for the same reason that
 /// gate does: the policy is runtime state the user can flip, while a
@@ -66,6 +67,24 @@ class RoutingPolicyGate {
     'domain:xn--p1ai',
     'geosite:category-ru',
     'geosite:category-gov-ru',
+  ];
+
+  /// The local network: private, loopback, link-local and multicast ranges.
+  /// Left out on purpose: 198.18.0.0/15 (Fake DNS hands these out for sites
+  /// that must go through the tunnel) and 100.64.0.0/10 (carrier-grade NAT,
+  /// not a network the user owns).
+  static const _lanIps = [
+    '10.0.0.0/8',
+    '172.16.0.0/12',
+    '192.168.0.0/16',
+    '127.0.0.0/8',
+    '169.254.0.0/16',
+    '224.0.0.0/4',
+    '255.255.255.255/32',
+    '::1/128',
+    'fc00::/7',
+    'fe80::/10',
+    'ff00::/8',
   ];
 
   /// Well-known public resolvers. Plain DNS (53) and DoH (443) to them is
@@ -123,6 +142,7 @@ class RoutingPolicyGate {
     bool privateDnsStrict = false,
     DnsSettings dns = const DnsSettings(),
     bool ipv6 = false,
+    bool lanBypass = true,
   }) {
     final untouched = (configJson: configJson, hijacksDns: false);
 
@@ -170,6 +190,7 @@ class RoutingPolicyGate {
       proxyTag: proxyTag,
       bypassRu: bypassRu,
       adToken: adToken,
+      lanBypass: lanBypass,
     );
     routing['rules'] = [...injected, ...rules];
     config['routing'] = routing;
@@ -180,7 +201,7 @@ class RoutingPolicyGate {
 
     _talker.debug(
       'RoutingPolicy: injected dns + ${injected.length} rule(s) '
-      '(bypassRu=$bypassRu, adBlock=${adBlock.name})',
+      '(bypassRu=$bypassRu, adBlock=${adBlock.name}, lanBypass=$lanBypass)',
     );
     return (configJson: jsonEncode(config), hijacksDns: true);
   }
@@ -315,13 +336,14 @@ class RoutingPolicyGate {
   ///  - the resolver's own queries (dns-ru / dns-remote) come first, or the
   ///    public-DNS block below would catch dns-remote's request to 8.8.8.8;
   ///  - the port-53 hijack comes before anything matching by IP, or a query to
-  ///    a private address would be sent direct by geoip:private;
+  ///    a private address would be sent direct by the LAN rule;
   ///  - blocks come before the direct rules, so an ad domain on a .ru site is
   ///    still blocked.
   static List<Map<String, dynamic>> _policyRules({
     required String proxyTag,
     required bool bypassRu,
     required String? adToken,
+    required bool lanBypass,
   }) => [
     if (bypassRu)
       {
@@ -373,21 +395,32 @@ class RoutingPolicyGate {
         'outboundTag': 'block',
         'ruleTag': 'ad-block',
       },
-    // Three separate rules: xray ANDs the conditions inside one rule, so
-    // domain and ip matchers must live in separate rules to act as OR.
+    // Separate rules: xray ANDs the conditions inside one rule, so domain and
+    // ip matchers must live in separate rules to act as OR.
     if (bypassRu)
       {
         'type': 'field',
-        'domain': [..._ruDomains, 'geosite:private'],
+        'domain': _ruDomains,
         'outboundTag': 'direct',
         'ruleTag': 'ru-bypass-domain',
       },
-    {
-      'type': 'field',
-      'ip': ['geoip:private'],
-      'outboundTag': 'direct',
-      'ruleTag': 'private-direct',
-    },
+    // The local network: names (`router.lan`, `printer.local`) and explicit
+    // ranges. Ranges rather than `geoip:private`, so it works without geo
+    // data too (GeoConfigGate strips geo tokens when no .dat is installed).
+    if (lanBypass) ...[
+      {
+        'type': 'field',
+        'domain': ['geosite:private'],
+        'outboundTag': 'direct',
+        'ruleTag': 'private-direct-domain',
+      },
+      {
+        'type': 'field',
+        'ip': _lanIps,
+        'outboundTag': 'direct',
+        'ruleTag': 'private-direct',
+      },
+    ],
     if (bypassRu)
       {
         'type': 'field',

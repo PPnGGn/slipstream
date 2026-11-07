@@ -12,6 +12,7 @@ import 'package:slipstream/features/geo/cubit/geo_cubit.dart';
 import 'package:slipstream/features/geo/data/geo_update_service.dart';
 import 'package:slipstream/features/geo/presentation/geo_update_toast.dart';
 import 'package:slipstream/features/routing/cubit/ad_block_cubit.dart';
+import 'package:slipstream/features/routing/cubit/lan_bypass_cubit.dart';
 import 'package:slipstream/features/routing/cubit/ru_bypass_cubit.dart';
 import 'package:slipstream/features/routing/data/ad_block_mode.dart';
 import 'package:slipstream/features/routing/data/ru_bypass_mode.dart';
@@ -27,6 +28,7 @@ class RoutingSettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final ruBypassCubit = getIt<RuBypassCubit>();
     final adBlockCubit = getIt<AdBlockCubit>();
+    final lanBypassCubit = getIt<LanBypassCubit>();
     final geoCubit = getIt<GeoCubit>();
     final geoService = getIt<GeoUpdateService>();
     final vpn = getIt<VpnServiceCubit>();
@@ -49,29 +51,7 @@ class RoutingSettingsPage extends StatelessWidget {
               child: ListView(
                 padding: const .fromLTRB(20, 6, 20, 28),
                 children: [
-                  // Not built yet: the app always works like Smart.
-                  const SegmentedPill<String>(
-                    options: [
-                      ('global', 'Global'),
-                      ('smart', 'Smart'),
-                      ('direct', 'Direct'),
-                    ],
-                    selected: 'smart',
-                    onChanged: null,
-                  ),
-                  Padding(
-                    padding: const .fromLTRB(2, 8, 2, 0),
-                    child: Text(
-                      'Rules decide per domain/IP: matched → direct or block, '
-                      'everything else → tunnel.',
-                      style: TextStyle(
-                        fontSize: 11,
-                        height: 1.5,
-                        color: colors.textMuted,
-                      ),
-                    ),
-                  ),
-                  const SectionHeader('Rule profiles', top: 18),
+                  const SectionHeader('Rule profiles', top: 4),
                   SettingsGroup(
                     children: [
                       BlocBuilder<RuBypassCubit, RuBypassMode>(
@@ -117,13 +97,19 @@ class RoutingSettingsPage extends StatelessWidget {
                               : null,
                         ),
                       ),
-                      const SettingsRow(
-                        iconPath: AppAssets.home,
-                        hue: TileHue.teal,
-                        title: 'Обход LAN',
-                        subtitle: '192.168/16 · 10/8 · localhost → напрямую',
-                        switchValue: false,
-                        enabled: false,
+                      BlocBuilder<LanBypassCubit, bool>(
+                        bloc: lanBypassCubit,
+                        builder: (context, enabled) => SettingsRow(
+                          iconPath: AppAssets.home,
+                          hue: TileHue.teal,
+                          title: 'Обход LAN',
+                          subtitle: '192.168/16 · 10/8 · localhost → напрямую',
+                          switchValue: enabled,
+                          onSwitch: (value) async {
+                            await lanBypassCubit.setEnabled(enabled: value);
+                            notifyIfTunnelActive(vpn);
+                          },
+                        ),
                       ),
                       BlocBuilder<GeoCubit, GeoState>(
                         bloc: geoCubit,
@@ -224,8 +210,16 @@ class RoutingSettingsPage extends StatelessWidget {
           title: 'RU bypass',
           body:
               'Sent directly, bypassing the VPN: .ru and .рф domains, '
-              'Russian services and IP addresses, local network, '
-              'torrents. All other traffic goes through the VPN.',
+              'Russian services and IP addresses, torrents. All other '
+              'traffic goes through the VPN.',
+        ),
+        const HelpEntry(
+          title: 'LAN bypass',
+          body:
+              'Traffic to your local network (router, printer, NAS, '
+              'Chromecast, localhost) is sent directly. Keep it on: '
+              'with it off, those devices go through the VPN server and '
+              'usually stop being found.',
         ),
         HelpEntry(
           title: 'Ad blocking',
