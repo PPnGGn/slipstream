@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:injectable/injectable.dart';
 import 'package:talker_flutter/talker_flutter.dart';
+import 'package:slipstream/features/dns/data/dns_settings.dart';
 import 'package:slipstream/features/routing/data/ad_block_mode.dart';
 import 'package:slipstream/features/routing/data/ru_bypass_mode.dart';
 
@@ -17,10 +18,13 @@ typedef PolicyResult = ({String configJson, bool hijacksDns});
 /// when they also bring resolvers of their own (see [_hijackProviderDns]).
 ///
 /// For such configs the gate always installs:
-///  - its own `dns` block: a remote DoH resolver reached through the tunnel,
-///    plus Yandex DoH for Russian domains when [RuBypassMode.bypassRu] is on;
+///  - its own `dns` block: the remote resolver the user picked
+///    ([DnsSettings.remote]) reached through the tunnel, plus the direct one
+///    ([DnsSettings.direct]) for Russian domains when [RuBypassMode.bypassRu]
+///    is on, and `fakedns` in front when [DnsSettings.fakeDns] is on;
 ///  - a `dns-out` outbound that answers the system's DNS (port 53 on the
-///    `socks` inbound) from that resolver, and drops AAAA / HTTPS records;
+///    `socks` inbound) from that resolver, and drops HTTPS records (and AAAA
+///    ones too, unless IPv6 is on);
 ///  - rules that stop apps from going around it (QUIC, public DNS by IP, DoH
 ///    hostnames) and keep LAN traffic direct.
 /// Two settings add to that:
@@ -55,10 +59,6 @@ class RoutingPolicyGate {
   /// Fallback tag for the proxy outbound when the config's first outbound has
   /// none (xray sends unmatched traffic to the first outbound).
   static const _defaultProxyTag = 'proxy';
-
-  // DoH by IP, so resolving the resolver itself never needs DNS.
-  static const _remoteDoh = 'https://8.8.8.8/dns-query';
-  static const _ruDoh = 'https://77.88.8.8/dns-query';
 
   /// Domains whose names the Yandex resolver answers when bypassRu is on.
   static const _ruDomains = [
@@ -111,11 +111,18 @@ class RoutingPolicyGate {
   /// own name, and a provider `dns.hosts` that blackholes DoH/DoT names (a
   /// common anti-bypass trick) would answer 0.0.0.0 and leave the phone with
   /// no DNS at all. Our own configs have no such entries and keep the hijack.
+  ///
+  /// [dns] and [ipv6] shape the injected `dns` block only; a provider config
+  /// keeps its own whatever they say. [ipv6] is the tunnel's IPv6 switch: with
+  /// it on the resolvers answer AAAA records too, or an app would never learn
+  /// an IPv6 address.
   PolicyResult apply(
     String configJson, {
     required RuBypassMode split,
     required AdBlockMode adBlock,
     bool privateDnsStrict = false,
+    DnsSettings dns = const DnsSettings(),
+    bool ipv6 = false,
   }) {
     final untouched = (configJson: configJson, hijacksDns: false);
 
@@ -147,7 +154,7 @@ class RoutingPolicyGate {
     final bypassRu = split == RuBypassMode.bypassRu;
     final adToken = adBlock.token;
 
-    config['dns'] = _dns(bypassRu: bypassRu);
+    config['dns'] = _dns(bypassRu: bypassRu, dns: dns, ipv6: ipv6);
 
     final routing = switch (config['routing']) {
       final Map<String, dynamic> r => r,
@@ -169,7 +176,7 @@ class RoutingPolicyGate {
 
     _ensureOutbound(config, {'tag': 'direct', 'protocol': 'freedom'});
     _ensureOutbound(config, {'tag': 'block', 'protocol': 'blackhole'});
-    _ensureOutbound(config, _dnsOutbound);
+    _ensureOutbound(config, _dnsOutbound(ipv6: ipv6));
 
     _talker.debug(
       'RoutingPolicy: injected dns + ${injected.length} rule(s) '
@@ -258,32 +265,48 @@ class RoutingPolicyGate {
     return _defaultProxyTag;
   }
 
-  static Map<String, dynamic> _dns({required bool bypassRu}) => {
+  /// The `dns` block, resolvers in the order xray asks them:
+  ///  - `fakedns` first when Fake DNS is on. It answers every name the system
+  ///    asks (the `dns-out` outbound), but never the lookups xray makes for
+  ///    itself (a `direct` connection to a domain), which fall through to the
+  ///    real resolvers below. No pool block is needed: xray adds one when it
+  ///    sees `fakedns` here, IPv4 for UseIPv4 and IPv4 plus IPv6 for UseIP;
+  ///  - `dns-ru` (the direct resolver) for Russian names, if the bypass is on;
+  ///  - `dns-remote`, everything else, through the tunnel.
+  /// Addresses come from [DnsSettings]; the resolvers are given by IP, so
+  /// finding the resolver itself never needs DNS.
+  static Map<String, dynamic> _dns({
+    required bool bypassRu,
+    required DnsSettings dns,
+    required bool ipv6,
+  }) => {
     'servers': [
+      if (dns.fakeDns) 'fakedns',
       if (bypassRu)
         {
           'tag': 'dns-ru',
-          'address': _ruDoh,
+          'address': dns.direct.address,
           'domains': _ruDomains,
           // A Russian answer only; anything else falls through to remote.
           'expectIPs': ['geoip:ru'],
           // Never used for names outside _ruDomains.
           'skipFallback': true,
         },
-      {'tag': 'dns-remote', 'address': _remoteDoh},
+      {'tag': 'dns-remote', 'address': dns.remote.address},
     ],
-    'queryStrategy': 'UseIPv4',
+    'queryStrategy': ipv6 ? 'UseIP' : 'UseIPv4',
   };
 
-  /// Answers A queries from the `dns` block above; AAAA (28) and HTTPS (65)
-  /// get an empty answer: everything goes over IPv4, and no ECH keys that
-  /// would hide the TLS server name from sniffing (and so from domain rules).
-  static const Map<String, dynamic> _dnsOutbound = {
+  /// Answers the system's queries from the `dns` block above. HTTPS (65)
+  /// always gets an empty answer: no ECH keys that would hide the TLS server
+  /// name from sniffing (and so from domain rules). AAAA (28) does too, unless
+  /// [ipv6] is on: with IPv6 off everything goes over IPv4.
+  static Map<String, dynamic> _dnsOutbound({required bool ipv6}) => {
     'tag': 'dns-out',
     'protocol': 'dns',
     'settings': {
       'rules': [
-        {'action': 'return', 'qType': '28,65'},
+        {'action': 'return', 'qType': ipv6 ? '65' : '28,65'},
       ],
     },
   };

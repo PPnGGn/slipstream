@@ -61,10 +61,7 @@ void main() {
   });
 
   test('an unknown stored name falls back to that field\'s default', () async {
-    final store = await storeWith({
-      'dns_remote': 'quad9',
-      'dns_direct': 'isp',
-    });
+    final store = await storeWith({'dns_remote': 'quad9', 'dns_direct': 'isp'});
     expect(store.load(), const DnsSettings());
   });
 }

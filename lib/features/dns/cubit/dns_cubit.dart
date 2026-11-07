@@ -16,7 +16,10 @@ import 'package:slipstream/features/dns/data/remote_dns.dart';
 @LazySingleton()
 class DnsCubit extends Cubit<DnsSettings> {
   DnsCubit({required DnsSettingsStore store, @ignoreParam bool? fakeDnsAllowed})
-    : this._(store, fakeDnsAllowed ?? isFakeDnsSupported(defaultTargetPlatform));
+    : this._(
+        store,
+        fakeDnsAllowed ?? isFakeDnsSupported(defaultTargetPlatform),
+      );
 
   DnsCubit._(this._store, this.fakeDnsAllowed)
     : super(_allowed(_store.load(), fakeDnsAllowed));
