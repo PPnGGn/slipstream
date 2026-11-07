@@ -36,6 +36,8 @@ import '../../features/client_identity/data/device_info_api.g.dart' as _i1033;
 import '../../features/diagnostics/cubit/memory_monitor_cubit.dart' as _i628;
 import '../../features/diagnostics/cubit/memory_usage_cubit.dart' as _i190;
 import '../../features/diagnostics/data/memory_monitor_store.dart' as _i193;
+import '../../features/dns/cubit/dns_cubit.dart' as _i518;
+import '../../features/dns/data/dns_settings_store.dart' as _i781;
 import '../../features/geo/cubit/geo_cubit.dart' as _i818;
 import '../../features/geo/data/geo_config_gate.dart' as _i951;
 import '../../features/geo/data/geo_paths.dart' as _i262;
@@ -203,6 +205,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i193.MemoryMonitorStore>(
       () => _i193.MemoryMonitorStore(gh<_i460.SharedPreferences>()),
     );
+    gh.lazySingleton<_i781.DnsSettingsStore>(
+      () => _i781.DnsSettingsStore(gh<_i460.SharedPreferences>()),
+    );
     gh.lazySingleton<_i384.PingSettingsStore>(
       () => _i384.PingSettingsStore(gh<_i460.SharedPreferences>()),
     );
@@ -297,6 +302,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i1033.DeviceInfoApi>(),
         gh<_i207.Talker>(),
       ),
+    );
+    gh.lazySingleton<_i518.DnsCubit>(
+      () => _i518.DnsCubit(store: gh<_i781.DnsSettingsStore>()),
     );
     gh.lazySingleton<_i236.GeoRepository>(
       () => _i236.GeoRepository(
