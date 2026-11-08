@@ -11,7 +11,9 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  intl: ^0.20.3
+  # Pinned by flutter_localizations to the version its SDK ships with, so any
+  # SDK (the local one and the CI one) gets the matching release.
+  intl: any
   talker_flutter: ^5.2.0
   flutter_bloc: ^9.1.1
   get_it: ^9.3.0
@@ -36,11 +38,14 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   fake_async: ^1.3.3
-  pigeon: ^29.1.1
-  # 2.17.1+ needs package:build 5, injectable_generator 3.1.3 still needs 4.
-  build_runner: ^2.16.1
-  freezed: ^4.0.3
-  json_serializable: ^6.15.2
+  # The code generators stay where CI can run them: its Flutter (3.44.8) ships
+  # Dart 3.12, and freezed 4 needs Dart 3.13 (pigeon 29 needs freezed 4's
+  # analyzer, so they go together). Raise them with the Flutter version in
+  # .github/workflows/release.yml, not before.
+  pigeon: ^26.3.4
+  build_runner: ^2.15.0
+  freezed: ^3.2.6-dev.1
+  json_serializable: ^6.14.0
   injectable_generator: ^3.1.3
 
 flutter:

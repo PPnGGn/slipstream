@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
+// ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'vpn_server.dart';
@@ -9,7 +9,6 @@ part of 'vpn_server.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -29,21 +28,16 @@ $VpnServerCopyWith<VpnServer> get copyWith => _$VpnServerCopyWithImpl<VpnServer>
 
 @override
 bool operator ==(Object other) {
-  final _this = this as VpnServer;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is VpnServer&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.subscriptionId, _this.subscriptionId) || other.subscriptionId == _this.subscriptionId)&&(identical(other.countryCode, _this.countryCode) || other.countryCode == _this.countryCode)&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.configJson, _this.configJson) || other.configJson == _this.configJson));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is VpnServer&&(identical(other.id, id) || other.id == id)&&(identical(other.subscriptionId, subscriptionId) || other.subscriptionId == subscriptionId)&&(identical(other.countryCode, countryCode) || other.countryCode == countryCode)&&(identical(other.title, title) || other.title == title)&&(identical(other.configJson, configJson) || other.configJson == configJson));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode {
-  final _this = this as VpnServer;
-  return Object.hash(runtimeType,_this.id,_this.subscriptionId,_this.countryCode,_this.title,_this.configJson);
-}
+int get hashCode => Object.hash(runtimeType,id,subscriptionId,countryCode,title,configJson);
 
 @override
 String toString() {
-  final _this = this as VpnServer;
-  return 'VpnServer(id: ${_this.id}, subscriptionId: ${_this.subscriptionId}, countryCode: ${_this.countryCode}, title: ${_this.title}, configJson: ${_this.configJson})';
+  return 'VpnServer(id: $id, subscriptionId: $subscriptionId, countryCode: $countryCode, title: $title, configJson: $configJson)';
 }
 
 
@@ -72,7 +66,7 @@ class _$VpnServerCopyWithImpl<$Res>
 /// Create a copy of VpnServer
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? subscriptionId = null,Object? countryCode = null,Object? title = null,Object? configJson = null,}) {
-  return _then(VpnServer(
+  return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,subscriptionId: null == subscriptionId ? _self.subscriptionId : subscriptionId // ignore: cast_nullable_to_non_nullable
 as String,countryCode: null == countryCode ? _self.countryCode : countryCode // ignore: cast_nullable_to_non_nullable
@@ -241,18 +235,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _VpnServer&&(identical(other.id, id) || other.id == id)&&(identical(other.subscriptionId, subscriptionId) || other.subscriptionId == subscriptionId)&&(identical(other.countryCode, countryCode) || other.countryCode == countryCode)&&(identical(other.title, title) || other.title == title)&&(identical(other.configJson, configJson) || other.configJson == configJson));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _VpnServer&&(identical(other.id, id) || other.id == id)&&(identical(other.subscriptionId, subscriptionId) || other.subscriptionId == subscriptionId)&&(identical(other.countryCode, countryCode) || other.countryCode == countryCode)&&(identical(other.title, title) || other.title == title)&&(identical(other.configJson, configJson) || other.configJson == configJson));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode {
-    return Object.hash(runtimeType,id,subscriptionId,countryCode,title,configJson);
-}
+int get hashCode => Object.hash(runtimeType,id,subscriptionId,countryCode,title,configJson);
 
 @override
 String toString() {
-    return 'VpnServer(id: $id, subscriptionId: $subscriptionId, countryCode: $countryCode, title: $title, configJson: $configJson)';
+  return 'VpnServer(id: $id, subscriptionId: $subscriptionId, countryCode: $countryCode, title: $title, configJson: $configJson)';
 }
 
 
