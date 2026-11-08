@@ -83,7 +83,24 @@ clean-installed-apps-api:
 
 
 # All Pigeon bridges at once (needed after a fresh clone: *.g.dart is gitignored)
-generate-pigeon: generate-vpn-api generate-updater-api generate-device-info-api generate-sync-api generate-installed-apps-api
+# Pigeon native preferences bridge (Android-only: the language and the alerts
+# that the VPN service and the tile need while the app is closed). Own Kotlin
+# package for the same FlutterError reason as above.
+generate-native-prefs-api:
+	dart run pigeon \
+	--input pigeons/native_prefs_api.dart \
+	--copyright_header pigeons/copyright_header.txt \
+	--dart_out lib/features/native_prefs/data/native_prefs_api.g.dart \
+	--kotlin_out android/app/src/main/kotlin/com/slipstream/nativeprefs/NativePrefsApi.g.kt \
+	--kotlin_package "com.slipstream.nativeprefs"
+
+# Remove generated Pigeon outputs
+clean-native-prefs-api:
+	rm -f lib/features/native_prefs/data/native_prefs_api.g.dart
+	rm -f android/app/src/main/kotlin/com/slipstream/nativeprefs/NativePrefsApi.g.kt
+
+
+generate-pigeon: generate-vpn-api generate-updater-api generate-device-info-api generate-sync-api generate-installed-apps-api generate-native-prefs-api
 
 
 build-core-android:

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_connecting">در حال اتصال…</string>
+    <string name="notification_connected">متصل شد</string>
+    <string name="notification_blocked">اتصال قطع شد · ترافیک مسدود است</string>
+    <string name="notification_action_reconnect">اتصال مجدد</string>
+    <string name="notification_action_disconnect">قطع اتصال</string>
+    <string name="notification_channel_status">وضعیت VPN</string>
+
+    <string name="tile_blocked">ترافیک مسدود شد</string>
+    <string name="tile_disconnecting">در حال قطع اتصال…</string>
+</resources>

@@ -2,9 +2,12 @@ package com.slipstream
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
+// The texts themselves live in res/values*/strings.xml, one file per language; these
+// tests pin which text each phase picks, so a translation cannot change what is said.
 class VpnNotificationContentTest {
 
     private fun content(phase: NotificationPhase, title: String? = "🇩🇪 Germany") =
@@ -15,7 +18,7 @@ class VpnNotificationContentTest {
         val content = content(NotificationPhase.CONNECTED)
 
         assertEquals("🇩🇪 Germany", content.title)
-        assertEquals("Connected", content.text)
+        assertEquals(R.string.notification_connected, content.text)
     }
 
     @Test
@@ -23,7 +26,7 @@ class VpnNotificationContentTest {
         val content = content(NotificationPhase.CONNECTING)
 
         assertEquals("🇩🇪 Germany", content.title)
-        assertEquals("Connecting…", content.text)
+        assertEquals(R.string.notification_connecting, content.text)
     }
 
     @Test
@@ -31,7 +34,14 @@ class VpnNotificationContentTest {
         val content = content(NotificationPhase.BLOCKED)
 
         assertEquals("🇩🇪 Germany", content.title)
-        assertEquals("Connection lost · traffic blocked", content.text)
+        assertEquals(R.string.notification_blocked, content.text)
+    }
+
+    @Test
+    fun everyPhaseHasItsOwnText() {
+        val texts = NotificationPhase.values().map { content(it).text }
+
+        assertEquals(texts.size, texts.toSet().size)
     }
 
     @Test
@@ -41,15 +51,16 @@ class VpnNotificationContentTest {
         assertFalse(content(NotificationPhase.CONNECTING).canReconnect)
     }
 
+    // The service puts the app name in its place, in the language of the moment.
     @Test
-    fun withoutAServerNameTheAppNameIsTheTitle() {
-        assertEquals("Slipstream", content(NotificationPhase.CONNECTED, null).title)
+    fun withoutAServerNameThereIsNoTitle() {
+        assertNull(content(NotificationPhase.CONNECTED, null).title)
     }
 
     @Test
     fun aBlankServerNameCountsAsMissing() {
-        assertEquals("Slipstream", content(NotificationPhase.CONNECTED, "  ").title)
-        assertEquals("Slipstream", content(NotificationPhase.CONNECTED, "").title)
+        assertNull(content(NotificationPhase.CONNECTED, "  ").title)
+        assertNull(content(NotificationPhase.CONNECTED, "").title)
     }
 
     @Test

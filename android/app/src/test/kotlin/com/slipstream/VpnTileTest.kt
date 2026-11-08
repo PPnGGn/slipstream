@@ -32,7 +32,8 @@ class VpnTileTest {
         val view = tileView(VpnStatus.BLOCKED, "🇩🇪 Germany")
 
         assertEquals(TileLook.ACTIVE, view.look)
-        assertEquals("Traffic blocked", view.subtitle)
+        assertEquals(R.string.tile_blocked, view.subtitleRes)
+        assertNull(view.serverName)
     }
 
     @Test
@@ -69,28 +70,36 @@ class VpnTileTest {
         val view = tileView(VpnStatus.CONNECTED, "🇩🇪 Germany")
 
         assertEquals(TileLook.ACTIVE, view.look)
-        assertEquals("🇩🇪 Germany", view.subtitle)
+        assertEquals("🇩🇪 Germany", view.serverName)
+        assertNull(view.subtitleRes)
     }
 
     @Test
     fun connectedWithoutAKnownServerSaysConnected() {
-        assertEquals("Connected", tileView(VpnStatus.CONNECTED, null).subtitle)
-        assertEquals("Connected", tileView(VpnStatus.CONNECTED, "  ").subtitle)
+        for (title in listOf(null, "  ")) {
+            val view = tileView(VpnStatus.CONNECTED, title)
+
+            assertNull(view.serverName)
+            assertEquals(R.string.notification_connected, view.subtitleRes)
+        }
     }
 
     @Test
     fun aChangeIsInactiveAndSaysWhat() {
         assertEquals(TileLook.INACTIVE, tileView(VpnStatus.CONNECTING, "x").look)
-        assertEquals("Connecting…", tileView(VpnStatus.CONNECTING, "x").subtitle)
+        assertEquals(R.string.notification_connecting, tileView(VpnStatus.CONNECTING, "x").subtitleRes)
         assertEquals(TileLook.INACTIVE, tileView(VpnStatus.DISCONNECTING, "x").look)
-        assertEquals("Disconnecting…", tileView(VpnStatus.DISCONNECTING, "x").subtitle)
+        assertEquals(R.string.tile_disconnecting, tileView(VpnStatus.DISCONNECTING, "x").subtitleRes)
     }
 
     @Test
     fun offIsInactiveWithNoSubtitle() {
-        assertEquals(TileLook.INACTIVE, tileView(VpnStatus.DISCONNECTED, "x").look)
-        assertNull(tileView(VpnStatus.DISCONNECTED, "x").subtitle)
-        assertEquals(TileLook.INACTIVE, tileView(VpnStatus.ERROR, "x").look)
-        assertNull(tileView(VpnStatus.ERROR, "x").subtitle)
+        for (status in listOf(VpnStatus.DISCONNECTED, VpnStatus.ERROR)) {
+            val view = tileView(status, "x")
+
+            assertEquals(TileLook.INACTIVE, view.look)
+            assertNull(view.subtitleRes)
+            assertNull(view.serverName)
+        }
     }
 }

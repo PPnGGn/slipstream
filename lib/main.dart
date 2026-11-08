@@ -7,6 +7,7 @@ import 'package:slipstream/app/di/injector.dart';
 import 'package:slipstream/features/auto_connect/presentation/auto_connect_runner.dart';
 import 'package:slipstream/features/launch_sync/presentation/launch_sync_runner.dart';
 import 'package:slipstream/features/geo/data/geo_update_service.dart';
+import 'package:slipstream/features/native_prefs/presentation/native_prefs_runner.dart';
 import 'package:slipstream/features/ping/presentation/ping_auto_runner.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscription_auto_updater.dart';
 import 'package:slipstream/features/subscriptions/data/auto_update/subscription_sync_job.dart';
@@ -17,6 +18,8 @@ Future<void> main() async {
   await configureDependencies();
   getIt<GeoUpdateService>().init();
   getIt<PingAutoRunner>().init();
+  // Tells the VPN notification and the tile (Kotlin) which language to use.
+  getIt<NativePrefsRunner>().init();
   getIt<SubscriptionAutoUpdater>().init();
   // Not awaited: it waits for the subscriptions and the VPN status, the first
   // frame must not.

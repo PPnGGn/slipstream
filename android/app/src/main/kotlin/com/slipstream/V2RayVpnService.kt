@@ -20,6 +20,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.slipstream.android.Android
+import com.slipstream.nativeprefs.NativePrefsStore
 
 class V2RayVpnService : VpnService() {
 
@@ -569,7 +570,14 @@ class V2RayVpnService : VpnService() {
         }
     }
 
+    // The service's texts in the language the user picked in the app (the phone's own
+    // when none was). Resolved at each use: a change of language shows from the next
+    // notification on.
+    private fun localized(): Context =
+            localizedContext(this, NativePrefsStore.of(this).language())
+
     private fun buildNotification(phase: NotificationPhase): Notification {
+        val texts = localized()
         val content = notificationContent(phase, serverTitle)
         val stopIntent = Intent(this, V2RayVpnService::class.java).setAction(ACTION_STOP_VPN)
         val stopPendingIntent =
@@ -581,15 +589,26 @@ class V2RayVpnService : VpnService() {
                 )
         val builder =
                 NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-                        .setContentTitle(content.title)
-                        .setContentText(content.text)
+                        .setContentTitle(content.title ?: texts.getString(R.string.app_name))
+                        .setContentText(texts.getString(content.text))
                         .setSmallIcon(R.mipmap.ic_launcher)
                         .setContentIntent(openAppPendingIntent())
                         .setOngoing(true)
                         .setOnlyAlertOnce(true)
                         .setPriority(NotificationCompat.PRIORITY_LOW)
-        if (content.canReconnect) builder.addAction(0, "Reconnect", reconnectPendingIntent())
-        return builder.addAction(0, "Disconnect", stopPendingIntent).build()
+        if (content.canReconnect) {
+            builder.addAction(
+                    0,
+                    texts.getString(R.string.notification_action_reconnect),
+                    reconnectPendingIntent(),
+            )
+        }
+        return builder.addAction(
+                        0,
+                        texts.getString(R.string.notification_action_disconnect),
+                        stopPendingIntent,
+                )
+                .build()
     }
 
     private fun ensureNotificationChannel() {
@@ -597,12 +616,12 @@ class V2RayVpnService : VpnService() {
         val manager = getSystemService(NotificationManager::class.java) ?: return
         // Created on every start, not only the first: creating a channel that
         // exists changes its name (what the user sees in the system settings)
-        // and leaves its importance alone. That is how the old Russian name of
-        // an installed app becomes English.
+        // and leaves its importance alone. That is how the name follows the
+        // language the user picked: it changes at the next start of the service.
         val channel =
                 NotificationChannel(
                         NOTIFICATION_CHANNEL_ID,
-                        "VPN status",
+                        localized().getString(R.string.notification_channel_status),
                         NotificationManager.IMPORTANCE_LOW,
                 )
         manager.createNotificationChannel(channel)

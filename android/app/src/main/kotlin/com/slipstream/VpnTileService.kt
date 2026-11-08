@@ -10,6 +10,7 @@ import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import android.util.Log
 import androidx.core.content.ContextCompat
+import com.slipstream.nativeprefs.NativePrefsStore
 
 // The quick settings tile: turns the VPN on and off from the notification shade.
 // What it does and shows is decided by plain functions (VpnTile.kt); this class
@@ -72,10 +73,14 @@ class VpnTileService : TileService() {
     private fun render(status: VpnStatus) {
         val tile = qsTile ?: return
         val view = tileView(status, VpnLaunchStore.of(this).load()?.serverTitle)
+        // The texts in the language the user picked in the app (the phone's by default).
+        val texts = localizedContext(this, NativePrefsStore.of(this).language())
         tile.state = if (view.look == TileLook.ACTIVE) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
-        tile.label = "Slipstream"
+        tile.label = texts.getString(R.string.app_name)
         // The line under the label exists from Android 10.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) tile.subtitle = view.subtitle
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            tile.subtitle = view.serverName ?: view.subtitleRes?.let { texts.getString(it) }
+        }
         tile.updateTile()
     }
 

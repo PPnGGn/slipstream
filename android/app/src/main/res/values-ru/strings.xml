@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_connecting">Подключение…</string>
+    <string name="notification_connected">Подключено</string>
+    <string name="notification_blocked">Соединение потеряно · трафик заблокирован</string>
+    <string name="notification_action_reconnect">Переподключить</string>
+    <string name="notification_action_disconnect">Отключить</string>
+    <string name="notification_channel_status">Статус VPN</string>
+
+    <string name="tile_blocked">Трафик заблокирован</string>
+    <string name="tile_disconnecting">Отключение…</string>
+</resources>

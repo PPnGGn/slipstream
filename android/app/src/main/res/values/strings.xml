@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Texts that Kotlin shows without Flutter: the VPN notification and the quick
+  settings tile. The app's own screens use lib/l10n/*.arb. One file per
+  language: values (English, the default), values-ru, values-zh, values-fa.
+  Keep the four files in step; NativeStringsTest checks it.
+  The app name is not translated.
+-->
+<resources>
+    <string name="app_name" translatable="false">Slipstream</string>
+
+    <string name="notification_connecting">Connecting…</string>
+    <string name="notification_connected">Connected</string>
+    <string name="notification_blocked">Connection lost · traffic blocked</string>
+    <string name="notification_action_reconnect">Reconnect</string>
+    <string name="notification_action_disconnect">Disconnect</string>
+    <string name="notification_channel_status">VPN status</string>
+
+    <string name="tile_blocked">Traffic blocked</string>
+    <string name="tile_disconnecting">Disconnecting…</string>
+</resources>

@@ -47,6 +47,9 @@ import '../../features/language/cubit/language_cubit.dart' as _i353;
 import '../../features/language/data/language_store.dart' as _i668;
 import '../../features/launch_sync/presentation/launch_sync_runner.dart'
     as _i348;
+import '../../features/native_prefs/data/native_prefs_sink.dart' as _i838;
+import '../../features/native_prefs/presentation/native_prefs_runner.dart'
+    as _i644;
 import '../../features/ping/data/host_resolver.dart' as _i371;
 import '../../features/ping/data/ping_settings_store.dart' as _i384;
 import '../../features/ping/data/ping_target_resolver.dart' as _i142;
@@ -171,6 +174,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i437.ServerPinger>(
       () => _i970.TcpConnectPinger(),
       instanceName: 'tcp',
+    );
+    gh.lazySingleton<_i838.NativePrefsSink>(
+      () => _i838.PlatformNativePrefsSink(),
     );
     gh.lazySingleton<_i437.ServerPinger>(
       () => _i874.QuicProbePinger(),
@@ -315,6 +321,13 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i964.LanBypassCubit>(
       () => _i964.LanBypassCubit(store: gh<_i1047.LanBypassStore>()),
+    );
+    gh.lazySingleton<_i644.NativePrefsRunner>(
+      () => _i644.NativePrefsRunner(
+        gh<_i838.NativePrefsSink>(),
+        gh<_i353.LanguageCubit>(),
+        gh<_i207.Talker>(),
+      ),
     );
     gh.lazySingleton<_i314.AutoConnectCubit>(
       () => _i314.AutoConnectCubit(store: gh<_i699.AutoConnectStore>()),
