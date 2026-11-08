@@ -1,6 +1,7 @@
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/core/service/vpn_service/vpn_service_cubit.dart';
 import 'package:slipstream/features/subscriptions/data/vpn_server_display.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 /// Picks the accent: off — muted, busy — warn, on — ok, error — danger.
 enum ConnectionPhase { off, busy, on, error }
@@ -26,6 +27,7 @@ class ConnectionStatusView {
   });
 
   factory ConnectionStatusView.from({
+    required AppLocalizations l10n,
     required VpnState state,
     required bool hasSubscriptions,
     required VpnServer? selectedServer,
@@ -38,52 +40,52 @@ class ConnectionStatusView {
       disconnected: () => ConnectionStatusView(
         phase: ConnectionPhase.off,
         title: !hasSubscriptions
-            ? 'No servers yet'
+            ? l10n.statusNoServersTitle
             : server == null
-            ? 'Pick a server'
-            : 'Ready to connect',
+            ? l10n.statusPickServerTitle
+            : l10n.statusReadyTitle,
         subtitle: !hasSubscriptions
-            ? 'Add a subscription below'
+            ? l10n.statusNoServersSubtitle
             : server == null
-            ? 'Choose one from the list below'
-            : 'Tap the ring to start',
+            ? l10n.statusPickServerSubtitle
+            : l10n.statusReadySubtitle,
         server: server,
-        compactLabel: 'off',
+        compactLabel: l10n.statusCompactOff,
       ),
       connecting: () => ConnectionStatusView(
         phase: ConnectionPhase.busy,
-        title: 'Establishing tunnel…',
+        title: l10n.statusConnectingTitle,
         subtitle: serverName,
         server: server,
-        compactLabel: 'connecting…',
+        compactLabel: l10n.statusCompactConnecting,
       ),
       connected: (_, _, _, _) => ConnectionStatusView(
         phase: ConnectionPhase.on,
-        title: 'Connected',
+        title: l10n.statusConnectedTitle,
         subtitle: serverName,
         server: server,
         compactLabel: null,
       ),
       disconnecting: () => ConnectionStatusView(
         phase: ConnectionPhase.busy,
-        title: 'Disconnecting…',
+        title: l10n.statusDisconnectingTitle,
         subtitle: serverName,
         server: server,
-        compactLabel: 'disconnecting…',
+        compactLabel: l10n.statusCompactDisconnecting,
       ),
       error: (message) => ConnectionStatusView(
         phase: ConnectionPhase.error,
-        title: 'Connection failed',
+        title: l10n.statusFailedTitle,
         subtitle: message,
         server: server,
-        compactLabel: 'failed',
+        compactLabel: l10n.statusCompactFailed,
       ),
       blocked: (_) => ConnectionStatusView(
         phase: ConnectionPhase.error,
-        title: 'Traffic blocked',
-        subtitle: 'Kill switch · tap the ring to turn off',
+        title: l10n.statusBlockedTitle,
+        subtitle: l10n.statusBlockedSubtitle,
         server: server,
-        compactLabel: 'blocked',
+        compactLabel: l10n.statusCompactBlocked,
       ),
     );
   }

@@ -86,8 +86,8 @@ class SubscriptionFactory {
       final host = Uri.tryParse(input)?.host;
       if (host != null && host.isNotEmpty) return host;
     }
-    return servers.length == 1
-        ? servers.first.title
-        : 'Импортированные серверы';
+    // The name is stored with the subscription, so it is not translated: a
+    // user who changes the language later would keep the old words anyway.
+    return servers.length == 1 ? servers.first.title : 'Imported servers';
   }
 }

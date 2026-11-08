@@ -45,6 +45,7 @@ import 'package:slipstream/features/update/data/updater_api.g.dart';
 import 'package:slipstream/features/update/ui/update_toasts.dart';
 import 'package:slipstream/features/update/ui/widgets/update_dialog.dart';
 import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -69,6 +70,7 @@ class _SettingsPageState extends State<SettingsPage> {
     }
 
     final feedback = updateCheckFeedback(
+      context.l10n,
       _updateCubit.state,
       '${app.version} (${app.buildNumber})',
     );

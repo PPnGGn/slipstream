@@ -5,6 +5,8 @@ import 'package:slipstream/core/service/vpn_service/vpn_service_cubit.dart';
 import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
 import 'package:slipstream/features/vpn/presentation/xray_logs_view.dart';
 
+import '../../helpers/l10n.dart';
+
 VpnLogMessage _log(
   String level,
   String message, {
@@ -132,25 +134,25 @@ void main() {
   group('logsStatusLine', () {
     test('follows the tunnel state and counts the lines', () {
       expect(
-        logsStatusLine(lines: 14, tunnelUp: true, following: true),
+        logsStatusLine(l10nEn, lines: 14, tunnelUp: true, following: true),
         'FOLLOWING · 14 LINES · TUNNEL UP',
       );
       expect(
-        logsStatusLine(lines: 14, tunnelUp: false, following: true),
+        logsStatusLine(l10nEn, lines: 14, tunnelUp: false, following: true),
         'FOLLOWING · 14 LINES · TUNNEL DOWN',
       );
     });
 
     test('says "line" for exactly one', () {
       expect(
-        logsStatusLine(lines: 1, tunnelUp: true, following: true),
+        logsStatusLine(l10nEn, lines: 1, tunnelUp: true, following: true),
         'FOLLOWING · 1 LINE · TUNNEL UP',
       );
     });
 
     test('says PAUSED once the user has scrolled up', () {
       expect(
-        logsStatusLine(lines: 14, tunnelUp: true, following: false),
+        logsStatusLine(l10nEn, lines: 14, tunnelUp: true, following: false),
         'PAUSED · 14 LINES · TUNNEL UP',
       );
     });
@@ -159,18 +161,18 @@ void main() {
   group('logsEmptyText', () {
     test('before any log exists it explains where logs come from', () {
       expect(
-        logsEmptyText(total: 0, filter: LogLevelFilter.all),
+        logsEmptyText(l10nEn, total: 0, filter: LogLevelFilter.all),
         'Logs appear while the tunnel runs',
       );
       expect(
-        logsEmptyText(total: 0, filter: LogLevelFilter.error),
+        logsEmptyText(l10nEn, total: 0, filter: LogLevelFilter.error),
         'Logs appear while the tunnel runs',
       );
     });
 
     test('with logs hidden by the filter it says so', () {
       expect(
-        logsEmptyText(total: 20, filter: LogLevelFilter.error),
+        logsEmptyText(l10nEn, total: 20, filter: LogLevelFilter.error),
         'No ERROR lines',
       );
     });
@@ -179,18 +181,18 @@ void main() {
   group('logsCopyToast', () {
     test('confirms the copy and counts the lines', () {
       expect(
-        logsCopyToast(14),
+        logsCopyToast(l10nEn, 14),
         const ToastSpec('Logs copied', subtitle: '14 LINES · PLAIN TEXT'),
       );
       expect(
-        logsCopyToast(1),
+        logsCopyToast(l10nEn, 1),
         const ToastSpec('Logs copied', subtitle: '1 LINE · PLAIN TEXT'),
       );
     });
 
     test('with nothing to copy it says that instead', () {
       expect(
-        logsCopyToast(0),
+        logsCopyToast(l10nEn, 0),
         const ToastSpec(
           'Nothing to copy',
           subtitle: 'NO LOG LINES YET',

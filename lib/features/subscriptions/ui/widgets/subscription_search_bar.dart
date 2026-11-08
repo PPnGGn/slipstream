@@ -2,18 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:slipstream/app/app_assets.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 class SubscriptionSearchBar extends StatefulWidget {
   const SubscriptionSearchBar({
     super.key,
     required this.colors,
     required this.controller,
-    this.hintText = 'Search servers, countries or protocols',
+    this.hintText,
   });
 
   final AppColors colors;
   final TextEditingController controller;
-  final String hintText;
+
+  /// Null: the hint for the server list.
+  final String? hintText;
 
   @override
   State<SubscriptionSearchBar> createState() => _SubscriptionSearchBarState();
@@ -58,7 +61,7 @@ class _SubscriptionSearchBarState extends State<SubscriptionSearchBar> {
         enabledBorder: border,
         focusedBorder: border,
         contentPadding: const .symmetric(vertical: 13),
-        hintText: widget.hintText,
+        hintText: widget.hintText ?? context.l10n.searchHint,
         prefixIcon: Padding(
           padding: const EdgeInsetsDirectional.fromSTEB(14, 0, 9, 0),
           child: SvgPicture.asset(

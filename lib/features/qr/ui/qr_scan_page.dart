@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:slipstream/core/ui/widgets/close_circle_button.dart';
 import 'package:slipstream/features/qr/data/qr_scan.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 // Full-screen camera. Pops with the scanned text, or with null if closed.
 class QrScanPage extends StatefulWidget {
@@ -72,8 +73,8 @@ class _CameraError extends StatelessWidget {
         padding: const .all(32),
         child: Text(
           denied
-              ? 'Camera access denied. Allow it in the system settings.'
-              : 'Camera is unavailable on this device.',
+              ? context.l10n.qrCameraDenied
+              : context.l10n.qrCameraUnavailable,
           textAlign: .center,
           style: const TextStyle(color: Colors.white, fontSize: 15),
         ),
@@ -100,9 +101,9 @@ class _ScanFrame extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          const Text(
-            'Point the camera at a QR code',
-            style: TextStyle(color: Colors.white, fontSize: 14),
+          Text(
+            context.l10n.qrScanHint,
+            style: const TextStyle(color: Colors.white, fontSize: 14),
           ),
         ],
       ),

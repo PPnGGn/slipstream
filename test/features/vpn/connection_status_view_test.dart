@@ -3,6 +3,8 @@ import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/core/service/vpn_service/vpn_service_cubit.dart';
 import 'package:slipstream/features/vpn/presentation/connection_status_view.dart';
 
+import '../../helpers/l10n.dart';
+
 void main() {
   const amsterdam = VpnServer(
     id: 'ams',
@@ -24,6 +26,7 @@ void main() {
     bool hasSubscriptions = true,
     VpnServer? selected,
   }) => ConnectionStatusView.from(
+    l10n: l10nEn,
     state: state,
     hasSubscriptions: hasSubscriptions,
     selectedServer: selected,

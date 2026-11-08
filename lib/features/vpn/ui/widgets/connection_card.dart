@@ -20,6 +20,7 @@ import 'package:slipstream/features/subscriptions/data/vpn_server_display.dart';
 import 'package:slipstream/features/vpn/presentation/connection_status_view.dart';
 import 'package:slipstream/features/vpn/ui/widgets/connection_phase_colors.dart';
 import 'package:slipstream/features/vpn/ui/widgets/connection_timer.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 /// Classic home layout: the card with the big connect ring.
 class ConnectionCard extends StatelessWidget {
@@ -41,6 +42,7 @@ class ConnectionCard extends StatelessWidget {
               builder: (context, subsState) {
                 final selectedServer = subsState.selectedServer;
                 final view = ConnectionStatusView.from(
+                  l10n: context.l10n,
                   state: state,
                   hasSubscriptions: subsState.subscriptions.isNotEmpty,
                   selectedServer: selectedServer,
@@ -49,6 +51,7 @@ class ConnectionCard extends StatelessWidget {
                 return GestureDetector(
                   onTap: () => handleConnectTap(
                     cubit,
+                    l10n: context.l10n,
                     server: selectedServer,
                     hasSubscriptions: subsState.subscriptions.isNotEmpty,
                   ),
@@ -413,7 +416,7 @@ class _Chips extends StatelessWidget {
       runSpacing: 6,
       children: [
         if (server == null)
-          _Chip(colors: colors, label: 'NO SERVER')
+          _Chip(colors: colors, label: context.l10n.homeNoServerChip)
         else
           _ProtocolChip(colors: colors, server: server),
         if (server != null) _PingChip(colors: colors, serverId: server.id),
@@ -465,7 +468,7 @@ class _PingChip extends StatelessWidget {
             '${entry.latencyMs!.round()} ms',
             _qualityColor(colors, entry.latencyMs!),
           ),
-          PingRunStatus.dead => ('timeout', colors.danger),
+          PingRunStatus.dead => (context.l10n.pingTimeout, colors.danger),
           PingRunStatus.queued ||
           PingRunStatus.measuring => ('··· ms', colors.textMuted),
           PingRunStatus.unsupported => ('n/a', colors.textMuted),

@@ -2,6 +2,7 @@ import 'package:slipstream/core/models/app_release/app_release.dart';
 import 'package:slipstream/core/service/toast/toast_message.dart';
 import 'package:slipstream/core/service/update_service/update_service_cubit.dart';
 import 'package:slipstream/core/utils/formatters.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 /// What the app does in answer to the user checking for updates.
 sealed class UpdateFeedback {
@@ -24,40 +25,50 @@ final class NoUpdateFeedback extends UpdateFeedback {
 
 /// The answer for the state the updater is in. [installedVersion] is the
 /// running app's "2.1.0 (36)", for the "up to date" line.
-UpdateFeedback updateCheckFeedback(UpdateState state, String installedVersion) {
+UpdateFeedback updateCheckFeedback(
+  AppLocalizations l10n,
+  UpdateState state,
+  String installedVersion,
+) {
   return state.when(
     idle: () => const NoUpdateFeedback(),
     checking: () => const NoUpdateFeedback(),
     upToDate: () => ShowUpdateToast(
       ToastSpec(
-        "You're up to date",
-        subtitle: 'SLIPSTREAM $installedVersion IS THE LATEST',
+        l10n.updateUpToDateTitle,
+        subtitle: l10n.updateUpToDateHint(installedVersion),
       ),
     ),
     downloading: (release, receivedBytes) =>
-        ShowUpdateToast(_downloadingToast(release, receivedBytes)),
+        ShowUpdateToast(_downloadingToast(l10n, release, receivedBytes)),
     readyToInstall: (_, _) => const OpenUpdateDialog(),
     signatureConflict: (_, _) => const OpenUpdateDialog(),
     // The reason (network, GitHub, a release without an APK) is in the logs;
     // the user needs to know only that it did not work and can be retried.
-    error: (_) => const ShowUpdateToast(
+    error: (_) => ShowUpdateToast(
       ToastSpec(
-        "Couldn't check for updates",
-        subtitle: 'UPDATE SERVER UNREACHABLE · TRY AGAIN',
+        l10n.updateCheckFailedTitle,
+        subtitle: l10n.updateCheckFailedHint,
         kind: ToastKind.error,
       ),
     ),
   );
 }
 
-ToastSpec _downloadingToast(AppRelease release, int receivedBytes) {
+ToastSpec _downloadingToast(
+  AppLocalizations l10n,
+  AppRelease release,
+  int receivedBytes,
+) {
   final size = release.sizeBytes;
   final percent = size > 0 ? (receivedBytes / size * 100).round() : 0;
   return ToastSpec(
-    'Downloading update…',
-    subtitle:
-        '${percent.clamp(0, 100)}% · ${formatBytes(receivedBytes)} OF '
-        '${formatBytes(size)}',
+    l10n.updateDownloadingTitle,
+    subtitle: l10n.updateDownloadingHint(
+      percent.clamp(0, 100),
+      formatBytes(receivedBytes),
+      formatBytes(size),
+    ),
     kind: ToastKind.info,
   );
 }
@@ -73,34 +84,34 @@ bool isUpdateStateWorthShowing(UpdateState state) => state.maybeWhen(
 
 /// Shown when the dialog is closed with an update ready: it will come up
 /// again, the next launch checks for updates and finds the downloaded file.
-const updateLaterToast = ToastSpec(
-  "We'll remind you on next launch",
-  kind: ToastKind.info,
-);
+ToastSpec updateLaterToast(AppLocalizations l10n) =>
+    ToastSpec(l10n.updateLaterTitle, kind: ToastKind.info);
 
 /// [location] is what the export returned: where the APK went, or null when
 /// copying failed. The path itself means nothing to the user.
-ToastSpec saveApkToast(String? location) => location == null
-    ? const ToastSpec(
-        "Couldn't save the APK",
-        subtitle: 'DOWNLOAD THE LATEST RELEASE FROM GITHUB',
+ToastSpec saveApkToast(AppLocalizations l10n, String? location) =>
+    location == null
+    ? ToastSpec(
+        l10n.updateSaveFailedTitle,
+        subtitle: l10n.updateSaveFailedHint,
         kind: ToastKind.error,
       )
-    : const ToastSpec('APK saved', subtitle: 'SAVED TO DOWNLOADS');
+    : ToastSpec(l10n.updateSavedTitle, subtitle: l10n.updateSavedHint);
 
 /// What to tell the user after a tap on Install. Null when nothing needs
 /// saying: the system installer opened, or the dialog itself switched to the
 /// reinstall steps.
-ToastSpec? installAttemptToast(InstallAttempt attempt) => switch (attempt) {
-  InstallAttempt.launched || InstallAttempt.signatureConflict => null,
-  InstallAttempt.permissionRequired => const ToastSpec(
-    'Allow app installs',
-    subtitle: 'ENABLE INSTALL UNKNOWN APPS · TAP INSTALL AGAIN',
-    kind: ToastKind.info,
-  ),
-  InstallAttempt.failed => const ToastSpec(
-    "Couldn't install update",
-    subtitle: 'TRY AGAIN OR DOWNLOAD IT FROM GITHUB',
-    kind: ToastKind.error,
-  ),
-};
+ToastSpec? installAttemptToast(AppLocalizations l10n, InstallAttempt attempt) =>
+    switch (attempt) {
+      InstallAttempt.launched || InstallAttempt.signatureConflict => null,
+      InstallAttempt.permissionRequired => ToastSpec(
+        l10n.updateAllowInstallsTitle,
+        subtitle: l10n.updateAllowInstallsHint,
+        kind: ToastKind.info,
+      ),
+      InstallAttempt.failed => ToastSpec(
+        l10n.updateInstallFailedTitle,
+        subtitle: l10n.updateInstallFailedHint,
+        kind: ToastKind.error,
+      ),
+    };

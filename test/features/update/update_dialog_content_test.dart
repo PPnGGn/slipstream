@@ -3,6 +3,8 @@ import 'package:slipstream/core/models/app_release/app_release.dart';
 import 'package:slipstream/core/service/update_service/update_service_cubit.dart';
 import 'package:slipstream/features/update/ui/update_dialog_content.dart';
 
+import '../../helpers/l10n.dart';
+
 const _release = AppRelease(
   version: '2.1.1',
   buildNumber: 37,
@@ -18,6 +20,7 @@ void main() {
 
   group('a downloaded update', () {
     final content = updateDialogContent(
+      l10nEn,
       const UpdateState.readyToInstall(_release, 'update.apk'),
       installed,
     )!;
@@ -51,6 +54,7 @@ void main() {
 
   test('a release without notes has an empty list, so no block is drawn', () {
     final content = updateDialogContent(
+      l10nEn,
       UpdateState.readyToInstall(_release.copyWith(notes: const []), 'u.apk'),
       installed,
     )!;
@@ -60,6 +64,7 @@ void main() {
 
   test('without a known installed version only the new one is shown', () {
     final content = updateDialogContent(
+      l10nEn,
       const UpdateState.readyToInstall(_release, 'update.apk'),
       null,
     )!;
@@ -70,6 +75,7 @@ void main() {
 
   group('a signature conflict', () {
     final content = updateDialogContent(
+      l10nEn,
       const UpdateState.signatureConflict(_release, 'update.apk'),
       installed,
     )!;
@@ -105,7 +111,11 @@ void main() {
       UpdateState.downloading(_release, receivedBytes: 1),
       const UpdateState.error('x'),
     ]) {
-      expect(updateDialogContent(state, installed), isNull, reason: '$state');
+      expect(
+        updateDialogContent(l10nEn, state, installed),
+        isNull,
+        reason: '$state',
+      );
     }
   });
 }

@@ -12,6 +12,7 @@ import 'package:slipstream/core/ui/widgets/page_header.dart';
 import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
 import 'package:slipstream/features/vpn/data/xray_log_store.dart';
 import 'package:slipstream/features/vpn/presentation/xray_logs_view.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 /// The live log of the Xray core. What it shows and says is decided in
 /// `xray_logs_view.dart`; this page keeps the filter, the scroll position and
@@ -76,7 +77,7 @@ class _XrayLogsPageState extends State<XrayLogsPage> {
   }
 
   void _copy(List<VpnLogMessage> visible) {
-    final toast = logsCopyToast(visible.length);
+    final toast = logsCopyToast(context.l10n, visible.length);
     if (visible.isEmpty) {
       showToastSpec(toast);
       return;
@@ -110,7 +111,7 @@ class _XrayLogsPageState extends State<XrayLogsPage> {
             return Column(
               children: [
                 PageHeader(
-                  title: 'Xray core logs',
+                  title: context.l10n.logsTitle,
                   actions: [
                     BoxIconButton(
                       iconPath: AppAssets.doc,
@@ -153,6 +154,7 @@ class _XrayLogsPageState extends State<XrayLogsPage> {
                                     padding: const .all(32),
                                     child: Text(
                                       logsEmptyText(
+                                        context.l10n,
                                         total: all.length,
                                         filter: _filter,
                                       ),
@@ -226,7 +228,7 @@ class _CopyButton extends StatelessWidget {
               colorFilter: .mode(colors.textSecondary, .srcIn),
             ),
             Text(
-              'Copy',
+              context.l10n.commonCopy,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: .w600,
@@ -381,6 +383,7 @@ class _StatusBar extends StatelessWidget {
               Expanded(
                 child: Text(
                   logsStatusLine(
+                    context.l10n,
                     lines: lines,
                     tunnelUp: tunnelUp,
                     following: following,

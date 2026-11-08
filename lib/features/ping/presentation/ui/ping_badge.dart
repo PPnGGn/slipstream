@@ -6,6 +6,7 @@ import 'package:slipstream/features/ping/data/ping_settings_store.dart';
 import 'package:slipstream/features/ping/domain/entities/ping_round_result.dart';
 import 'package:slipstream/features/ping/presentation/ping_cubit.dart';
 import 'package:slipstream/features/ping/presentation/ping_entry.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 /// Latency indicator for one server row. Reads its own entry out of
 /// the ping cubit via a selector, so a patch to one server's entry
@@ -47,7 +48,7 @@ class PingPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = _pillStyle(colors, entry);
+    final style = _pillStyle(context.l10n, colors, entry);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
@@ -113,7 +114,11 @@ class _PillStyle {
   final bool live;
 }
 
-_PillStyle _pillStyle(AppColors colors, PingEntry entry) {
+_PillStyle _pillStyle(
+  AppLocalizations l10n,
+  AppColors colors,
+  PingEntry entry,
+) {
   switch (entry.status) {
     case PingRunStatus.measured:
       final color = _qualityColor(colors, entry.latencyMs!);
@@ -128,7 +133,7 @@ _PillStyle _pillStyle(AppColors colors, PingEntry entry) {
         background: colors.danger.withValues(alpha: 0.15),
         foreground: colors.danger,
         marker: Icon(Icons.close, size: 9, color: colors.danger),
-        label: _failureLabel(entry.failureReason),
+        label: _failureLabel(l10n, entry.failureReason),
       );
     case PingRunStatus.queued:
     case PingRunStatus.measuring:
@@ -163,12 +168,13 @@ Color _qualityColor(AppColors colors, double latencyMs) =>
       PingQuality.poor => colors.danger,
     };
 
-String _failureLabel(PingFailureReason? reason) => switch (reason) {
-  PingFailureReason.refused => 'refused',
-  PingFailureReason.dns => 'no dns',
-  PingFailureReason.error => 'error',
-  PingFailureReason.timeout || null => 'timeout',
-};
+String _failureLabel(AppLocalizations l10n, PingFailureReason? reason) =>
+    switch (reason) {
+      PingFailureReason.refused => l10n.pingRefused,
+      PingFailureReason.dns => l10n.pingNoDns,
+      PingFailureReason.error => l10n.pingError,
+      PingFailureReason.timeout || null => l10n.pingTimeout,
+    };
 
 class _PingDot extends StatelessWidget {
   const _PingDot({required this.colors, required this.entry});

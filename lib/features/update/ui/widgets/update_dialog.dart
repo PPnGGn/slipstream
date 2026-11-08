@@ -9,6 +9,7 @@ import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/ui/toast/show_toast.dart';
 import 'package:slipstream/core/ui/widgets/accent_button.dart';
 import 'package:slipstream/core/ui/widgets/mirror_in_rtl.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 import 'package:slipstream/features/update/data/updater_api.g.dart';
 import 'package:slipstream/features/update/ui/update_dialog_content.dart';
 import 'package:slipstream/features/update/ui/update_toasts.dart';
@@ -26,11 +27,12 @@ Future<void> showUpdateDialog(BuildContext context) async {
   if (_updateDialogVisible) return;
   _updateDialogVisible = true;
   final updates = getIt<UpdateServiceCubit>();
+  final l10n = context.l10n;
   try {
     final done = await showGeneralDialog<bool>(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'Later',
+      barrierLabel: l10n.updateLater,
       barrierColor: const Color.fromRGBO(14, 14, 22, 0.62),
       transitionDuration: const Duration(milliseconds: 360),
       pageBuilder: (context, _, _) => const UpdateDialog(),
@@ -50,7 +52,7 @@ Future<void> showUpdateDialog(BuildContext context) async {
       readyToInstall: (_, _) => true,
       orElse: () => false,
     );
-    if (done != true && stillWaiting) showToastSpec(updateLaterToast);
+    if (done != true && stillWaiting) showToastSpec(updateLaterToast(l10n));
   } finally {
     _updateDialogVisible = false;
   }
@@ -94,7 +96,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
     final attempt = await _updates.install();
     if (!mounted) return;
     setState(() => _installing = false);
-    final toast = installAttemptToast(attempt);
+    final toast = installAttemptToast(context.l10n, attempt);
     if (toast != null) showToastSpec(toast);
     if (attempt == InstallAttempt.launched) Navigator.of(context).pop(true);
   }
@@ -104,7 +106,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
     final location = await _updates.exportApk();
     if (!mounted) return;
     setState(() => _saving = false);
-    showToastSpec(saveApkToast(location));
+    showToastSpec(saveApkToast(context.l10n, location));
   }
 
   void _later() {
@@ -124,7 +126,11 @@ class _UpdateDialogState extends State<UpdateDialog> {
     return BlocBuilder<UpdateServiceCubit, UpdateState>(
       bloc: _updates,
       builder: (context, state) {
-        final content = updateDialogContent(state, _installedVersion);
+        final content = updateDialogContent(
+          context.l10n,
+          state,
+          _installedVersion,
+        );
         if (content == null) return const SizedBox.shrink();
         final reinstall = content.kind == UpdateDialogKind.reinstall;
         final accent = reinstall ? colors.warn : colors.ok;
@@ -237,7 +243,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
                                 children: reinstall
                                     ? [
                                         AccentButton(
-                                          label: 'Save APK',
+                                          label: context.l10n.updateSaveApk,
                                           iconPath: AppAssets.download,
                                           height: 52,
                                           radius: 16,
@@ -246,12 +252,12 @@ class _UpdateDialogState extends State<UpdateDialog> {
                                           onPressed: _saveApk,
                                         ),
                                         _TextAction(
-                                          label: 'Uninstall',
+                                          label: context.l10n.updateUninstall,
                                           color: colors.danger,
                                           onTap: _updates.uninstallForReinstall,
                                         ),
                                         _TextAction(
-                                          label: 'Close',
+                                          label: context.l10n.commonClose,
                                           color: colors.textSecondary,
                                           onTap: _close,
                                         ),
@@ -259,8 +265,8 @@ class _UpdateDialogState extends State<UpdateDialog> {
                                     : [
                                         AccentButton(
                                           label: _installing
-                                              ? 'Installing…'
-                                              : 'Install',
+                                              ? context.l10n.updateInstalling
+                                              : context.l10n.updateInstall,
                                           iconPath: AppAssets.download,
                                           height: 52,
                                           radius: 16,
@@ -269,7 +275,7 @@ class _UpdateDialogState extends State<UpdateDialog> {
                                           onPressed: _install,
                                         ),
                                         _TextAction(
-                                          label: 'Later',
+                                          label: context.l10n.updateLater,
                                           color: colors.textSecondary,
                                           onTap: _installing ? null : _later,
                                         ),

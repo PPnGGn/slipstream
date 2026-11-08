@@ -3,6 +3,8 @@ import 'package:slipstream/core/models/subscription/subscription.dart';
 import 'package:slipstream/features/subscriptions/data/auto_update/auto_update_interval.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_display.dart';
 
+import '../../../helpers/l10n.dart';
+
 void main() {
   Subscription sub({
     String? url = 'https://example/sub',
@@ -23,6 +25,7 @@ void main() {
     bool refreshing = false,
     AutoUpdateInterval autoUpdate = AutoUpdateInterval.h12,
   }) => subscriptionMeta(
+    l10nEn,
     subscription,
     serverCount: serverCount,
     refreshing: refreshing,

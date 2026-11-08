@@ -14,6 +14,7 @@ import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
 import 'package:slipstream/features/vpn/data/xray_log_store.dart';
 import 'package:slipstream/features/vpn/ui/xray_logs_page.dart';
 
+import '../../helpers/l10n.dart';
 import '../subscriptions/data/subscription_fakes.dart';
 
 VpnLogMessage _log(String level, String message, {int second = 0}) =>
@@ -61,7 +62,13 @@ void main() {
           return null;
         });
 
-    await tester.pumpWidget(const MaterialApp(home: XrayLogsPage()));
+    await tester.pumpWidget(
+      const MaterialApp(
+        localizationsDelegates: localizationsDelegates,
+        supportedLocales: supportedLocales,
+        home: XrayLogsPage(),
+      ),
+    );
     // The store's own 200 ms flush timer must not outlive the test.
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump();

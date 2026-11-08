@@ -12,6 +12,7 @@ import 'package:slipstream/features/ping/presentation/ping_cubit.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
 import 'package:slipstream/features/subscriptions/ui/pull_to_refresh.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/subscription_section.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 class ServerList extends StatelessWidget {
   const ServerList({
@@ -48,6 +49,7 @@ class ServerList extends StatelessWidget {
             // Pull down updates every subscription (see pullToRefresh).
             return RefreshIndicator(
               onRefresh: () => pullToRefresh(
+                context.l10n,
                 getIt<SubscriptionsCubit>(),
                 getIt<PingCubit>(),
               ),
@@ -131,7 +133,7 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'No subscriptions yet',
+            context.l10n.serversEmptyTitle,
             style: TextStyle(
               fontSize: 16,
               fontWeight: .w700,
@@ -140,8 +142,7 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Add a subscription link or a single server URI —\n'
-            'https://, vless://, ss://, trojan:// or raw JSON.',
+            context.l10n.serversEmptyBody,
             textAlign: .center,
             style: TextStyle(
               fontSize: 12.5,
@@ -151,7 +152,7 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           AccentButton(
-            label: 'Add subscription',
+            label: context.l10n.addSubscriptionTitle,
             onPressed: onAdd,
             height: 44,
             radius: 14,

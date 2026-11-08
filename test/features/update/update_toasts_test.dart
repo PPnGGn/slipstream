@@ -4,6 +4,8 @@ import 'package:slipstream/core/service/toast/toast_message.dart';
 import 'package:slipstream/core/service/update_service/update_service_cubit.dart';
 import 'package:slipstream/features/update/ui/update_toasts.dart';
 
+import '../../helpers/l10n.dart';
+
 const _release = AppRelease(
   version: '2.1.1',
   buildNumber: 37,
@@ -21,7 +23,7 @@ void main() {
 
     test('an up-to-date app says which version is the latest', () {
       expect(
-        updateCheckFeedback(const UpdateState.upToDate(), installed),
+        updateCheckFeedback(l10nEn, const UpdateState.upToDate(), installed),
         showsToast(
           const ToastSpec(
             "You're up to date",
@@ -34,6 +36,7 @@ void main() {
     test('a failed check is an error with a hint, no raw exception', () {
       expect(
         updateCheckFeedback(
+          l10nEn,
           const UpdateState.error(
             'Failed to check for updates: SocketException',
           ),
@@ -52,6 +55,7 @@ void main() {
     test('a running download shows its progress', () {
       expect(
         updateCheckFeedback(
+          l10nEn,
           UpdateState.downloading(_release, receivedBytes: 5 * 1024 * 1024),
           installed,
         ),
@@ -67,6 +71,7 @@ void main() {
 
     test('progress never goes past 100%', () {
       final feedback = updateCheckFeedback(
+        l10nEn,
         UpdateState.downloading(_release, receivedBytes: 30 * 1024 * 1024),
         installed,
       );
@@ -77,6 +82,7 @@ void main() {
     test('a downloaded update and a signature conflict open the dialog', () {
       expect(
         updateCheckFeedback(
+          l10nEn,
           const UpdateState.readyToInstall(_release, 'update.apk'),
           installed,
         ),
@@ -84,6 +90,7 @@ void main() {
       );
       expect(
         updateCheckFeedback(
+          l10nEn,
           const UpdateState.signatureConflict(_release, 'update.apk'),
           installed,
         ),
@@ -93,11 +100,11 @@ void main() {
 
     test('idle and checking have nothing to say', () {
       expect(
-        updateCheckFeedback(const UpdateState.idle(), installed),
+        updateCheckFeedback(l10nEn, const UpdateState.idle(), installed),
         isA<NoUpdateFeedback>(),
       );
       expect(
-        updateCheckFeedback(const UpdateState.checking(), installed),
+        updateCheckFeedback(l10nEn, const UpdateState.checking(), installed),
         isA<NoUpdateFeedback>(),
       );
     });
@@ -134,7 +141,7 @@ void main() {
 
   test('Later promises a reminder, and the reminder is real', () {
     expect(
-      updateLaterToast,
+      updateLaterToast(l10nEn),
       const ToastSpec("We'll remind you on next launch", kind: ToastKind.info),
     );
   });
@@ -142,14 +149,17 @@ void main() {
   group('saveApkToast', () {
     test('a saved APK is a success, without the file path', () {
       expect(
-        saveApkToast('/storage/emulated/0/Download/slipstream-2.1.1.apk'),
+        saveApkToast(
+          l10nEn,
+          '/storage/emulated/0/Download/slipstream-2.1.1.apk',
+        ),
         const ToastSpec('APK saved', subtitle: 'SAVED TO DOWNLOADS'),
       );
     });
 
     test('a failed save points to GitHub', () {
       expect(
-        saveApkToast(null),
+        saveApkToast(l10nEn, null),
         const ToastSpec(
           "Couldn't save the APK",
           subtitle: 'DOWNLOAD THE LATEST RELEASE FROM GITHUB',
@@ -161,16 +171,19 @@ void main() {
 
   group('installAttemptToast', () {
     test('the system installer opening needs no toast', () {
-      expect(installAttemptToast(InstallAttempt.launched), isNull);
+      expect(installAttemptToast(l10nEn, InstallAttempt.launched), isNull);
     });
 
     test('a signature conflict is shown by the dialog itself', () {
-      expect(installAttemptToast(InstallAttempt.signatureConflict), isNull);
+      expect(
+        installAttemptToast(l10nEn, InstallAttempt.signatureConflict),
+        isNull,
+      );
     });
 
     test('a missing permission tells what to do and to tap Install again', () {
       expect(
-        installAttemptToast(InstallAttempt.permissionRequired),
+        installAttemptToast(l10nEn, InstallAttempt.permissionRequired),
         const ToastSpec(
           'Allow app installs',
           subtitle: 'ENABLE INSTALL UNKNOWN APPS · TAP INSTALL AGAIN',
@@ -181,7 +194,7 @@ void main() {
 
     test('a failure is plain, with no raw installer text', () {
       expect(
-        installAttemptToast(InstallAttempt.failed),
+        installAttemptToast(l10nEn, InstallAttempt.failed),
         const ToastSpec(
           "Couldn't install update",
           subtitle: 'TRY AGAIN OR DOWNLOAD IT FROM GITHUB',

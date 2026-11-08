@@ -2,6 +2,7 @@ import 'package:slipstream/core/ui/toast/show_toast.dart';
 import 'package:slipstream/features/ping/presentation/ping_cubit.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
 import 'package:slipstream/features/subscriptions/ui/subscription_menu_toasts.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 /// The server list's pull down: re-fetches every URL subscription and pings
 /// the ones without a URL, which have nothing to fetch. Refreshed
@@ -9,6 +10,7 @@ import 'package:slipstream/features/subscriptions/ui/subscription_menu_toasts.da
 /// their `lastUpdatedAt` changes. Completes when both are over, so the
 /// indicator spins for as long as something runs.
 Future<void> pullToRefresh(
+  AppLocalizations l10n,
   SubscriptionsCubit subscriptions,
   PingCubit ping,
 ) async {
@@ -18,7 +20,7 @@ Future<void> pullToRefresh(
   ];
   final pinging = local.isEmpty ? null : ping.runForServers(local);
 
-  final toast = refreshAllToast(await subscriptions.refreshAll());
+  final toast = refreshAllToast(l10n, await subscriptions.refreshAll());
   if (toast != null) showToastSpec(toast);
   await pinging;
 }

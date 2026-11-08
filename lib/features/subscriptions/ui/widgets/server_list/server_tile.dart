@@ -9,6 +9,7 @@ import 'package:slipstream/features/subscriptions/data/vpn_server_display.dart';
 import 'package:slipstream/features/subscriptions/ui/server_problem_view.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/protocol_tags.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/server_info_sheet.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 class ServerTile extends StatelessWidget {
   const ServerTile({
@@ -89,7 +90,7 @@ class ServerTile extends StatelessWidget {
                   ),
                   if (problem != null)
                     Text(
-                      serverProblemLabel(problem),
+                      serverProblemLabel(context.l10n, problem),
                       style: TextStyle(
                         fontSize: 10.5,
                         fontWeight: .w600,

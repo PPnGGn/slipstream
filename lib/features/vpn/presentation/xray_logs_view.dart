@@ -1,6 +1,7 @@
 import 'package:slipstream/core/service/toast/toast_message.dart';
 import 'package:slipstream/core/service/vpn_service/vpn_service_cubit.dart';
 import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 /// What the Xray logs page says and decides, away from the widget: the page
 /// only draws these values.
@@ -70,33 +71,36 @@ String logsAsText(List<VpnLogMessage> logs) => [
 /// The line under the log: "FOLLOWING · 14 LINES · TUNNEL UP". [following]
 /// is false once the user has scrolled up and the view stopped sticking to
 /// the newest line.
-String logsStatusLine({
+String logsStatusLine(
+  AppLocalizations l10n, {
   required int lines,
   required bool tunnelUp,
   required bool following,
 }) {
-  final mode = following ? 'FOLLOWING' : 'PAUSED';
-  final tunnel = tunnelUp ? 'TUNNEL UP' : 'TUNNEL DOWN';
-  return '$mode · ${_lineCount(lines)} · $tunnel';
+  final mode = following ? l10n.logsFollowing : l10n.logsPaused;
+  final tunnel = tunnelUp ? l10n.logsTunnelUp : l10n.logsTunnelDown;
+  return '$mode · ${l10n.logsLineCount(lines)} · $tunnel';
 }
 
 /// What the empty log box says: where logs come from, or that the filter
 /// hides everything there is.
-String logsEmptyText({required int total, required LogLevelFilter filter}) =>
-    total == 0
-    ? 'Logs appear while the tunnel runs'
-    : 'No ${filter.label} lines';
-
-String _lineCount(int lines) => lines == 1 ? '1 LINE' : '$lines LINES';
+String logsEmptyText(
+  AppLocalizations l10n, {
+  required int total,
+  required LogLevelFilter filter,
+}) => total == 0 ? l10n.logsEmptyNoLogs : l10n.logsEmptyFiltered(filter.label);
 
 /// The toast after Copy; [lines] is how many lines went to the clipboard.
-ToastSpec logsCopyToast(int lines) => lines == 0
-    ? const ToastSpec(
-        'Nothing to copy',
-        subtitle: 'NO LOG LINES YET',
+ToastSpec logsCopyToast(AppLocalizations l10n, int lines) => lines == 0
+    ? ToastSpec(
+        l10n.logsCopyNothingTitle,
+        subtitle: l10n.logsCopyNothingHint,
         kind: ToastKind.info,
       )
-    : ToastSpec('Logs copied', subtitle: '${_lineCount(lines)} · PLAIN TEXT');
+    : ToastSpec(
+        l10n.logsCopiedTitle,
+        subtitle: l10n.logsCopiedHint(l10n.logsLineCount(lines)),
+      );
 
 bool isTunnelUp(VpnState state) =>
     state.maybeWhen(connected: (_, _, _, _) => true, orElse: () => false);

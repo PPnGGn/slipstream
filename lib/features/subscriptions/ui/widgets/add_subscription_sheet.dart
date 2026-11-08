@@ -15,6 +15,7 @@ import 'package:slipstream/features/qr/data/qr_image_import.dart';
 import 'package:slipstream/features/qr/data/qr_scan.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
 import 'package:slipstream/features/subscriptions/ui/add_subscription_toasts.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 /// What the sheet does as soon as it opens (the compact layout's Paste and
 /// Scan QR buttons): the result and any error show up inside the sheet.
@@ -84,7 +85,7 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
     if (_busy) return;
     if (text.isEmpty) {
       setState(() => _hasError = true);
-      showToastSpec(nothingToAddToast);
+      showToastSpec(nothingToAddToast(context.l10n));
       return;
     }
 
@@ -103,6 +104,7 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
       final added = _cubit.state.subscriptions.last;
       showToastSpec(
         subscriptionAddedToast(
+          context.l10n,
           servers: added.servers.length,
           name: added.subscription.name,
         ),
@@ -113,7 +115,7 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
         _busy = false;
         _hasError = true;
       });
-      showToastSpec(addFailedToast(_cubit.state.errorCause));
+      showToastSpec(addFailedToast(context.l10n, _cubit.state.errorCause));
     }
   }
 
@@ -122,7 +124,7 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
     final text = data?.text?.trim() ?? '';
     if (!mounted) return;
     if (text.isEmpty) {
-      showToastSpec(emptyClipboardToast);
+      showToastSpec(emptyClipboardToast(context.l10n));
       return;
     }
     await _addFromText(text);
@@ -142,7 +144,7 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
       case QrImportCancelled():
         return;
       case QrImportNotFound():
-        showToastSpec(noQrInImageToast);
+        showToastSpec(noQrInImageToast(context.l10n));
       case QrImportFound(:final text):
         await _addFromText(text);
     }
@@ -178,9 +180,9 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
                 crossAxisAlignment: .stretch,
                 children: [
                   const SheetGrabber(),
-                  const SheetTitleRow(
+                  SheetTitleRow(
                     iconPath: AppAssets.link,
-                    title: 'Add subscription',
+                    title: context.l10n.addSubscriptionTitle,
                   ),
                   const SizedBox(height: 16),
                   TextField(
@@ -197,8 +199,7 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
                       color: colors.textPrimary,
                     ),
                     decoration: InputDecoration(
-                      hintText:
-                          'https://…, vless://…, vmess://…, trojan://…, hy2://…, ss://… or JSON',
+                      hintText: context.l10n.addInputHint,
                       // A failed add outlines the field it came from.
                       enabledBorder: _hasError ? errorBorder : null,
                       focusedBorder: _hasError ? errorBorder : null,
@@ -213,7 +214,7 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
                           child: _ChipButton(
                             colors: colors,
                             iconPath: AppAssets.scanQr,
-                            label: 'Scan QR',
+                            label: context.l10n.addScanQr,
                             onTap: _busy ? null : _scanQr,
                           ),
                         ),
@@ -222,7 +223,7 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
                           child: _ChipButton(
                             colors: colors,
                             iconPath: AppAssets.doc,
-                            label: 'Image',
+                            label: context.l10n.addImage,
                             onTap: _busy ? null : _importFromImage,
                           ),
                         ),
@@ -230,7 +231,7 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
                         child: _ChipButton(
                           colors: colors,
                           iconPath: AppAssets.paste,
-                          label: 'Paste',
+                          label: context.l10n.commonPaste,
                           onTap: _busy ? null : _paste,
                         ),
                       ),
@@ -245,18 +246,20 @@ class _AddSubscriptionSheetState extends State<_AddSubscriptionSheet> {
                       fontWeight: .w500,
                       color: colors.textPrimary,
                     ),
-                    decoration: const InputDecoration(
-                      hintText: 'Name (optional)',
+                    decoration: InputDecoration(
+                      hintText: context.l10n.addNameHint,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Bulk add: separate several links with ; or a new line',
+                    context.l10n.addBulkHint,
                     style: TextStyle(fontSize: 10, color: colors.textMuted),
                   ),
                   const SizedBox(height: 16),
                   AccentButton(
-                    label: _busy ? 'Fetching servers…' : 'Add subscription',
+                    label: _busy
+                        ? context.l10n.addFetching
+                        : context.l10n.addSubscriptionTitle,
                     fontSize: 14.5,
                     loading: _busy,
                     onPressed: () => _submit(activate: false),

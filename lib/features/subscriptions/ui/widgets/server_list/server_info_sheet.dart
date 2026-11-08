@@ -15,6 +15,7 @@ import 'package:slipstream/features/ping/presentation/ping_entry.dart';
 import 'package:slipstream/features/ping/presentation/ui/ping_badge.dart';
 import 'package:slipstream/features/subscriptions/data/vpn_server_display.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/protocol_tags.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 Future<void> showServerInfoSheet(BuildContext context, VpnServer server) {
   final media = MediaQuery.of(context);
@@ -44,7 +45,7 @@ class _ServerInfoSheet extends StatelessWidget {
         final meta = server.meta;
         final facts = [
           if (meta.host != null) meta.host!,
-          if (meta.port != null) 'PORT ${meta.port}',
+          if (meta.port != null) context.l10n.serverInfoPort(meta.port!),
           if (meta.securityLabel != null && meta.securityLabel != 'NONE')
             meta.securityLabel!,
         ];
@@ -108,7 +109,7 @@ class _ServerInfoSheet extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          'XRAY CONFIG',
+                          context.l10n.serverInfoXrayConfig,
                           style: TextStyle(
                             fontFamily: 'monospace',
                             fontSize: 9.5,
@@ -123,9 +124,10 @@ class _ServerInfoSheet extends StatelessWidget {
                         onTap: () {
                           copyToClipboard(
                             pretty,
-                            title: 'Config copied',
-                            subtitle:
-                                'XRAY JSON · ${server.title.toUpperCase()}',
+                            title: context.l10n.serverInfoConfigCopied,
+                            subtitle: context.l10n.serverInfoCopiedHint(
+                              server.title.toUpperCase(),
+                            ),
                           );
                           Navigator.of(context).pop();
                         },
@@ -203,7 +205,7 @@ class _CopyButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return IconButton(
       onPressed: onTap,
-      tooltip: 'Copy config',
+      tooltip: context.l10n.serverInfoCopyTooltip,
       style: IconButton.styleFrom(
         backgroundColor: colors.chip,
         fixedSize: const Size.square(32),

@@ -11,6 +11,8 @@ import 'package:slipstream/features/help/ui/help_button.dart';
 import 'package:slipstream/features/help/ui/help_sheet.dart';
 import 'package:slipstream/features/help/ui/help_topic.dart';
 
+import '../../helpers/l10n.dart';
+
 HelpItem _item(String title, {String? tip}) => HelpItem(
   iconPath: AppAssets.bolt,
   hue: TileHue.blue,
@@ -45,6 +47,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: localizationsDelegates,
+        supportedLocales: supportedLocales,
         home: Scaffold(body: Builder(builder: opener)),
       ),
     );

@@ -12,5 +12,261 @@
   "languageSystemHint": "Follows your phone",
   "@languageSystemHint": {
     "description": "Subtitle of the System row of the language list"
-  }
+  },
+
+  "commonCopy": "Copy",
+
+  "statusNoServersTitle": "No servers yet",
+  "statusNoServersSubtitle": "Add a subscription below",
+  "statusPickServerTitle": "Pick a server",
+  "statusPickServerSubtitle": "Choose one from the list below",
+  "statusReadyTitle": "Ready to connect",
+  "statusReadySubtitle": "Tap the ring to start",
+  "statusConnectingTitle": "Establishing tunnel…",
+  "statusConnectedTitle": "Connected",
+  "statusDisconnectingTitle": "Disconnecting…",
+  "statusFailedTitle": "Connection failed",
+  "statusBlockedTitle": "Traffic blocked",
+  "statusBlockedSubtitle": "Kill switch · tap the ring to turn off",
+  "statusCompactOff": "off",
+  "statusCompactConnecting": "connecting…",
+  "statusCompactDisconnecting": "disconnecting…",
+  "statusCompactFailed": "failed",
+  "statusCompactBlocked": "blocked",
+
+  "connectNoServerTitle": "No server selected",
+  "connectPickHint": "PICK A SERVER FROM THE LIST",
+  "connectAddFirstHint": "ADD A SUBSCRIPTION FIRST",
+  "homeNoServerChip": "NO SERVER",
+  "pingTimeout": "timeout",
+
+  "logsTitle": "Xray core logs",
+  "logsFollowing": "FOLLOWING",
+  "logsPaused": "PAUSED",
+  "logsTunnelUp": "TUNNEL UP",
+  "logsTunnelDown": "TUNNEL DOWN",
+  "logsLineCount": "{count, plural, one{{count} LINE} other{{count} LINES}}",
+  "@logsLineCount": {
+    "description": "Count of log lines, in capitals like the rest of the status line",
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "logsEmptyNoLogs": "Logs appear while the tunnel runs",
+  "logsEmptyFiltered": "No {filter} lines",
+  "@logsEmptyFiltered": {
+    "description": "The filter is a log level written as in the log: ALL, INFO, WARN or ERROR",
+    "placeholders": {
+      "filter": {"type": "String"}
+    }
+  },
+  "logsCopyNothingTitle": "Nothing to copy",
+  "logsCopyNothingHint": "NO LOG LINES YET",
+  "logsCopiedTitle": "Logs copied",
+  "logsCopiedHint": "{lines} · PLAIN TEXT",
+  "@logsCopiedHint": {
+    "description": "Toast hint after Copy; lines is the already translated line count",
+    "placeholders": {
+      "lines": {"type": "String"}
+    }
+  },
+
+  "memoryNormal": "Normal",
+  "memoryHigh": "High",
+  "memoryCritical": "Critical",
+
+  "commonAdd": "Add",
+  "commonPaste": "Paste",
+  "addSubscriptionTitle": "Add subscription",
+  "addInputHint": "https://…, vless://…, vmess://…, trojan://…, hy2://…, ss://… or JSON",
+  "addScanQr": "Scan QR",
+  "addImage": "Image",
+  "addNameHint": "Name (optional)",
+  "addBulkHint": "Bulk add: separate several links with ; or a new line",
+  "addFetching": "Fetching servers…",
+  "serversEmptyTitle": "No subscriptions yet",
+  "serversEmptyBody": "Add a subscription link or a single server URI —\nhttps://, vless://, ss://, trojan:// or raw JSON.",
+  "searchHint": "Search servers, countries or protocols",
+
+  "serverInfoPort": "PORT {port}",
+  "@serverInfoPort": {
+    "placeholders": {
+      "port": {"type": "int"}
+    }
+  },
+  "serverInfoXrayConfig": "XRAY CONFIG",
+  "serverInfoConfigCopied": "Config copied",
+  "serverInfoCopiedHint": "XRAY JSON · {name}",
+  "@serverInfoCopiedHint": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "serverInfoCopyTooltip": "Copy config",
+
+  "subInfoDaysLeft": "{days}d left",
+  "@subInfoDaysLeft": {
+    "placeholders": {
+      "days": {"type": "int"}
+    }
+  },
+  "subInfoExpired": "expired",
+  "subMetaUpdating": "UPDATING…",
+  "subMetaFailed": "FAILED",
+  "subMetaIntervalOff": "off",
+  "subMetaIntervalHours": "{hours}h",
+  "@subMetaIntervalHours": {
+    "placeholders": {
+      "hours": {"type": "int"}
+    }
+  },
+  "subMenuRefresh": "Refresh subscription",
+  "subMenuPing": "Ping servers",
+  "subMenuShare": "Share subscription",
+  "subMenuHideDescription": "Hide description",
+  "subMenuShowDescription": "Show description",
+  "subMenuDelete": "Delete subscription",
+
+  "toastNothingToAddTitle": "Nothing to add",
+  "toastNothingToAddHint": "PASTE A LINK OR KEY FIRST",
+  "toastClipboardEmptyTitle": "Clipboard is empty",
+  "toastClipboardEmptyHint": "COPY A LINK OR KEY FIRST",
+  "toastNoQrTitle": "No QR code found",
+  "toastNoQrHint": "TRY ANOTHER IMAGE",
+  "addFailedTitle": "Couldn't add subscription",
+  "refreshFailedTitle": "Couldn't update subscription",
+  "failInvalidTitle": "Invalid key or link",
+  "failInvalidHint": "CHECK THAT IT IS COPIED IN FULL",
+  "failNoServersTitle": "No servers found",
+  "failNoServersHint": "NOTHING IN IT THE APP SUPPORTS",
+  "failDuplicateTitle": "Already added",
+  "failDuplicateHint": "THIS SUBSCRIPTION IS IN YOUR LIST",
+  "failDeviceLimitTitle": "Device limit reached",
+  "failDeviceLimitHint": "ASK THE PROVIDER TO REMOVE AN OLD DEVICE",
+  "failHwidTitle": "Provider rejected this device",
+  "failHwidHint": "TRY LATER OR CONTACT THE PROVIDER",
+  "failAccessDeniedTitle": "Access denied",
+  "failAccessDeniedHint": "THE LINK MAY BE EXPIRED OR REVOKED",
+  "failNotFoundTitle": "Link not found",
+  "failNotFoundHint": "CHECK THE LINK",
+  "failTooManyTitle": "Too many requests",
+  "failTooManyHint": "WAIT A MINUTE AND TRY AGAIN",
+  "failServerErrorTitle": "Provider server error",
+  "failServerErrorHint": "TRY AGAIN LATER · HTTP {code}",
+  "@failServerErrorHint": {
+    "placeholders": {
+      "code": {"type": "int"}
+    }
+  },
+  "failRefusedTitle": "Provider refused the link",
+  "failRefusedHint": "HTTP {code}",
+  "@failRefusedHint": {
+    "placeholders": {
+      "code": {"type": "int"}
+    }
+  },
+  "failTimeoutTitle": "Server didn't respond",
+  "failUnreachableTitle": "Can't reach the server",
+  "failCheckConnectionHint": "CHECK CONNECTION · TRY AGAIN",
+  "failSeeLogsHint": "SEE APP LOGS FOR DETAILS",
+  "subAddedTitle": "Subscription added",
+  "serverCountUpper": "{count, plural, one{{count} SERVER} other{{count} SERVERS}}",
+  "@serverCountUpper": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "subscriptionCountUpper": "{count, plural, one{{count} SUBSCRIPTION} other{{count} SUBSCRIPTIONS}}",
+  "@subscriptionCountUpper": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "subUpdatedTitle": "Subscription updated",
+  "subsUpdatedTitle": "Subscriptions updated",
+  "refreshSomeFailedTitle": "Couldn't update {failed} of {total}",
+  "@refreshSomeFailedTitle": {
+    "placeholders": {
+      "failed": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "refreshSomeFailedHint": "MARKED IN THE LIST",
+  "subDeletedTitle": "Subscription deleted",
+  "favAddedTitle": "Added to favorites",
+  "favRemovedTitle": "Removed from favorites",
+  "serverProblemRealityLabel": "No REALITY key",
+  "serverProblemRealityTitle": "This server can't connect",
+  "serverProblemRealityHint": "NO REALITY KEY IN THE SUBSCRIPTION",
+
+  "commonClose": "Close",
+  "commonShare": "Share",
+
+  "qrCameraDenied": "Camera access denied. Allow it in the system settings.",
+  "qrCameraUnavailable": "Camera is unavailable on this device.",
+  "qrScanHint": "Point the camera at a QR code",
+  "qrShareFailedTitle": "Couldn't share QR code",
+  "qrShareFailedHint": "TRY AGAIN OR COPY THE LINK",
+  "qrShareWarning": "Anyone who scans this code can use your subscription.",
+  "qrLinkCopiedTitle": "Link copied",
+  "qrLinkCopiedHint": "SUBSCRIPTION URL · READY TO PASTE",
+  "qrCopyUrl": "Copy URL",
+
+  "pingRefused": "refused",
+  "pingNoDns": "no dns",
+  "pingError": "error",
+
+  "updateEyebrowDownloaded": "DOWNLOADED · {size}",
+  "@updateEyebrowDownloaded": {
+    "placeholders": {
+      "size": {"type": "String"}
+    }
+  },
+  "updateReadyTitle": "Update ready to install",
+  "updateWhatsNew": "WHAT'S NEW",
+  "updateReadyHint": "System installer opens · reconnect VPN after update",
+  "updateMismatchEyebrow": "SIGNATURE MISMATCH",
+  "updateReinstallTitle": "Reinstall required",
+  "updateWhatToDo": "WHAT TO DO",
+  "updateStepSave": "Save the APK",
+  "updateStepUninstall": "Uninstall Slipstream",
+  "updateStepOpen": "Open the saved APK to install v{version}",
+  "@updateStepOpen": {
+    "placeholders": {
+      "version": {"type": "String"}
+    }
+  },
+  "updateReinstallHint": "Uninstalling also removes your saved subscriptions",
+  "updateUpToDateTitle": "You're up to date",
+  "updateUpToDateHint": "SLIPSTREAM {version} IS THE LATEST",
+  "@updateUpToDateHint": {
+    "placeholders": {
+      "version": {"type": "String"}
+    }
+  },
+  "updateCheckFailedTitle": "Couldn't check for updates",
+  "updateCheckFailedHint": "UPDATE SERVER UNREACHABLE · TRY AGAIN",
+  "updateDownloadingTitle": "Downloading update…",
+  "updateDownloadingHint": "{percent}% · {received} OF {total}",
+  "@updateDownloadingHint": {
+    "placeholders": {
+      "percent": {"type": "int"},
+      "received": {"type": "String"},
+      "total": {"type": "String"}
+    }
+  },
+  "updateLaterTitle": "We'll remind you on next launch",
+  "updateSaveFailedTitle": "Couldn't save the APK",
+  "updateSaveFailedHint": "DOWNLOAD THE LATEST RELEASE FROM GITHUB",
+  "updateSavedTitle": "APK saved",
+  "updateSavedHint": "SAVED TO DOWNLOADS",
+  "updateAllowInstallsTitle": "Allow app installs",
+  "updateAllowInstallsHint": "ENABLE INSTALL UNKNOWN APPS · TAP INSTALL AGAIN",
+  "updateInstallFailedTitle": "Couldn't install update",
+  "updateInstallFailedHint": "TRY AGAIN OR DOWNLOAD IT FROM GITHUB",
+  "updateSaveApk": "Save APK",
+  "updateUninstall": "Uninstall",
+  "updateInstalling": "Installing…",
+  "updateInstall": "Install",
+  "updateLater": "Later"
 }

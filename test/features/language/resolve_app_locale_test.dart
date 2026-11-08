@@ -55,7 +55,10 @@ void main() {
     });
 
     test('falls back to English for an empty list', () {
-      expect(resolveAppLocale(AppLanguage.system, const []), const Locale('en'));
+      expect(
+        resolveAppLocale(AppLanguage.system, const []),
+        const Locale('en'),
+      );
     });
 
     test('every Chinese variant gets the one Chinese translation', () {

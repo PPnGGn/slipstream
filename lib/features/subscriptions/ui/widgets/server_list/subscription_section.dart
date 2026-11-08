@@ -28,6 +28,7 @@ import 'package:slipstream/features/subscriptions/ui/server_problem_view.dart';
 import 'package:slipstream/features/subscriptions/ui/subscription_menu_toasts.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/server_tile.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/subscription_info.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 enum _SectionAction { refresh, share, delete, pingAll, toggleDescription }
 
@@ -99,7 +100,8 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
   // The ⋯ menu's refresh tells the user how it ended; the automatic refresh
   // runs the same cubit method and stays silent.
   Future<void> _refresh(SubscriptionsCubit cubit, String id) async {
-    final toast = refreshToast(await cubit.refreshSubscription(id));
+    final l10n = context.l10n;
+    final toast = refreshToast(l10n, await cubit.refreshSubscription(id));
     if (toast != null) showToastSpec(toast);
   }
 
@@ -109,7 +111,7 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
   // A server that cannot connect is not selected: the toast says why, and the
   // current selection and tunnel stay as they are.
   void _onServerTap(VpnServer server) {
-    final toast = serverTapToast(server);
+    final toast = serverTapToast(context.l10n, server);
     if (toast != null) {
       showToastSpec(toast);
       return;
@@ -120,18 +122,22 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
   Future<void> _toggleFavorite(VpnServer server) async {
     if (isAutoTitle(server.title)) return;
     unawaited(HapticFeedback.mediumImpact());
+    final l10n = context.l10n;
     final added = await getIt<SubscriptionsCubit>().toggleFavorite(
       widget.stored.subscription.id,
       server.id,
     );
     if (added == null) return;
-    showToastSpec(favoriteToast(added: added, serverName: server.displayTitle));
+    showToastSpec(
+      favoriteToast(l10n, added: added, serverName: server.displayTitle),
+    );
   }
 
   // The name is taken before the delete: afterwards the section is gone.
   Future<void> _delete(SubscriptionsCubit cubit, String id, String name) async {
+    final l10n = context.l10n;
     await cubit.removeSubscription(id);
-    showToastSpec(subscriptionDeletedToast(name));
+    showToastSpec(subscriptionDeletedToast(l10n, name));
   }
 
   void _runAction(_SectionAction action) {
@@ -189,6 +195,7 @@ class _SubscriptionSectionState extends State<SubscriptionSection> {
                     colors: colors,
                     name: sub.name,
                     meta: subscriptionMeta(
+                      context.l10n,
                       sub,
                       serverCount: widget.stored.servers.length,
                       refreshing: widget.refreshing,
@@ -364,7 +371,9 @@ class _MetaLine extends StatelessWidget {
       fontWeight: .w500,
       color: meta.refreshing ? colors.warn : colors.textMuted,
     );
-    if (meta.refreshing) return Text('UPDATING…', style: style, maxLines: 1);
+    if (meta.refreshing) {
+      return Text(context.l10n.subMetaUpdating, style: style, maxLines: 1);
+    }
 
     Widget icon(String path) => SvgPicture.asset(
       path,
@@ -394,7 +403,10 @@ class _MetaLine extends StatelessWidget {
         Text('${meta.serverCount}', style: style),
         icon(AppAssets.server),
         if (meta.failed)
-          Text('FAILED', style: style.copyWith(color: colors.warn)),
+          Text(
+            context.l10n.subMetaFailed,
+            style: style.copyWith(color: colors.warn),
+          ),
       ],
     );
   }
@@ -415,6 +427,7 @@ class _SectionMenu extends StatelessWidget {
   final ValueChanged<_SectionAction> onAction;
 
   Future<void> _open(BuildContext context) async {
+    final l10n = context.l10n;
     final button = context.findRenderObject()! as RenderBox;
     final overlay =
         Navigator.of(context).overlay!.context.findRenderObject()! as RenderBox;
@@ -456,23 +469,21 @@ class _SectionMenu extends StatelessWidget {
       position: position,
       items: [
         if (isUrl)
-          item(
-            _SectionAction.refresh,
-            'Refresh subscription',
-            AppAssets.refresh,
-          ),
-        item(_SectionAction.pingAll, 'Ping servers', AppAssets.ping),
+          item(_SectionAction.refresh, l10n.subMenuRefresh, AppAssets.refresh),
+        item(_SectionAction.pingAll, l10n.subMenuPing, AppAssets.ping),
         if (isUrl)
-          item(_SectionAction.share, 'Share subscription', AppAssets.share),
+          item(_SectionAction.share, l10n.subMenuShare, AppAssets.share),
         item(
           _SectionAction.toggleDescription,
-          descriptionShown ? 'Hide description' : 'Show description',
+          descriptionShown
+              ? l10n.subMenuHideDescription
+              : l10n.subMenuShowDescription,
           AppAssets.info,
         ),
         const PopupMenuDivider(height: 9),
         item(
           _SectionAction.delete,
-          'Delete subscription',
+          l10n.subMenuDelete,
           AppAssets.trash,
           color: colors.danger,
         ),

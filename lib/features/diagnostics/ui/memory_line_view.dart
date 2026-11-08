@@ -1,4 +1,5 @@
 import 'package:slipstream/features/diagnostics/cubit/memory_usage_cubit.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 /// What the memory line on the home screen says: `23 MB · Normal`.
 class MemoryLineView {
@@ -17,7 +18,11 @@ class MemoryLineView {
 /// Pure, so the wording is tested without a widget. The budget is shown on
 /// iOS only: there it is the real kill threshold of the extension, while on
 /// Android there is no ceiling worth showing (see [memoryBudgetBytesFor]).
-MemoryLineView memoryLineView(MemoryUsage usage, {required bool ios}) {
+MemoryLineView memoryLineView(
+  AppLocalizations l10n,
+  MemoryUsage usage, {
+  required bool ios,
+}) {
   final bytes = usage.bytes;
   if (bytes == null) return const MemoryLineView(value: '— MB');
 
@@ -27,9 +32,9 @@ MemoryLineView memoryLineView(MemoryUsage usage, {required bool ios}) {
   return MemoryLineView(
     value: value,
     label: switch (usage.health) {
-      MemoryHealth.ok => 'Normal',
-      MemoryHealth.warn => 'High',
-      MemoryHealth.danger => 'Critical',
+      MemoryHealth.ok => l10n.memoryNormal,
+      MemoryHealth.warn => l10n.memoryHigh,
+      MemoryHealth.danger => l10n.memoryCritical,
     },
     health: usage.health,
   );

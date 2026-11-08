@@ -10,6 +10,7 @@ import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
 import 'package:slipstream/features/diagnostics/cubit/memory_monitor_cubit.dart';
 import 'package:slipstream/features/diagnostics/cubit/memory_usage_cubit.dart';
 import 'package:slipstream/features/diagnostics/data/memory_monitor_mode.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 import 'package:slipstream/features/diagnostics/ui/memory_line_view.dart';
 
 /// `[chip] 23 MB · Normal`: one thin line on the home screen, above the
@@ -36,7 +37,7 @@ class MemoryMonitorLine extends StatelessWidget {
               padding: padding,
               child: _Line(
                 colors: getIt<AppColors>(),
-                view: memoryLineView(usage, ios: Platform.isIOS),
+                view: memoryLineView(context.l10n, usage, ios: Platform.isIOS),
               ),
             ),
           ),

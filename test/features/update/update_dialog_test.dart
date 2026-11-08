@@ -17,6 +17,8 @@ import 'package:slipstream/features/update/data/updater_api.g.dart';
 import 'package:slipstream/features/update/ui/widgets/update_dialog.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
+import '../../helpers/l10n.dart';
+
 const _release = AppRelease(
   version: '2.1.1',
   buildNumber: 37,
@@ -99,6 +101,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: localizationsDelegates,
+        supportedLocales: supportedLocales,
         home: Builder(
           builder: (context) => Scaffold(
             body: Center(

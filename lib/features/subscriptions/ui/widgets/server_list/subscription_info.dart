@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:slipstream/core/utils/formatters.dart';
 import 'package:slipstream/core/models/subscription/subscription.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 /// Always-visible block under the section header: days left, traffic and
 /// the provider's announce. Does not collapse with the servers. The update
@@ -51,7 +52,9 @@ class SubscriptionInfo extends StatelessWidget {
               children: [
                 if (daysLeft != null)
                   Text(
-                    daysLeft > 0 ? '${daysLeft}d left' : 'expired',
+                    daysLeft > 0
+                        ? context.l10n.subInfoDaysLeft(daysLeft)
+                        : context.l10n.subInfoExpired,
                     style: metaStyle.copyWith(
                       color: daysLeft <= 3 ? colors.warn : colors.textMuted,
                     ),

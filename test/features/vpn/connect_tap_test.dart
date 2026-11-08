@@ -6,6 +6,7 @@ import 'package:slipstream/features/subscriptions/data/server_problem.dart';
 import 'package:slipstream/features/subscriptions/ui/server_problem_view.dart';
 import 'package:slipstream/features/vpn/presentation/connect_tap.dart';
 
+import '../../helpers/l10n.dart';
 import '../subscriptions/reality_fixtures.dart';
 
 const _server = VpnServer(
@@ -32,6 +33,7 @@ void main() {
     test('with subscriptions it asks to pick a server', () {
       expect(
         connectTapToast(
+          l10n: l10nEn,
           state: const VpnState.disconnected(),
           server: null,
           hasSubscriptions: true,
@@ -43,6 +45,7 @@ void main() {
     test('with none it asks to add a subscription first', () {
       expect(
         connectTapToast(
+          l10n: l10nEn,
           state: const VpnState.disconnected(),
           server: null,
           hasSubscriptions: false,
@@ -54,6 +57,7 @@ void main() {
     test('after a failed attempt the same applies', () {
       expect(
         connectTapToast(
+          l10n: l10nEn,
           state: const VpnState.error('boom'),
           server: null,
           hasSubscriptions: true,
@@ -65,6 +69,7 @@ void main() {
     test('with a server there is nothing to say', () {
       expect(
         connectTapToast(
+          l10n: l10nEn,
           state: const VpnState.disconnected(),
           server: _server,
           hasSubscriptions: true,
@@ -76,6 +81,7 @@ void main() {
     test('a tap that turns the tunnel off needs no server', () {
       expect(
         connectTapToast(
+          l10n: l10nEn,
           state: VpnState.connected(_server, connectedAt: DateTime(2026)),
           server: null,
           hasSubscriptions: true,
@@ -84,6 +90,7 @@ void main() {
       );
       expect(
         connectTapToast(
+          l10n: l10nEn,
           state: const VpnState.connecting(),
           server: null,
           hasSubscriptions: true,
@@ -95,11 +102,12 @@ void main() {
     test('a server that cannot connect says so instead of trying', () {
       expect(
         connectTapToast(
+          l10n: l10nEn,
           state: const VpnState.disconnected(),
           server: realityServerWithoutKey(),
           hasSubscriptions: true,
         ),
-        serverProblemToast(ServerProblem.realityWithoutKey),
+        serverProblemToast(l10nEn, ServerProblem.realityWithoutKey),
       );
     });
 
@@ -108,6 +116,7 @@ void main() {
       // off must still work.
       expect(
         connectTapToast(
+          l10n: l10nEn,
           state: VpnState.connected(_server, connectedAt: DateTime(2026)),
           server: realityServerWithoutKey(),
           hasSubscriptions: true,
@@ -116,6 +125,7 @@ void main() {
       );
       expect(
         connectTapToast(
+          l10n: l10nEn,
           state: const VpnState.blocked('x'),
           server: realityServerWithoutKey(),
           hasSubscriptions: true,
@@ -127,6 +137,7 @@ void main() {
     test('while it is disconnecting a tap does nothing, silently', () {
       expect(
         connectTapToast(
+          l10n: l10nEn,
           state: const VpnState.disconnecting(),
           server: null,
           hasSubscriptions: true,

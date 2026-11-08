@@ -2,6 +2,7 @@ import 'package:slipstream/core/models/subscription/subscription.dart';
 import 'package:slipstream/core/utils/formatters.dart';
 import 'package:slipstream/features/subscriptions/data/auto_update/auto_update_interval.dart';
 import 'package:slipstream/features/subscriptions/data/auto_update/subscription_update_policy.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 /// What the line under a subscription's name shows, as data: the widget turns
 /// it into icons (↻ 12h · 29.10.26, 01:11 · 40 ▤) and decides what to cut on
@@ -25,6 +26,7 @@ class SubscriptionMeta {
 /// The interval is the one auto-update actually uses (the provider's, else
 /// [autoUpdate]).
 SubscriptionMeta subscriptionMeta(
+  AppLocalizations l10n,
   Subscription subscription, {
   required int serverCount,
   required bool refreshing,
@@ -37,8 +39,8 @@ SubscriptionMeta subscriptionMeta(
     interval: subscription.url == null
         ? null
         : interval == null
-        ? 'off'
-        : '${interval.inHours}h',
+        ? l10n.subMetaIntervalOff
+        : l10n.subMetaIntervalHours(interval.inHours),
     failed: subscription.lastError != null,
     refreshing: refreshing,
   );

@@ -9,6 +9,8 @@ import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
 import 'package:slipstream/core/theme/data/theme_store.dart';
 import 'package:slipstream/core/ui/widgets/close_circle_button.dart';
 
+import '../../helpers/l10n.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -25,6 +27,8 @@ void main() {
     GetIt.I.registerSingleton<AppColors>(AppColors(themeCubit: cubit));
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: localizationsDelegates,
+        supportedLocales: supportedLocales,
         home: Scaffold(
           body: CloseCircleButton(onPressed: () {}, overCamera: overCamera),
         ),

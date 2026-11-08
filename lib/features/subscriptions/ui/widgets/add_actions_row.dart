@@ -6,6 +6,7 @@ import 'package:slipstream/app/di/injector.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/ui/widgets/accent_button.dart';
 import 'package:slipstream/features/qr/data/qr_scan.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 /// Compact layout only: Add / Paste / Scan QR under the server list. The
 /// classic layout has just the "+" in the header.
@@ -33,7 +34,7 @@ class AddActionsRow extends StatelessWidget {
           Expanded(
             flex: 6,
             child: AccentButton(
-              label: 'Add',
+              label: context.l10n.commonAdd,
               iconPath: AppAssets.plus,
               onPressed: onAdd,
             ),
@@ -44,7 +45,7 @@ class AddActionsRow extends StatelessWidget {
               colors: colors,
               onTap: onPaste,
               iconPath: AppAssets.paste,
-              label: 'Paste',
+              label: context.l10n.commonPaste,
             ),
           ),
           if (isQrScanSupported(defaultTargetPlatform))

@@ -12,6 +12,7 @@ import 'package:slipstream/core/ui/toast/show_toast.dart';
 import 'package:slipstream/core/ui/widgets/accent_button.dart';
 import 'package:slipstream/core/ui/widgets/sheet_parts.dart';
 import 'package:slipstream/features/qr/data/qr_share_service.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 
 // Shows [data] as a QR code another phone can scan.
@@ -50,11 +51,13 @@ class _QrShareSheetState extends State<_QrShareSheet> {
       await getIt<QrShareService>().shareQr(data: data, name: title);
     } on Object catch (e, st) {
       getIt<Talker>().handle(e, st, 'QR: share failed');
-      showToast(
-        "Couldn't share QR code",
-        subtitle: 'TRY AGAIN OR COPY THE LINK',
-        kind: ToastKind.error,
-      );
+      if (mounted) {
+        showToast(
+          context.l10n.qrShareFailedTitle,
+          subtitle: context.l10n.qrShareFailedHint,
+          kind: ToastKind.error,
+        );
+      }
     } finally {
       if (mounted) setState(() => _sharing = false);
     }
@@ -78,7 +81,7 @@ class _QrShareSheetState extends State<_QrShareSheet> {
                 const SheetGrabber(),
                 SheetTitleRow(
                   iconPath: AppAssets.share,
-                  title: 'Share subscription',
+                  title: context.l10n.subMenuShare,
                   subtitle: title,
                 ),
                 const SizedBox(height: 18),
@@ -106,13 +109,13 @@ class _QrShareSheetState extends State<_QrShareSheet> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Anyone who scans this code can use your subscription.',
+                  context.l10n.qrShareWarning,
                   textAlign: .center,
                   style: TextStyle(fontSize: 11, color: colors.textMuted),
                 ),
                 const SizedBox(height: 18),
                 AccentButton(
-                  label: 'Share',
+                  label: context.l10n.commonShare,
                   iconPath: AppAssets.share,
                   loading: _sharing,
                   onPressed: _share,
@@ -122,8 +125,8 @@ class _QrShareSheetState extends State<_QrShareSheet> {
                   onTap: () {
                     copyToClipboard(
                       data,
-                      title: 'Link copied',
-                      subtitle: 'SUBSCRIPTION URL · READY TO PASTE',
+                      title: context.l10n.qrLinkCopiedTitle,
+                      subtitle: context.l10n.qrLinkCopiedHint,
                     );
                     Navigator.of(context).pop();
                   },
@@ -146,7 +149,7 @@ class _QrShareSheetState extends State<_QrShareSheet> {
                           colorFilter: .mode(colors.textPrimary, .srcIn),
                         ),
                         Text(
-                          'Copy URL',
+                          context.l10n.qrCopyUrl,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: .w600,

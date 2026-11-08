@@ -2,12 +2,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:slipstream/features/diagnostics/cubit/memory_usage_cubit.dart';
 import 'package:slipstream/features/diagnostics/ui/memory_line_view.dart';
 
+import '../../helpers/l10n.dart';
+
 const _mb = 1024 * 1024;
 
 void main() {
   group('memoryLineView', () {
     test('rounds the megabytes and names the health', () {
       final view = memoryLineView(
+        l10nEn,
         const MemoryUsage(bytes: 23 * _mb + 300 * 1024),
         ios: false,
       );
@@ -20,6 +23,7 @@ void main() {
     test('warn is "High", danger is "Critical"', () {
       expect(
         memoryLineView(
+          l10nEn,
           const MemoryUsage(bytes: 100 * _mb, health: MemoryHealth.warn),
           ios: false,
         ).label,
@@ -27,6 +31,7 @@ void main() {
       );
       expect(
         memoryLineView(
+          l10nEn,
           const MemoryUsage(bytes: 140 * _mb, health: MemoryHealth.danger),
           ios: false,
         ).label,
@@ -36,6 +41,7 @@ void main() {
 
     test('iOS shows the budget next to the value', () {
       final view = memoryLineView(
+        l10nEn,
         const MemoryUsage(bytes: 38 * _mb),
         ios: true,
       );
@@ -44,7 +50,7 @@ void main() {
     });
 
     test('without a reading there is a dash and no verdict', () {
-      final view = memoryLineView(const MemoryUsage(), ios: false);
+      final view = memoryLineView(l10nEn, const MemoryUsage(), ios: false);
 
       expect(view.value, '— MB');
       expect(view.label, isNull);

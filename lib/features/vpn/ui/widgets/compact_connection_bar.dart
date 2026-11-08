@@ -13,6 +13,7 @@ import 'package:slipstream/features/vpn/presentation/connect_tap.dart';
 import 'package:slipstream/features/vpn/presentation/connection_status_view.dart';
 import 'package:slipstream/features/vpn/ui/widgets/connection_phase_colors.dart';
 import 'package:slipstream/features/vpn/ui/widgets/connection_timer.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 /// Compact home layout: a slim bar at the bottom with a connect switch,
 /// the server and live traffic. Same state as the classic card — only the
@@ -36,6 +37,7 @@ class CompactConnectionBar extends StatelessWidget {
               builder: (context, subsState) {
                 final selectedServer = subsState.selectedServer;
                 final view = ConnectionStatusView.from(
+                  l10n: context.l10n,
                   state: state,
                   hasSubscriptions: subsState.subscriptions.isNotEmpty,
                   selectedServer: selectedServer,
@@ -58,6 +60,7 @@ class CompactConnectionBar extends StatelessWidget {
                     child: GestureDetector(
                       onTap: () => handleConnectTap(
                         cubit,
+                        l10n: context.l10n,
                         server: selectedServer,
                         hasSubscriptions: subsState.subscriptions.isNotEmpty,
                       ),
@@ -213,7 +216,7 @@ class _Details extends StatelessWidget {
               ),
             Expanded(
               child: Text(
-                server?.displayTitle ?? 'No server selected',
+                server?.displayTitle ?? context.l10n.connectNoServerTitle,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: .w700,

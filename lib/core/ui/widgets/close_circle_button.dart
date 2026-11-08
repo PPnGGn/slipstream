@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:slipstream/app/app_assets.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 /// × on a circle. One button for every close action: in bottom sheet
 /// headers it follows the theme; [overCamera] (the QR scanner) keeps a white
@@ -21,7 +22,7 @@ class CloseCircleButton extends StatelessWidget {
     final colors = AppColors.of(context);
     return IconButton(
       onPressed: onPressed,
-      tooltip: 'Close',
+      tooltip: context.l10n.commonClose,
       style: IconButton.styleFrom(
         backgroundColor: overCamera ? Colors.black54 : colors.chip,
       ),
