@@ -49,7 +49,10 @@ class _QrScanPageState extends State<QrScanPage> {
             overlayBuilder: (context, constraints) => const _ScanFrame(),
           ),
           const SafeArea(
-            child: Align(alignment: .topLeft, child: _CloseButton()),
+            child: Align(
+              alignment: AlignmentDirectional.topStart,
+              child: _CloseButton(),
+            ),
           ),
         ],
       ),

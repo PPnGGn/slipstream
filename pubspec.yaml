@@ -6,13 +6,13 @@ environment:
   sdk: ^3.11.4
 
 dependencies:
-  go_router: ^18.1.1
+  go_router: ^18.1.3
   flutter:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  intl: ^0.20.2
-  talker_flutter: ^5.1.20
+  intl: ^0.20.3
+  talker_flutter: ^5.2.0
   flutter_bloc: ^9.1.1
   get_it: ^9.3.0
   injectable: ^3.0.0
@@ -20,13 +20,13 @@ dependencies:
   json_annotation: ^4.12.0
   shared_preferences: ^2.5.6
   http: ^1.6.0
-  crypto: ^3.0.7
+  crypto: ^3.0.8
   collection: ^1.19.1
   path_provider: ^2.1.6
   uuid: ^4.6.0
-  flutter_svg: ^2.3.0
+  flutter_svg: ^2.3.2
   pointycastle: ^4.0.0
-  mobile_scanner: ^7.4.2
+  mobile_scanner: ^7.5.0
   qr_flutter: ^4.1.0
   share_plus: ^13.3.1
   image_picker: ^1.2.4
@@ -36,10 +36,11 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   fake_async: ^1.3.3
-  pigeon: ^26.3.4
-  build_runner: ^2.15.0
-  freezed: ^3.2.6-dev.1
-  json_serializable: ^6.14.0
+  pigeon: ^29.1.1
+  # 2.17.1+ needs package:build 5, injectable_generator 3.1.3 still needs 4.
+  build_runner: ^2.16.1
+  freezed: ^4.0.3
+  json_serializable: ^6.15.2
   injectable_generator: ^3.1.3
 
 flutter:

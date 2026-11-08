@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'subscription.dart';
@@ -9,6 +9,7 @@ part of 'subscription.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -33,16 +34,21 @@ $SubscriptionCopyWith<Subscription> get copyWith => _$SubscriptionCopyWithImpl<S
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Subscription&&(identical(other.id, id) || other.id == id)&&(identical(other.url, url) || other.url == url)&&(identical(other.name, name) || other.name == name)&&(identical(other.lastUpdatedAt, lastUpdatedAt) || other.lastUpdatedAt == lastUpdatedAt)&&(identical(other.announce, announce) || other.announce == announce)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.updateIntervalHours, updateIntervalHours) || other.updateIntervalHours == updateIntervalHours)&&(identical(other.usedBytes, usedBytes) || other.usedBytes == usedBytes)&&(identical(other.dataLimitBytes, dataLimitBytes) || other.dataLimitBytes == dataLimitBytes)&&(identical(other.lastAttemptAt, lastAttemptAt) || other.lastAttemptAt == lastAttemptAt)&&(identical(other.lastError, lastError) || other.lastError == lastError)&&const DeepCollectionEquality().equals(other.favoriteServerIds, favoriteServerIds));
+  final _this = this as Subscription;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Subscription&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.url, _this.url) || other.url == _this.url)&&(identical(other.name, _this.name) || other.name == _this.name)&&(identical(other.lastUpdatedAt, _this.lastUpdatedAt) || other.lastUpdatedAt == _this.lastUpdatedAt)&&(identical(other.announce, _this.announce) || other.announce == _this.announce)&&(identical(other.expiresAt, _this.expiresAt) || other.expiresAt == _this.expiresAt)&&(identical(other.updateIntervalHours, _this.updateIntervalHours) || other.updateIntervalHours == _this.updateIntervalHours)&&(identical(other.usedBytes, _this.usedBytes) || other.usedBytes == _this.usedBytes)&&(identical(other.dataLimitBytes, _this.dataLimitBytes) || other.dataLimitBytes == _this.dataLimitBytes)&&(identical(other.lastAttemptAt, _this.lastAttemptAt) || other.lastAttemptAt == _this.lastAttemptAt)&&(identical(other.lastError, _this.lastError) || other.lastError == _this.lastError)&&const DeepCollectionEquality().equals(other.favoriteServerIds, _this.favoriteServerIds));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,url,name,lastUpdatedAt,announce,expiresAt,updateIntervalHours,usedBytes,dataLimitBytes,lastAttemptAt,lastError,const DeepCollectionEquality().hash(favoriteServerIds));
+int get hashCode {
+  final _this = this as Subscription;
+  return Object.hash(runtimeType,_this.id,_this.url,_this.name,_this.lastUpdatedAt,_this.announce,_this.expiresAt,_this.updateIntervalHours,_this.usedBytes,_this.dataLimitBytes,_this.lastAttemptAt,_this.lastError,const DeepCollectionEquality().hash(_this.favoriteServerIds));
+}
 
 @override
 String toString() {
-  return 'Subscription(id: $id, url: $url, name: $name, lastUpdatedAt: $lastUpdatedAt, announce: $announce, expiresAt: $expiresAt, updateIntervalHours: $updateIntervalHours, usedBytes: $usedBytes, dataLimitBytes: $dataLimitBytes, lastAttemptAt: $lastAttemptAt, lastError: $lastError, favoriteServerIds: $favoriteServerIds)';
+  final _this = this as Subscription;
+  return 'Subscription(id: ${_this.id}, url: ${_this.url}, name: ${_this.name}, lastUpdatedAt: ${_this.lastUpdatedAt}, announce: ${_this.announce}, expiresAt: ${_this.expiresAt}, updateIntervalHours: ${_this.updateIntervalHours}, usedBytes: ${_this.usedBytes}, dataLimitBytes: ${_this.dataLimitBytes}, lastAttemptAt: ${_this.lastAttemptAt}, lastError: ${_this.lastError}, favoriteServerIds: ${_this.favoriteServerIds})';
 }
 
 
@@ -71,7 +77,7 @@ class _$SubscriptionCopyWithImpl<$Res>
 /// Create a copy of Subscription
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? url = freezed,Object? name = null,Object? lastUpdatedAt = null,Object? announce = freezed,Object? expiresAt = freezed,Object? updateIntervalHours = freezed,Object? usedBytes = freezed,Object? dataLimitBytes = freezed,Object? lastAttemptAt = freezed,Object? lastError = freezed,Object? favoriteServerIds = null,}) {
-  return _then(_self.copyWith(
+  return _then(Subscription(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,url: freezed == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
 as String?,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -225,7 +231,7 @@ return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt,_that.announce
 @JsonSerializable()
 
 class _Subscription implements Subscription {
-  const _Subscription({required this.id, required this.url, required this.name, required this.lastUpdatedAt, this.announce, this.expiresAt, this.updateIntervalHours, this.usedBytes, this.dataLimitBytes, this.lastAttemptAt, this.lastError, final  List<String> favoriteServerIds = const <String>[]}): _favoriteServerIds = favoriteServerIds;
+  const _Subscription({required this.id, required this.url, required this.name, required this.lastUpdatedAt, this.announce, this.expiresAt, this.updateIntervalHours, this.usedBytes, this.dataLimitBytes, this.lastAttemptAt, this.lastError,  List<String> favoriteServerIds = const <String>[]}): _favoriteServerIds = favoriteServerIds;
   factory _Subscription.fromJson(Map<String, dynamic> json) => _$SubscriptionFromJson(json);
 
 @override final  String id;
@@ -268,16 +274,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Subscription&&(identical(other.id, id) || other.id == id)&&(identical(other.url, url) || other.url == url)&&(identical(other.name, name) || other.name == name)&&(identical(other.lastUpdatedAt, lastUpdatedAt) || other.lastUpdatedAt == lastUpdatedAt)&&(identical(other.announce, announce) || other.announce == announce)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.updateIntervalHours, updateIntervalHours) || other.updateIntervalHours == updateIntervalHours)&&(identical(other.usedBytes, usedBytes) || other.usedBytes == usedBytes)&&(identical(other.dataLimitBytes, dataLimitBytes) || other.dataLimitBytes == dataLimitBytes)&&(identical(other.lastAttemptAt, lastAttemptAt) || other.lastAttemptAt == lastAttemptAt)&&(identical(other.lastError, lastError) || other.lastError == lastError)&&const DeepCollectionEquality().equals(other._favoriteServerIds, _favoriteServerIds));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Subscription&&(identical(other.id, id) || other.id == id)&&(identical(other.url, url) || other.url == url)&&(identical(other.name, name) || other.name == name)&&(identical(other.lastUpdatedAt, lastUpdatedAt) || other.lastUpdatedAt == lastUpdatedAt)&&(identical(other.announce, announce) || other.announce == announce)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.updateIntervalHours, updateIntervalHours) || other.updateIntervalHours == updateIntervalHours)&&(identical(other.usedBytes, usedBytes) || other.usedBytes == usedBytes)&&(identical(other.dataLimitBytes, dataLimitBytes) || other.dataLimitBytes == dataLimitBytes)&&(identical(other.lastAttemptAt, lastAttemptAt) || other.lastAttemptAt == lastAttemptAt)&&(identical(other.lastError, lastError) || other.lastError == lastError)&&const DeepCollectionEquality().equals(other.favoriteServerIds, _favoriteServerIds));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,url,name,lastUpdatedAt,announce,expiresAt,updateIntervalHours,usedBytes,dataLimitBytes,lastAttemptAt,lastError,const DeepCollectionEquality().hash(_favoriteServerIds));
+int get hashCode {
+    return Object.hash(runtimeType,id,url,name,lastUpdatedAt,announce,expiresAt,updateIntervalHours,usedBytes,dataLimitBytes,lastAttemptAt,lastError,const DeepCollectionEquality().hash(_favoriteServerIds));
+}
 
 @override
 String toString() {
-  return 'Subscription(id: $id, url: $url, name: $name, lastUpdatedAt: $lastUpdatedAt, announce: $announce, expiresAt: $expiresAt, updateIntervalHours: $updateIntervalHours, usedBytes: $usedBytes, dataLimitBytes: $dataLimitBytes, lastAttemptAt: $lastAttemptAt, lastError: $lastError, favoriteServerIds: $favoriteServerIds)';
+    return 'Subscription(id: $id, url: $url, name: $name, lastUpdatedAt: $lastUpdatedAt, announce: $announce, expiresAt: $expiresAt, updateIntervalHours: $updateIntervalHours, usedBytes: $usedBytes, dataLimitBytes: $dataLimitBytes, lastAttemptAt: $lastAttemptAt, lastError: $lastError, favoriteServerIds: $favoriteServerIds)';
 }
 
 

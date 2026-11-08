@@ -49,7 +49,7 @@ class SettingsGroup extends StatelessWidget {
           for (final (i, child) in children.indexed) ...[
             if (i > 0)
               Padding(
-                padding: const EdgeInsets.only(left: 63),
+                padding: const EdgeInsetsDirectional.only(start: 63),
                 child: Divider(height: 1, color: colors.border),
               ),
             child,

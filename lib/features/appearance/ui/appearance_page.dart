@@ -124,7 +124,6 @@ class AppearancePage extends StatelessWidget {
       ),
     );
   }
-
 }
 
 /// The language list. The names are written in their own language on purpose

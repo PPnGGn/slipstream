@@ -8,6 +8,7 @@ import 'package:slipstream/core/service/update_service/update_service_cubit.dart
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/ui/toast/show_toast.dart';
 import 'package:slipstream/core/ui/widgets/accent_button.dart';
+import 'package:slipstream/core/ui/widgets/mirror_in_rtl.dart';
 import 'package:slipstream/features/update/data/updater_api.g.dart';
 import 'package:slipstream/features/update/ui/update_dialog_content.dart';
 import 'package:slipstream/features/update/ui/update_toasts.dart';
@@ -337,8 +338,8 @@ class _Header extends StatelessWidget {
                     ),
                   ),
                 ),
-                Positioned(
-                  right: -6,
+                PositionedDirectional(
+                  end: -6,
                   bottom: -6,
                   child: Container(
                     width: 26,
@@ -396,11 +397,13 @@ class _Header extends StatelessWidget {
                   color: colors.textMuted,
                   strike: true,
                 ),
-                SvgPicture.asset(
-                  AppAssets.arrowRight,
-                  width: 14,
-                  height: 10,
-                  colorFilter: .mode(colors.textMuted, .srcIn),
+                MirrorInRtl(
+                  child: SvgPicture.asset(
+                    AppAssets.arrowRight,
+                    width: 14,
+                    height: 10,
+                    colorFilter: .mode(colors.textMuted, .srcIn),
+                  ),
                 ),
               ],
               _VersionChip(

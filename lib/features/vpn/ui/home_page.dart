@@ -80,7 +80,12 @@ class _HomePageState extends State<HomePage> {
                           // Under the card; the 12 above is its gap to the
                           // list, so the line takes 10 and keeps 2 below.
                           const MemoryMonitorLine(
-                            padding: .fromLTRB(26, 0, 20, 10),
+                            padding: EdgeInsetsDirectional.fromSTEB(
+                              26,
+                              0,
+                              20,
+                              10,
+                            ),
                           ),
                         ],
                         // The key keeps the list's element (scroll offset,
@@ -114,7 +119,12 @@ class _HomePageState extends State<HomePage> {
                         if (compact) ...[
                           // Above the bar, which has its own 8 on top.
                           const MemoryMonitorLine(
-                            padding: .fromLTRB(26, 6, 20, 0),
+                            padding: EdgeInsetsDirectional.fromSTEB(
+                              26,
+                              6,
+                              20,
+                              0,
+                            ),
                           ),
                           const CompactConnectionBar(),
                         ],

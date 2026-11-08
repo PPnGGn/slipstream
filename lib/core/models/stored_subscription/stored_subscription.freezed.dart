@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'stored_subscription.dart';
@@ -9,6 +9,7 @@ part of 'stored_subscription.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $StoredSubscriptionCopyWith<StoredSubscription> get copyWith => _$StoredSubscrip
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is StoredSubscription&&(identical(other.subscription, subscription) || other.subscription == subscription)&&const DeepCollectionEquality().equals(other.servers, servers));
+  final _this = this as StoredSubscription;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is StoredSubscription&&(identical(other.subscription, _this.subscription) || other.subscription == _this.subscription)&&const DeepCollectionEquality().equals(other.servers, _this.servers));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,subscription,const DeepCollectionEquality().hash(servers));
+int get hashCode {
+  final _this = this as StoredSubscription;
+  return Object.hash(runtimeType,_this.subscription,const DeepCollectionEquality().hash(_this.servers));
+}
 
 @override
 String toString() {
-  return 'StoredSubscription(subscription: $subscription, servers: $servers)';
+  final _this = this as StoredSubscription;
+  return 'StoredSubscription(subscription: ${_this.subscription}, servers: ${_this.servers})';
 }
 
 
@@ -66,7 +72,7 @@ class _$StoredSubscriptionCopyWithImpl<$Res>
 /// Create a copy of StoredSubscription
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? subscription = null,Object? servers = null,}) {
-  return _then(_self.copyWith(
+  return _then(StoredSubscription(
 subscription: null == subscription ? _self.subscription : subscription // ignore: cast_nullable_to_non_nullable
 as Subscription,servers: null == servers ? _self.servers : servers // ignore: cast_nullable_to_non_nullable
 as List<VpnServer>,
@@ -219,7 +225,7 @@ return $default(_that.subscription,_that.servers);case _:
 @JsonSerializable()
 
 class _StoredSubscription implements StoredSubscription {
-  const _StoredSubscription({required this.subscription, required final  List<VpnServer> servers}): _servers = servers;
+  const _StoredSubscription({required this.subscription, required  List<VpnServer> servers}): _servers = servers;
   factory _StoredSubscription.fromJson(Map<String, dynamic> json) => _$StoredSubscriptionFromJson(json);
 
 @override final  Subscription subscription;
@@ -244,16 +250,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StoredSubscription&&(identical(other.subscription, subscription) || other.subscription == subscription)&&const DeepCollectionEquality().equals(other._servers, _servers));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _StoredSubscription&&(identical(other.subscription, subscription) || other.subscription == subscription)&&const DeepCollectionEquality().equals(other.servers, _servers));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,subscription,const DeepCollectionEquality().hash(_servers));
+int get hashCode {
+    return Object.hash(runtimeType,subscription,const DeepCollectionEquality().hash(_servers));
+}
 
 @override
 String toString() {
-  return 'StoredSubscription(subscription: $subscription, servers: $servers)';
+    return 'StoredSubscription(subscription: $subscription, servers: $servers)';
 }
 
 

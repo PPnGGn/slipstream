@@ -49,7 +49,7 @@ class ToastCard extends StatelessWidget {
           child: Stack(
             children: [
               Padding(
-                padding: const .fromLTRB(10, 10, 16, 10),
+                padding: const EdgeInsetsDirectional.fromSTEB(10, 10, 16, 10),
                 child: Row(
                   mainAxisSize: .min,
                   spacing: 11,
@@ -163,7 +163,7 @@ class _TimerBarState extends State<_TimerBar>
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, _) => Align(
-        alignment: .centerLeft,
+        alignment: AlignmentDirectional.centerStart,
         child: FractionallySizedBox(
           key: const Key('toast-timer'),
           widthFactor: 1 - _controller.value,

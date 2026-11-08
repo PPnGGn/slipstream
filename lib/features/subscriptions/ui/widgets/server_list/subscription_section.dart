@@ -9,6 +9,7 @@ import 'package:slipstream/core/models/stored_subscription/stored_subscription.d
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/ui/toast/show_toast.dart';
+import 'package:slipstream/core/ui/widgets/mirror_in_rtl.dart';
 import 'package:slipstream/features/ping/presentation/ping_cubit.dart';
 import 'package:slipstream/features/ping/presentation/ui/ping_sorting.dart';
 import 'package:slipstream/features/qr/ui/qr_share_sheet.dart';
@@ -292,18 +293,27 @@ class _Header extends StatelessWidget {
       onTap: onTap,
       behavior: .opaque,
       child: Padding(
-        padding: const .fromLTRB(10, 13, 8, 12),
+        padding: const EdgeInsetsDirectional.fromSTEB(10, 13, 8, 12),
         child: Row(
           spacing: 8,
           children: [
             AnimatedRotation(
-              turns: expanded ? 0.25 : 0.0,
+              // The chevron points to the end of the line when collapsed and
+              // down when open. Mirrored (right-to-left) it points left, so it
+              // has to turn the other way round to end up pointing down.
+              turns: expanded
+                  ? (Directionality.of(context) == TextDirection.rtl
+                        ? -0.25
+                        : 0.25)
+                  : 0.0,
               duration: const Duration(milliseconds: 200),
-              child: SvgPicture.asset(
-                AppAssets.chevronRight,
-                width: 16,
-                height: 16,
-                colorFilter: .mode(colors.textSecondary, .srcIn),
+              child: MirrorInRtl(
+                child: SvgPicture.asset(
+                  AppAssets.chevronRight,
+                  width: 16,
+                  height: 16,
+                  colorFilter: .mode(colors.textSecondary, .srcIn),
+                ),
               ),
             ),
             Expanded(

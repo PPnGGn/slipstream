@@ -34,7 +34,7 @@ class AppSelectionRow extends StatelessWidget {
         children: [
           if (showDivider)
             Padding(
-              padding: const .only(left: 59),
+              padding: const EdgeInsetsDirectional.only(start: 59),
               child: Divider(height: 1, color: colors.border),
             ),
           Padding(

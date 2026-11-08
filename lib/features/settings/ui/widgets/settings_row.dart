@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:slipstream/app/app_assets.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/ui/widgets/icon_tile.dart';
+import 'package:slipstream/core/ui/widgets/mirror_in_rtl.dart';
 import 'package:slipstream/core/ui/widgets/wave_switch.dart';
 
 /// One settings row of design v3: icon tile, title and subtitle, then
@@ -110,11 +111,13 @@ class SettingsRow extends StatelessWidget {
                 style: TextStyle(fontSize: 13, color: colors.textMuted),
               ),
             if (showChevron)
-              SvgPicture.asset(
-                AppAssets.chevronRight,
-                width: 13,
-                height: 13,
-                colorFilter: .mode(colors.textMuted, .srcIn),
+              MirrorInRtl(
+                child: SvgPicture.asset(
+                  AppAssets.chevronRight,
+                  width: 13,
+                  height: 13,
+                  colorFilter: .mode(colors.textMuted, .srcIn),
+                ),
               ),
             if (switchValue != null)
               IgnorePointer(

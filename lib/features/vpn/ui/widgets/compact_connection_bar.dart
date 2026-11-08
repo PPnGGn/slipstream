@@ -135,7 +135,9 @@ class _ConnectSwitch extends StatelessWidget {
       child: AnimatedAlign(
         duration: duration,
         curve: curve,
-        alignment: on || busy ? .centerRight : .centerLeft,
+        alignment: on || busy
+            ? AlignmentDirectional.centerEnd
+            : AlignmentDirectional.centerStart,
         child: AnimatedContainer(
           duration: duration,
           width: 32,

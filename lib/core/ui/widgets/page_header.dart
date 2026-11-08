@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:slipstream/app/app_assets.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
+import 'package:slipstream/core/ui/widgets/mirror_in_rtl.dart';
 
 /// Top bar of a sub-page: the boxed back button, the title and optional
 /// boxed actions on the right. Replaces the Material AppBar on v3 screens.
@@ -23,6 +24,7 @@ class PageHeader extends StatelessWidget {
         children: [
           BoxIconButton(
             iconPath: AppAssets.arrowLeft,
+            mirrorInRtl: true,
             onTap: () => Navigator.of(context).maybePop(),
           ),
           Expanded(
@@ -49,14 +51,28 @@ class PageHeader extends StatelessWidget {
 
 /// 34 px square button with a border, used for back and header actions.
 class BoxIconButton extends StatelessWidget {
-  const BoxIconButton({super.key, required this.iconPath, required this.onTap});
+  const BoxIconButton({
+    super.key,
+    required this.iconPath,
+    required this.onTap,
+    this.mirrorInRtl = false,
+  });
 
   final String iconPath;
   final VoidCallback onTap;
 
+  /// True for an icon that points somewhere (the back arrow).
+  final bool mirrorInRtl;
+
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final icon = SvgPicture.asset(
+      iconPath,
+      width: 16,
+      height: 16,
+      colorFilter: .mode(colors.textSecondary, .srcIn),
+    );
 
     return GestureDetector(
       onTap: onTap,
@@ -70,12 +86,7 @@ class BoxIconButton extends StatelessWidget {
           borderRadius: .circular(11),
           border: .all(color: colors.border),
         ),
-        child: SvgPicture.asset(
-          iconPath,
-          width: 16,
-          height: 16,
-          colorFilter: .mode(colors.textSecondary, .srcIn),
-        ),
+        child: mirrorInRtl ? MirrorInRtl(child: icon) : icon,
       ),
     );
   }

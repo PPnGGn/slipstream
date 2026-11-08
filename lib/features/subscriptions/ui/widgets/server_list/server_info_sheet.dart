@@ -103,7 +103,7 @@ class _ServerInfoSheet extends StatelessWidget {
                   ),
                 ],
                 Padding(
-                  padding: const .fromLTRB(2, 10, 0, 6),
+                  padding: const EdgeInsetsDirectional.fromSTEB(2, 10, 0, 6),
                   child: Row(
                     children: [
                       Expanded(

@@ -55,7 +55,7 @@ class ServerTile extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         margin: const .symmetric(horizontal: 6, vertical: 2),
-        padding: const .fromLTRB(10, 9, 8, 9),
+        padding: const EdgeInsetsDirectional.fromSTEB(10, 9, 8, 9),
         decoration: BoxDecoration(
           color: selected ? colors.selectedRow : Colors.transparent,
           borderRadius: .circular(14),
@@ -149,8 +149,8 @@ class _Flag extends StatelessWidget {
             style: const TextStyle(fontSize: 19, height: 1),
           ),
           if (favorite)
-            Positioned(
-              right: -5,
+            PositionedDirectional(
+              end: -5,
               bottom: -4,
               child: Container(
                 width: 14,

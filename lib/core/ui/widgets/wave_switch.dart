@@ -33,7 +33,9 @@ class WaveSwitch extends StatelessWidget {
           child: AnimatedAlign(
             duration: const Duration(milliseconds: 250),
             curve: Curves.easeOut,
-            alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+            alignment: value
+                ? AlignmentDirectional.centerEnd
+                : AlignmentDirectional.centerStart,
             child: Container(
               width: 22,
               height: 22,

@@ -80,9 +80,9 @@ class _ToastHostState extends State<ToastHost>
       children: [
         widget.child,
         if (message != null)
-          Positioned(
-            left: 14,
-            right: 14,
+          PositionedDirectional(
+            start: 14,
+            end: 14,
             bottom: math.max(92, keyboard + 12),
             child: IgnorePointer(
               ignoring: widget.cubit.state == null,

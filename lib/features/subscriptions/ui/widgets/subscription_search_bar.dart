@@ -60,7 +60,7 @@ class _SubscriptionSearchBarState extends State<SubscriptionSearchBar> {
         contentPadding: const .symmetric(vertical: 13),
         hintText: widget.hintText,
         prefixIcon: Padding(
-          padding: const .fromLTRB(14, 0, 9, 0),
+          padding: const EdgeInsetsDirectional.fromSTEB(14, 0, 9, 0),
           child: SvgPicture.asset(
             AppAssets.search,
             width: 15,
