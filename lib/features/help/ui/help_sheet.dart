@@ -8,6 +8,7 @@ import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
 import 'package:slipstream/core/ui/widgets/icon_tile.dart';
 import 'package:slipstream/core/ui/widgets/sheet_parts.dart';
 import 'package:slipstream/features/help/ui/help_topic.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 /// Opens the help sheet of a settings page. The sheet only draws [topic]; the
 /// texts live in help_topics.dart.
@@ -50,7 +51,7 @@ class _HelpSheet extends StatelessWidget {
                 SheetTitleRow(
                   iconPath: AppAssets.info,
                   title: topic.title,
-                  subtitle: 'How it works',
+                  subtitle: context.l10n.helpHowItWorks,
                 ),
                 const SizedBox(height: 14),
                 Flexible(
@@ -128,8 +129,16 @@ class _ItemCard extends StatelessWidget {
               ),
             ],
           ),
-          _Block(label: 'What it does', text: item.what, colors: colors),
-          _Block(label: 'Why it matters', text: item.why, colors: colors),
+          _Block(
+            label: context.l10n.helpWhatItDoes,
+            text: item.what,
+            colors: colors,
+          ),
+          _Block(
+            label: context.l10n.helpWhyItMatters,
+            text: item.why,
+            colors: colors,
+          ),
           if (item.tip case final tip?) _Tip(text: tip, colors: colors),
         ],
       ),
@@ -233,7 +242,7 @@ class _NotesCard extends StatelessWidget {
         Padding(
           padding: const .fromLTRB(4, 10, 4, 8),
           child: Text(
-            'GOOD TO KNOW',
+            context.l10n.helpGoodToKnow,
             style: TextStyle(
               fontFamily: 'monospace',
               fontSize: 10,

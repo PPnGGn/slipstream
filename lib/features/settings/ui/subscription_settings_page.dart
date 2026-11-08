@@ -29,8 +29,10 @@ class SubscriptionSettingsPage extends StatelessWidget {
               title: context.l10n.subscriptionsTitle,
               actions: [
                 HelpButton(
-                  topic: () =>
-                      subscriptionsHelp(backgroundUpdates: Platform.isAndroid),
+                  topic: (l10n) => subscriptionsHelp(
+                    l10n,
+                    backgroundUpdates: Platform.isAndroid,
+                  ),
                 ),
               ],
             ),

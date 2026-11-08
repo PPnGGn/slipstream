@@ -193,7 +193,7 @@ void main() {
       await pumpPage(
         tester,
         (context) => HelpButton(
-          topic: () =>
+          topic: (_) =>
               HelpTopic(title: 'DNS', intro: 'About DNS.', items: [_item('A')]),
         ),
       );
@@ -213,7 +213,7 @@ void main() {
       await pumpPage(
         tester,
         (context) => HelpButton(
-          topic: () => HelpTopic(
+          topic: (_) => HelpTopic(
             title: 'DNS',
             intro: allowed ? 'With fake DNS.' : 'Without fake DNS.',
             items: [_item('A')],

@@ -53,8 +53,10 @@ class RoutingSettingsPage extends StatelessWidget {
               title: l10n.routingTitle,
               actions: [
                 HelpButton(
-                  topic: () =>
-                      routingHelp(fullAdBlockAllowed: adBlockCubit.fullAllowed),
+                  topic: (l10n) => routingHelp(
+                    l10n,
+                    fullAdBlockAllowed: adBlockCubit.fullAllowed,
+                  ),
                 ),
               ],
             ),

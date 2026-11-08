@@ -503,5 +503,110 @@
   "backupExportNote": "Encrypted with your passphrase. Scan the QR with SlipStream on another device to transfer everything.",
   "backupRestoreHeader": "Restore",
   "backupImportTitle": "Import backup file or scan QR",
-  "backupImportSubtitle": ".ssbk file, QR code or slipstream:// link"
+  "backupImportSubtitle": ".ssbk file, QR code or slipstream:// link",
+
+  "helpHowItWorks": "How it works",
+  "helpWhatItDoes": "What it does",
+  "helpWhyItMatters": "Why it matters",
+  "helpGoodToKnow": "GOOD TO KNOW",
+
+  "helpNoteReconnectTitle": "When it applies",
+  "helpNoteReconnectBody": "Changes take effect on reconnect. If the VPN is on, turn it off and on again.",
+  "helpNoteOwnRoutingTitle": "Servers with their own rules",
+  "helpNoteOwnRoutingBody": "If a server's config comes with routing rules of its own (set by the VPN provider or your panel), they are kept as they are and this page does not change them.",
+
+  "helpPingIntro": "Shows how quickly each server answers, so you can pick a fast one without trying them one by one.",
+  "helpPingLaunchWhat": "Measures all servers when the app starts, and again when you come back to it after 10 minutes or more. A refreshed subscription is always measured.",
+  "helpPingLaunchWhy": "Server quality changes during the day. Fresh numbers mean you connect to what works now, not to what worked yesterday.",
+  "helpPingLaunchTip": "Off: measure by hand with the button on a subscription, or pull down on the list.",
+  "helpPingSortWhat": "Reorders each list by ping once measuring finishes. The order stays fixed while measuring, so rows do not jump under your finger.",
+  "helpPingSortWhy": "The fastest servers end up at the top, one tap from connecting.",
+  "helpPingDisplayWhat": "Numbers show the value in milliseconds. Dots show only the color.",
+  "helpPingDisplayWhy": "Numbers help to compare servers; dots keep a long list calm and easy to scan.",
+  "helpPingNoteMeasuredTitle": "How it is measured",
+  "helpPingNoteMeasuredBody": "A TCP connection to the server (UDP/QUIC for Hysteria2), up to 3 attempts, the result is the median. It is measured directly from the device, bypassing the VPN, also while connected. It proves only that the server is reachable, not that the VPN works.",
+  "helpPingNoteColorsTitle": "Colors and marks",
+  "helpPingNoteColorsBody": "green: under 80 ms\nyellow: 80–160 ms\nred: over 160 ms\ntimeout: no response\nrefused: connection rejected, the port is closed\nno dns: the server address was not found\nerror: network error, usually on the device side\nn/a: cannot be measured for this protocol (mKCP)",
+
+  "helpSubsIntro": "A subscription is a link to a server list kept by your provider. Here you choose how often the app re-downloads it.",
+  "helpSubsAutoWhat": "Downloads the list again at the chosen interval. When the provider sends its own interval, that one is used. Off stops every automatic update.",
+  "helpSubsAutoWhy": "Providers move servers, rotate keys and remove dead nodes. An old list slowly stops connecting, and an update fixes it before you notice.",
+  "helpSubsAutoTip": "Leave it on unless your provider asks you not to refresh often.",
+  "helpSubsNoteWhenTitle": "When it runs",
+  "helpSubsNoteWhenBackground": "While the app is open, and in the background about once an hour when the network is up, also with the app closed.",
+  "helpSubsNoteWhenForeground": "While the app is open and when you come back to it.",
+  "helpSubsNoteBlockedTitle": "Blocked links",
+  "helpSubsNoteBlockedBody": "The link is loaded directly first. If that fails and the VPN is on, it is loaded again through the tunnel.",
+  "helpSubsNoteFailedTitle": "When an update fails",
+  "helpSubsNoteFailedBody": "The old servers stay and \"update failed\" appears next to the subscription. It is retried in 30 minutes, or as soon as the VPN connects.",
+
+  "helpDnsIntro": "DNS turns a site name into an address. Whoever answers also learns which sites you open, so it matters who you ask.",
+  "helpDnsRemoteTitle": "Remote DNS",
+  "helpDnsRemoteWhat": "Looks up names for traffic that goes through the VPN. Cloudflare and Google use DNS over HTTPS, which is encrypted. Xray built-in is plain DNS to 1.1.1.1 inside the tunnel.",
+  "helpDnsRemoteWhy": "Your mobile operator does not see these lookups: they travel inside the tunnel, and only the VPN server (or the DoH provider) sees them.",
+  "helpDnsRemoteTip": "Cloudflare DoH is a good default.",
+  "helpDnsDirectTitle": "Direct DNS",
+  "helpDnsDirectWhat": "Looks up Russian names ({zones}, Russian services) for traffic that bypasses the VPN. Yandex DNS is encrypted. The system resolver is the phone's own DNS, usually your operator's.",
+  "@helpDnsDirectWhat": {
+    "placeholders": {
+      "zones": {"type": "String"}
+    }
+  },
+  "helpDnsDirectWhy": "Russian sites often answer differently, or not at all, to a resolver abroad. Asking a local one keeps them working. The system resolver is the simplest, but the operator sees those names.",
+  "helpDnsFakeWhat": "Apps get a made-up address at once, and the VPN finds the real one later.",
+  "helpDnsFakeWhy": "The first connection to a site is faster, because the app does not wait for a real answer.",
+  "helpDnsFakeTip": "If an app stops opening, turn it off.",
+  "helpDnsNotePrivateTitle": "Private DNS in Android",
+  "helpDnsNotePrivateBody": "With strict Private DNS in Android settings, apps look names up through it and not through these resolvers.",
+
+  "helpRoutingIntro": "Decides which traffic goes through the VPN, which goes directly and which is dropped. By default everything goes through the VPN.",
+  "helpRoutingRuWhat": "Sends {zones} domains, Russian services, Russian IP addresses and torrents directly, bypassing the VPN.",
+  "@helpRoutingRuWhat": {
+    "placeholders": {
+      "zones": {"type": "String"}
+    }
+  },
+  "helpRoutingRuWhy": "Banks, government sites and streaming services in Russia often refuse foreign addresses. Going direct keeps them working and saves VPN traffic and speed.",
+  "helpRoutingAdsWhatFull": "Basic drops major ad and tracking networks (about 830 domains). Full uses an extended list (about 150,000 domains) with higher memory use and a chance of false positives.",
+  "helpRoutingAdsWhatLimited": "Drops major ad and tracking networks (about 830 domains). The extended list does not fit the memory limit of the iOS VPN extension.",
+  "helpRoutingAdsWhy": "Fewer ads, less tracking, less traffic and a faster page load, in every app, not only in the browser.",
+  "helpRoutingAdsTip": "Start with Basic. Switch to Full only if you still see ads.",
+  "helpRoutingLanWhat": "Traffic to your local network (router, printer, NAS, Chromecast, localhost) is sent directly.",
+  "helpRoutingLanWhy": "Through a server abroad your own devices cannot be reached, because the server has no access to your home network. With the switch off they usually stop being found.",
+  "helpRoutingLanTip": "Keep it on.",
+  "helpRoutingGeoTitle": "Geo databases",
+  "helpRoutingGeoWhat": "Domain and IP lists that the rules above rely on. They are downloaded separately from the app and updated by hand.",
+  "helpRoutingGeoWhy": "Without them ads are not blocked, and RU bypass covers only {zones}. Refresh them from time to time: services change addresses.",
+  "@helpRoutingGeoWhy": {
+    "placeholders": {
+      "zones": {"type": "String"}
+    }
+  },
+  "helpRoutingCustomWhat": "Your own rule for a domain (with its subdomains), an IP address or a range. Proxy sends it through the VPN, Direct sends it bypassing the VPN, Block drops it.",
+  "helpRoutingCustomWhy": "For the exceptions the lists do not know: one site that only works from a foreign address, or a service you want to cut off.",
+  "helpRoutingCustomTip": "The most specific rule wins: mail.google.com beats google.com. Your rules come before RU bypass, ad blocking and LAN bypass.",
+  "helpRoutingNoteOwnBody": "If a server's config comes with routing rules of its own (set by the VPN provider or your panel), they are kept: RU bypass, ad blocking and LAN bypass do not apply to it. Custom rules do, and stand ahead of the server's own.",
+
+  "helpSecurityIntro": "Protects you when the VPN breaks, and sets how the tunnel carries your traffic.",
+  "helpSecurityKillWhat": "If the tunnel is lost and cannot come back (Android stopped the app, or the system restarted the VPN), traffic stays blocked until you reconnect or turn the VPN off.",
+  "helpSecurityKillWhy": "Without it apps quietly switch to your normal connection, and sites see your real address. With it you notice the break instead of leaking.",
+  "helpSecurityKillTip": "Turn it on if showing your real address would be a problem. A server that fails on the first connect only shows an error.",
+  "helpSecurityIpv6What": "On: IPv6 traffic goes through the tunnel as well. Off: the tunnel carries IPv4 only, and apps and sites that need IPv6 fall back to IPv4 on their own.",
+  "helpSecurityIpv6Why": "If the server has no IPv6 exit, apps try IPv6, wait and only then fall back, so sites open slower.",
+  "helpSecurityIpv6Tip": "Leave it off unless you know your server supports IPv6.",
+  "helpSecurityNoteKillTitle": "What the kill switch does not cover",
+  "helpSecurityNoteKillBody": "When Android stops the app, traffic can leave the VPN for a few seconds while the tunnel comes back. If the app itself crashes, the VPN is simply gone.",
+  "helpSecurityNoteAlwaysOnTitle": "Always-on VPN",
+  "helpSecurityNoteAlwaysOnBody": "With Android's own Always-on VPN turned on, the system brings the VPN back even when you turn it off from the app.",
+
+  "helpSplitIntro": "Chooses which apps use the VPN and which connect on their own, app by app.",
+  "helpSplitMainWhat": "The main switch. Your choice of mode and apps is kept when you turn it off. With no apps selected it does nothing.",
+  "helpSplitMainWhy": "One VPN for the whole phone is not always right: some apps need it, others work better without it.",
+  "helpSplitModesWhat": "Proxy selected: only the apps you tick go through the tunnel, everything else connects directly. Bypass selected: the ticked apps connect directly, everything else goes through the tunnel.",
+  "helpSplitModesWhy": "Bypass suits banks, government apps and games that reject a foreign address or lag through a server. Proxy suits the opposite: use the VPN for one messenger or browser only.",
+  "helpSplitModesTip": "Bypass selected is the usual choice.",
+  "helpSplitSystemWhat": "Only changes the list: it also shows pre-installed apps that have no icon in the launcher, such as WebView and Play Services.",
+  "helpSplitSystemWhy": "Sometimes a background service, not the app you see, is what needs to go around the VPN.",
+  "helpSplitNoteTitle": "Apps, not sites",
+  "helpSplitNoteBody": "This works per app. To send a particular site or address around the VPN, use a custom rule in Routing."
 }

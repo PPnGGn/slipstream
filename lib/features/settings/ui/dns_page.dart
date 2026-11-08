@@ -47,7 +47,8 @@ class DnsPage extends StatelessWidget {
               title: l10n.dnsTitle,
               actions: [
                 HelpButton(
-                  topic: () => dnsHelp(fakeDnsAllowed: dns.fakeDnsAllowed),
+                  topic: (l10n) =>
+                      dnsHelp(l10n, fakeDnsAllowed: dns.fakeDnsAllowed),
                 ),
               ],
             ),
