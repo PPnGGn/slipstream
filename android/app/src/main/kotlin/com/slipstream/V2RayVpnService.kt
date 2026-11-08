@@ -24,14 +24,13 @@ import com.slipstream.nativeprefs.NativePrefsStore
 
 class V2RayVpnService : VpnService() {
 
-    // The interface the core runs on. Non-null from the moment it is built until the
-    // session ends: that is what "a session is running" means (see startDecision).
-    private var localTunnel: ParcelFileDescriptor? = null
-
-    // The kill switch's hold after a failed start: an interface with the tunnel's
-    // addresses and routes that nobody reads from, so whatever apps send into it goes
-    // nowhere. Replaced by the real interface on Reconnect, closed on Disconnect.
-    private var blockingTunnel: ParcelFileDescriptor? = null
+    // The interface of the session and the kill switch's blocking one, and who closes
+    // them (see TunnelInterfaces). The core runs on a duplicate of the descriptor
+    // kept here, so the interface outlives a core that closes its own.
+    private val interfaces =
+            TunnelInterfaces<ParcelFileDescriptor>(
+                    onCloseError = { Log.w("VPN_SERVICE", "Closing an interface failed: ${it.message}") },
+            )
 
     // The launch being worked on: the blocking interface is built from the same one.
     private var activeLaunch: VpnLaunchConfig? = null
@@ -141,7 +140,7 @@ class V2RayVpnService : VpnService() {
         val decision =
                 startDecision(
                         trigger,
-                        sessionRunning = localTunnel != null,
+                        sessionRunning = interfaces.session != null,
                         savedKillSwitch = saved?.killSwitch,
                         startInterrupted = launchStore.startInterrupted(),
                 )
@@ -165,7 +164,7 @@ class V2RayVpnService : VpnService() {
                             stopForeground(STOP_FOREGROUND_REMOVE)
                         }
                         // Nothing runs and nothing is held: do not sit there started.
-                        if (localTunnel == null && blockingTunnel == null) stopSelf()
+                        if (!interfaces.hasAny) stopSelf()
                         return START_NOT_STICKY
                     }
                     StartDecision.START_SAVED -> saved
@@ -173,7 +172,7 @@ class V2RayVpnService : VpnService() {
                 }
         if (launch == null) {
             Log.e("VPN_SERVICE", "No launch to start. Aborting.")
-            if (localTunnel == null && blockingTunnel == null) stopSelf()
+            if (!interfaces.hasAny) stopSelf()
             return START_NOT_STICKY
         }
 
@@ -292,9 +291,15 @@ class V2RayVpnService : VpnService() {
     private fun setupVpn(launch: VpnLaunchConfig, trigger: StartTrigger) {
         try {
             val tunnel = establishInterface(launch)
-            localTunnel = tunnel
+            interfaces.begin(tunnel)
 
-            val fd = tunnel.detachFd()
+            // The core gets a duplicate and closes it when its start fails or the
+            // session ends. The original stays here: as long as it is open the
+            // interface exists, so a failed start with the kill switch goes straight
+            // to the block (see holdBlockingTunnel) with no moment when the traffic
+            // flows around the VPN. stopVpn closes it; forgetting that leaves the
+            // phone without a network.
+            val fd = tunnel.dup().detachFd()
             // Chatty core logs for debug builds only. The flag comes from the
             // build itself (release APKs are never debuggable), not from Dart.
             Android.setVerboseLogs(isDebuggable())
@@ -322,7 +327,7 @@ class V2RayVpnService : VpnService() {
 
             // The real interface replaced the blocking one when it was established;
             // what is left of it is a stale handle.
-            releaseBlockingTunnel()
+            interfaces.sessionUp()
             finishStartMark()
             notificationPhase = NotificationPhase.CONNECTED
             val connectedAtMs = System.currentTimeMillis()
@@ -334,11 +339,16 @@ class V2RayVpnService : VpnService() {
             Log.e("VPN_SERVICE", "Critical error in setupVpn: ${e.message}")
             // A start that failed in a way we caught is not a crash: the mark goes.
             finishStartMark()
-            localTunnel = null
             val reason = e.message ?: "setupVpn failed"
             // A tunnel lost and not coming back is held; a server that never worked
-            // is just an error (see shouldBlockOnFailure).
-            if (shouldBlockOnFailure(launch.killSwitch, trigger, alreadyBlocked = blockingTunnel != null)) {
+            // is just an error (see shouldBlockOnFailure). If it is not held, stopVpn
+            // closes the interface of this attempt.
+            if (shouldBlockOnFailure(
+                            launch.killSwitch,
+                            trigger,
+                            alreadyBlocked = interfaces.blocking != null,
+                    )
+            ) {
                 holdBlockingTunnel(launch, reason, trigger)
             } else {
                 VpnEventBridge.notifyStatus(VpnStatus.ERROR, reason)
@@ -349,9 +359,10 @@ class V2RayVpnService : VpnService() {
     }
 
     // The kill switch's answer to a failed start: instead of closing the VPN, which
-    // would let every app's traffic out the moment the interface is gone, build the
-    // interface again and read nothing from it. The user ends it with Reconnect (a
-    // new interface replaces this one) or Disconnect (stopVpn closes it).
+    // would let every app's traffic out the moment the interface is gone, keep the
+    // interface of the attempt and read nothing from it (it is built anew only when
+    // the attempt failed before it had one). The user ends it with Reconnect (a new
+    // interface replaces this one) or Disconnect (stopVpn closes it).
     private fun holdBlockingTunnel(launch: VpnLaunchConfig, reason: String, trigger: StartTrigger) {
         try {
             // Nothing of the core may keep running while the traffic is held. Safe to
@@ -362,10 +373,7 @@ class V2RayVpnService : VpnService() {
                 Log.w("VPN_SERVICE", "Core stop before blocking failed: ${e.message}")
             }
             stopTrafficPolling()
-            val blocking = establishInterface(launch)
-            val previous = blockingTunnel
-            blockingTunnel = blocking
-            previous?.closeQuietly()
+            interfaces.holdBlocking { establishInterface(launch) }
 
             notificationPhase = NotificationPhase.BLOCKED
             updateNotification(buildNotification(NotificationPhase.BLOCKED))
@@ -379,19 +387,6 @@ class V2RayVpnService : VpnService() {
             VpnEventBridge.notifyStatus(VpnStatus.ERROR, reason)
             raiseAlertAfterFailure(blocked = false, trigger = trigger)
             stopVpn(dueToError = true)
-        }
-    }
-
-    private fun releaseBlockingTunnel() {
-        blockingTunnel?.closeQuietly()
-        blockingTunnel = null
-    }
-
-    private fun ParcelFileDescriptor.closeQuietly() {
-        try {
-            close()
-        } catch (e: Exception) {
-            Log.w("VPN_SERVICE", "Closing an interface failed: ${e.message}")
         }
     }
 
@@ -497,16 +492,17 @@ class V2RayVpnService : VpnService() {
         stopTrafficPolling()
 
         try {
-            // core closes the TUN fd on the native side
+            // The core closes its duplicate of the TUN descriptor.
             Android.stop()
         } catch (e: Exception) {
             Log.e("VPN_SERVICE", "Failed to stop core: ${e.message}")
         }
 
-        localTunnel = null
+        // The original descriptor is ours: the interface exists until it is closed.
         // The user turned the VPN off (or it failed with nothing left to hold): the
-        // blocking interface goes with it, and traffic flows as it does without a VPN.
-        releaseBlockingTunnel()
+        // session's interface and the blocking one go, and traffic flows as it does
+        // without a VPN.
+        interfaces.releaseAll()
         activeLaunch = null
 
         if (!dueToError) {
