@@ -46,6 +46,11 @@ import 'package:slipstream/features/update/ui/update_toasts.dart';
 import 'package:slipstream/features/update/ui/widgets/update_dialog.dart';
 import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
 import 'package:slipstream/features/language/cubit/language_cubit.dart';
+import 'package:slipstream/features/notifications/cubit/notification_access_cubit.dart';
+import 'package:slipstream/features/notifications/cubit/notifications_cubit.dart';
+import 'package:slipstream/features/notifications/data/notification_prefs.dart';
+import 'package:slipstream/features/notifications/data/notification_support.dart';
+import 'package:slipstream/features/notifications/ui/notifications_labels.dart';
 import 'package:slipstream/features/language/data/app_language.dart';
 import 'package:slipstream/l10n/l10n_context.dart';
 
@@ -58,6 +63,14 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   final _updateCubit = getIt<UpdateServiceCubit>();
+
+  @override
+  void initState() {
+    super.initState();
+    // The Notifications row says when Android blocks the alerts; the answer
+    // may have changed since the last visit.
+    getIt<NotificationAccessCubit>().refresh();
+  }
 
   // Tap on the Version row. What to show for each updater state is decided
   // by updateCheckFeedback; this only asks GitHub first when there is no
@@ -229,15 +242,8 @@ class _SettingsPageState extends State<SettingsPage> {
                               showChevron: true,
                               onTap: () => context.push('/settings/backup'),
                             ),
-                            SettingsRow(
-                              iconPath: AppAssets.bell,
-                              hue: TileHue.notif,
-                              title: context.l10n.notificationsTitle,
-                              subtitle:
-                                  context.l10n.settingsNotificationsSubtitle,
-                              switchValue: false,
-                              enabled: false,
-                            ),
+                            if (isNotificationsSupported(defaultTargetPlatform))
+                              const _NotificationsRow(),
                           ],
                         ),
                         SectionHeader(context.l10n.sectionDiagnostics),
@@ -307,6 +313,31 @@ class _SettingsPageState extends State<SettingsPage> {
           : l10n.pingSummaryNumbers,
     ];
     return parts.join(' · ');
+  }
+}
+
+/// The Notifications row: the subtitle says what the page is about, the value
+/// on the right says how it is set (or that Android blocks the alerts).
+class _NotificationsRow extends StatelessWidget {
+  const _NotificationsRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<NotificationsCubit, NotificationPrefs>(
+      bloc: getIt<NotificationsCubit>(),
+      builder: (context, prefs) => BlocBuilder<NotificationAccessCubit, bool>(
+        bloc: getIt<NotificationAccessCubit>(),
+        builder: (context, allowed) => SettingsRow(
+          iconPath: AppAssets.bell,
+          hue: TileHue.notif,
+          title: context.l10n.notificationsTitle,
+          subtitle: context.l10n.settingsNotificationsSubtitle,
+          value: notificationsSummary(context.l10n, prefs, allowed: allowed),
+          showChevron: true,
+          onTap: () => context.push('/settings/notifications'),
+        ),
+      ),
+    );
   }
 }
 

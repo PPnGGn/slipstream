@@ -5,6 +5,7 @@ import 'package:slipstream/features/appearance/ui/appearance_page.dart';
 import 'package:slipstream/features/qr/ui/qr_scan_page.dart';
 import 'package:slipstream/features/settings/ui/backup_page.dart';
 import 'package:slipstream/features/settings/ui/dns_page.dart';
+import 'package:slipstream/features/settings/ui/notifications_page.dart';
 import 'package:slipstream/features/settings/ui/ping_settings_page.dart';
 import 'package:slipstream/features/settings/ui/security_page.dart';
 import 'package:slipstream/features/settings/ui/split_tunneling_page.dart';
@@ -59,6 +60,10 @@ final GoRouter appRouter = GoRouter(
           builder: (context, state) => const SecurityPage(),
         ),
         appRoute(path: 'dns', builder: (context, state) => const DnsPage()),
+        appRoute(
+          path: 'notifications',
+          builder: (context, state) => const NotificationsPage(),
+        ),
         // Not built yet: a laid-out page with inactive controls.
         appRoute(
           path: 'backup',

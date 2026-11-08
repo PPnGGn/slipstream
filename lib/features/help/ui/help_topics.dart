@@ -265,3 +265,31 @@ HelpTopic splitTunnelHelp(AppLocalizations l10n) => HelpTopic(
     HelpNote(title: l10n.helpSplitNoteTitle, body: l10n.helpSplitNoteBody),
   ],
 );
+
+HelpTopic notificationsHelp(AppLocalizations l10n) => HelpTopic(
+  title: l10n.notificationsTitle,
+  intro: l10n.helpNotifIntro,
+  items: [
+    HelpItem(
+      iconPath: AppAssets.kill,
+      hue: TileHue.red,
+      title: l10n.notifyTrafficBlockedTitle,
+      what: l10n.helpNotifBlockedWhat,
+      why: l10n.helpNotifBlockedWhy,
+    ),
+    HelpItem(
+      iconPath: AppAssets.power,
+      hue: TileHue.amber,
+      title: l10n.notifyStartFailedTitle,
+      what: l10n.helpNotifStartWhat,
+      why: l10n.helpNotifStartWhy,
+      tip: l10n.helpNotifStartTip,
+    ),
+  ],
+  notes: [
+    HelpNote(
+      title: l10n.helpNotifNoteSystemTitle,
+      body: l10n.helpNotifNoteSystemBody,
+    ),
+  ],
+);

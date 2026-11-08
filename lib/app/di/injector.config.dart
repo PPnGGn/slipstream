@@ -50,6 +50,10 @@ import '../../features/launch_sync/presentation/launch_sync_runner.dart'
 import '../../features/native_prefs/data/native_prefs_sink.dart' as _i838;
 import '../../features/native_prefs/presentation/native_prefs_runner.dart'
     as _i644;
+import '../../features/notifications/cubit/notification_access_cubit.dart'
+    as _i197;
+import '../../features/notifications/cubit/notifications_cubit.dart' as _i840;
+import '../../features/notifications/data/notifications_store.dart' as _i1013;
 import '../../features/ping/data/host_resolver.dart' as _i371;
 import '../../features/ping/data/ping_settings_store.dart' as _i384;
 import '../../features/ping/data/ping_target_resolver.dart' as _i142;
@@ -204,6 +208,9 @@ extension GetItInjectableX on _i174.GetIt {
       preResolve: true,
     );
     gh.lazySingleton<_i139.HostResolver>(() => const _i371.DnsHostResolver());
+    gh.lazySingleton<_i197.NotificationAccessCubit>(
+      () => _i197.NotificationAccessCubit(gh<_i838.NativePrefsSink>()),
+    );
     gh.lazySingleton<_i802.ThemeStore>(
       () => _i802.ThemeStore(gh<_i460.SharedPreferences>()),
     );
@@ -224,6 +231,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i668.LanguageStore>(
       () => _i668.LanguageStore(gh<_i460.SharedPreferences>()),
+    );
+    gh.lazySingleton<_i1013.NotificationsStore>(
+      () => _i1013.NotificationsStore(gh<_i460.SharedPreferences>()),
     );
     gh.lazySingleton<_i384.PingSettingsStore>(
       () => _i384.PingSettingsStore(gh<_i460.SharedPreferences>()),
@@ -313,6 +323,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i353.LanguageCubit>(
       () => _i353.LanguageCubit(store: gh<_i668.LanguageStore>()),
     );
+    gh.lazySingleton<_i840.NotificationsCubit>(
+      () => _i840.NotificationsCubit(store: gh<_i1013.NotificationsStore>()),
+    );
     gh.lazySingleton<_i1021.UpdateServiceCubit>(
       () => _i1021.UpdateServiceCubit(
         repository: gh<_i11.UpdateRepository>(),
@@ -321,13 +334,6 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i964.LanBypassCubit>(
       () => _i964.LanBypassCubit(store: gh<_i1047.LanBypassStore>()),
-    );
-    gh.lazySingleton<_i644.NativePrefsRunner>(
-      () => _i644.NativePrefsRunner(
-        gh<_i838.NativePrefsSink>(),
-        gh<_i353.LanguageCubit>(),
-        gh<_i207.Talker>(),
-      ),
     );
     gh.lazySingleton<_i314.AutoConnectCubit>(
       () => _i314.AutoConnectCubit(store: gh<_i699.AutoConnectStore>()),
@@ -365,6 +371,14 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i962.AppColors>(
       () => _i962.AppColors(themeCubit: gh<_i12.AppThemeCubit>()),
+    );
+    gh.lazySingleton<_i644.NativePrefsRunner>(
+      () => _i644.NativePrefsRunner(
+        gh<_i838.NativePrefsSink>(),
+        gh<_i353.LanguageCubit>(),
+        gh<_i840.NotificationsCubit>(),
+        gh<_i207.Talker>(),
+      ),
     );
     gh.lazySingleton<_i746.SubscriptionFetcher>(
       () => _i746.SubscriptionFetcher(

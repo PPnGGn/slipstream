@@ -41,6 +41,7 @@ void main() {
     ),
     'security': securityHelp(l10nEn),
     'split tunneling': splitTunnelHelp(l10nEn),
+    'notifications': notificationsHelp(l10nEn),
   };
 
   for (final MapEntry(key: name, value: topic) in topics.entries) {
@@ -115,6 +116,13 @@ void main() {
       expect(_titles(securityHelp(l10nEn)), ['Kill switch', 'IPv6']);
     });
 
+    test('notifications', () {
+      expect(_titles(notificationsHelp(l10nEn)), [
+        'Traffic blocked',
+        'VPN could not start',
+      ]);
+    });
+
     test('split tunneling', () {
       expect(_titles(splitTunnelHelp(l10nEn)), [
         'Split tunneling',
@@ -175,6 +183,7 @@ void main() {
       routingHelp(l10n, fullAdBlockAllowed: false),
       securityHelp(l10n),
       splitTunnelHelp(l10n),
+      notificationsHelp(l10n),
     ];
 
     final english = all(l10nEn);

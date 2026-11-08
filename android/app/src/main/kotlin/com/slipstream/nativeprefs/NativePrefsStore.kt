@@ -16,9 +16,25 @@ class NativePrefsStore(private val prefs: SharedPreferences) {
         prefs.edit().putString(KEY_LANGUAGE, code).apply()
     }
 
+    // The alert switches. On until the user says otherwise, also before the app ever
+    // sent them: an alert that is off by default never reaches the person who needs it.
+    fun alertTrafficBlocked(): Boolean = prefs.getBoolean(KEY_ALERT_TRAFFIC_BLOCKED, true)
+
+    fun alertStartFailed(): Boolean = prefs.getBoolean(KEY_ALERT_START_FAILED, true)
+
+    fun saveAlertTrafficBlocked(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_ALERT_TRAFFIC_BLOCKED, enabled).apply()
+    }
+
+    fun saveAlertStartFailed(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_ALERT_START_FAILED, enabled).apply()
+    }
+
     companion object {
         private const val FILE = "slipstream_native_prefs"
         private const val KEY_LANGUAGE = "language"
+        private const val KEY_ALERT_TRAFFIC_BLOCKED = "alert_traffic_blocked"
+        private const val KEY_ALERT_START_FAILED = "alert_start_failed"
 
         fun of(context: Context) =
                 NativePrefsStore(

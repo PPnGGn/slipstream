@@ -207,7 +207,7 @@
   "backupTitle": "Резервная копия",
   "settingsBackupSubtitle": "Зашифрованный файл, QR или ссылка",
   "notificationsTitle": "Уведомления",
-  "settingsNotificationsSubtitle": "Обрывы соединения и обновления подписок",
+  "settingsNotificationsSubtitle": "Блок трафика и неудачные запуски",
   "memoryMonitorTitle": "Монитор памяти",
   "settingsMemoryIosSubtitle": "Память туннеля на главном экране · лимит 50 MB",
   "settingsMemorySubtitle": "Память ядра Xray на главном экране",
@@ -429,5 +429,25 @@
   "helpSplitSystemWhat": "Меняет только список: в нём появляются и предустановленные приложения без значка в лаунчере, например WebView и Play Services.",
   "helpSplitSystemWhy": "Иногда в обход VPN нужно пустить фоновую службу, а не само видимое приложение.",
   "helpSplitNoteTitle": "Приложения, а не сайты",
-  "helpSplitNoteBody": "Это работает по приложениям. Чтобы пустить конкретный сайт или адрес в обход VPN, используйте своё правило в «Маршрутизации»."
+  "helpSplitNoteBody": "Это работает по приложениям. Чтобы пустить конкретный сайт или адрес в обход VPN, используйте своё правило в «Маршрутизации».",
+
+  "notificationsSummaryAll": "Все включены",
+  "notificationsSummaryOne": "1 из 2 включено",
+  "notificationsSummaryBlocked": "Заблокированы в настройках системы",
+  "notifyTrafficBlockedTitle": "Трафик заблокирован",
+  "notifyTrafficBlockedSubtitle": "Kill switch удерживает ваш трафик",
+  "notifyStartFailedTitle": "VPN не удалось запустить",
+  "notifyStartFailedSubtitle": "Не удался запуск с плитки или самой системой",
+  "notifyDisabledTitle": "Уведомления Slipstream выключены",
+  "notifyDisabledBody": "Android не покажет эти оповещения. Включите их в настройках системы.",
+  "notifyOpenSettings": "Открыть настройки",
+
+  "helpNotifIntro": "Оповещения, которые появляются, когда VPN нужно ваше внимание, а приложение не перед глазами.",
+  "helpNotifBlockedWhat": "Показывает уведомление, когда kill switch блокирует трафик после потери туннеля. В нём есть кнопка «Переподключить».",
+  "helpNotifBlockedWhy": "При закрытом приложении вы бы не поняли, почему ничего не грузится. Оповещение объясняет причину и позволяет переподключиться одним нажатием.",
+  "helpNotifStartWhat": "Показывает уведомление, когда VPN не удалось запустить без приложения: с плитки быстрых настроек, через Always-on VPN Android или после перезапуска службы.",
+  "helpNotifStartWhy": "Плитка и система запускают VPN тихо. Без оповещения неудачный запуск выглядит как «мёртвая» плитка.",
+  "helpNotifStartTip": "Запуск из приложения показывает ошибку на главном экране.",
+  "helpNotifNoteSystemTitle": "Разрешение системы",
+  "helpNotifNoteSystemBody": "На Android 13 и новее приложению нужно ваше разрешение на уведомления. Если вы отказали, включите их в настройках системы (кнопка «Открыть настройки» на этой странице)."
 }

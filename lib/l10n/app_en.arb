@@ -308,7 +308,7 @@
   "backupTitle": "Backup & restore",
   "settingsBackupSubtitle": "Encrypted file, QR or deep link",
   "notificationsTitle": "Notifications",
-  "settingsNotificationsSubtitle": "Connection drops & subscription updates",
+  "settingsNotificationsSubtitle": "Blocked traffic and failed starts",
   "memoryMonitorTitle": "Memory monitor",
   "settingsMemoryIosSubtitle": "Tunnel footprint on the home screen · 50 MB limit",
   "settingsMemorySubtitle": "Xray-core memory on the home screen",
@@ -608,5 +608,25 @@
   "helpSplitSystemWhat": "Only changes the list: it also shows pre-installed apps that have no icon in the launcher, such as WebView and Play Services.",
   "helpSplitSystemWhy": "Sometimes a background service, not the app you see, is what needs to go around the VPN.",
   "helpSplitNoteTitle": "Apps, not sites",
-  "helpSplitNoteBody": "This works per app. To send a particular site or address around the VPN, use a custom rule in Routing."
+  "helpSplitNoteBody": "This works per app. To send a particular site or address around the VPN, use a custom rule in Routing.",
+
+  "notificationsSummaryAll": "All on",
+  "notificationsSummaryOne": "1 of 2 on",
+  "notificationsSummaryBlocked": "Blocked in system settings",
+  "notifyTrafficBlockedTitle": "Traffic blocked",
+  "notifyTrafficBlockedSubtitle": "The kill switch is holding your traffic",
+  "notifyStartFailedTitle": "VPN could not start",
+  "notifyStartFailedSubtitle": "A start from the tile or by the system failed",
+  "notifyDisabledTitle": "Notifications are off for Slipstream",
+  "notifyDisabledBody": "Android will not show these alerts. Turn them on in the system settings.",
+  "notifyOpenSettings": "Open settings",
+
+  "helpNotifIntro": "Alerts that appear when the VPN needs your attention and the app is not in front of you.",
+  "helpNotifBlockedWhat": "Shows a notification when the kill switch blocks your traffic after the tunnel was lost. It has a Reconnect button.",
+  "helpNotifBlockedWhy": "With the app closed you would not notice why nothing loads. The alert tells you the reason and lets you reconnect in one tap.",
+  "helpNotifStartWhat": "Shows a notification when the VPN could not start without the app: from the quick settings tile, by Android's Always-on VPN or after a restart of the service.",
+  "helpNotifStartWhy": "The tile and the system start the VPN quietly. Without an alert a failed start looks like a dead tile.",
+  "helpNotifStartTip": "A start you make in the app shows its error on the main screen instead.",
+  "helpNotifNoteSystemTitle": "System permission",
+  "helpNotifNoteSystemBody": "On Android 13 and newer the app needs your permission to show notifications. If you refused, turn it on in the system settings (the Open settings button on this page)."
 }

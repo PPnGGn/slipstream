@@ -80,7 +80,7 @@ class MainActivity : FlutterActivity(), VpnConnection, UpdateInstaller {
         )
         NativePrefsApi.setUp(
                 flutterEngine.dartExecutor.binaryMessenger,
-                NativePrefsApiImpl(NativePrefsStore.of(applicationContext)),
+                NativePrefsApiImpl(applicationContext, NativePrefsStore.of(applicationContext)),
         )
         VpnEventBridge.receiver = VpnEventReceiver(flutterEngine.dartExecutor.binaryMessenger)
         MainEngine.attached = true

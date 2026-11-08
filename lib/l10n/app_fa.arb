@@ -207,7 +207,7 @@
   "backupTitle": "پشتیبان‌گیری و بازیابی",
   "settingsBackupSubtitle": "فایل رمزگذاری‌شده، QR یا پیوند",
   "notificationsTitle": "اعلان‌ها",
-  "settingsNotificationsSubtitle": "قطع اتصال و به‌روزرسانی اشتراک",
+  "settingsNotificationsSubtitle": "مسدود شدن ترافیک و شروع ناموفق",
   "memoryMonitorTitle": "پایشگر حافظه",
   "settingsMemoryIosSubtitle": "حافظهٔ تونل در صفحهٔ اصلی · سقف 50 MB",
   "settingsMemorySubtitle": "حافظهٔ هستهٔ Xray در صفحهٔ اصلی",
@@ -429,5 +429,25 @@
   "helpSplitSystemWhat": "فقط فهرست را تغییر می‌دهد: برنامه‌های از پیش نصب‌شده‌ای را هم نشان می‌دهد که در لانچر آیکون ندارند، مانند WebView و Play Services.",
   "helpSplitSystemWhy": "گاهی چیزی که باید از VPN دور بزند یک سرویس پس‌زمینه است، نه برنامه‌ای که می‌بینید.",
   "helpSplitNoteTitle": "برنامه‌ها، نه سایت‌ها",
-  "helpSplitNoteBody": "این روی هر برنامه اعمال می‌شود. برای اینکه یک سایت یا نشانی خاص از VPN دور بزند، از یک قانون سفارشی در «مسیریابی» استفاده کنید."
+  "helpSplitNoteBody": "این روی هر برنامه اعمال می‌شود. برای اینکه یک سایت یا نشانی خاص از VPN دور بزند، از یک قانون سفارشی در «مسیریابی» استفاده کنید.",
+
+  "notificationsSummaryAll": "همه روشن",
+  "notificationsSummaryOne": "1 از 2 روشن",
+  "notificationsSummaryBlocked": "در تنظیمات سیستم مسدود شده",
+  "notifyTrafficBlockedTitle": "ترافیک مسدود شد",
+  "notifyTrafficBlockedSubtitle": "Kill switch ترافیک شما را نگه داشته است",
+  "notifyStartFailedTitle": "VPN شروع نشد",
+  "notifyStartFailedSubtitle": "شروع از کاشی یا توسط سیستم ناموفق بود",
+  "notifyDisabledTitle": "اعلان‌های Slipstream خاموش است",
+  "notifyDisabledBody": "اندروید این هشدارها را نشان نمی‌دهد. آن‌ها را در تنظیمات سیستم روشن کنید.",
+  "notifyOpenSettings": "باز کردن تنظیمات",
+
+  "helpNotifIntro": "هشدارهایی که وقتی VPN به توجه شما نیاز دارد و برنامه جلوی چشم شما نیست ظاهر می‌شوند.",
+  "helpNotifBlockedWhat": "وقتی kill switch پس از قطع تونل ترافیک را مسدود می‌کند اعلانی نشان می‌دهد. دکمهٔ «اتصال مجدد» دارد.",
+  "helpNotifBlockedWhy": "با برنامهٔ بسته نمی‌فهمید چرا هیچ‌چیز باز نمی‌شود. هشدار دلیل را می‌گوید و با یک ضربه دوباره وصل می‌شوید.",
+  "helpNotifStartWhat": "وقتی VPN بدون برنامه شروع نشد اعلانی نشان می‌دهد: از کاشی تنظیمات سریع، با «VPN همیشه روشن» اندروید یا پس از راه‌اندازی مجدد سرویس.",
+  "helpNotifStartWhy": "کاشی و سیستم VPN را بی‌صدا شروع می‌کنند. بدون هشدار، شروع ناموفق مثل یک کاشی خراب به نظر می‌رسد.",
+  "helpNotifStartTip": "شروعی که از داخل برنامه انجام دهید خطایش را روی صفحهٔ اصلی نشان می‌دهد.",
+  "helpNotifNoteSystemTitle": "مجوز سیستم",
+  "helpNotifNoteSystemBody": "در اندروید 13 و بالاتر برنامه برای نمایش اعلان به اجازهٔ شما نیاز دارد. اگر رد کرده‌اید، آن را در تنظیمات سیستم روشن کنید (دکمهٔ «باز کردن تنظیمات» در همین صفحه)."
 }
