@@ -18,6 +18,7 @@ import 'package:slipstream/features/help/ui/help_topics.dart';
 import 'package:slipstream/features/settings/ui/widgets/reconnect_hint.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_card.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_row.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 /// Settings → DNS. The choices live in [DnsCubit] and reach the tunnel with the
 /// next connection (VpnRepository.start); the page only draws them.
@@ -36,13 +37,14 @@ class DnsPage extends StatelessWidget {
     final ruBypass = getIt<RuBypassCubit>();
     final vpn = getIt<VpnServiceCubit>();
     final colors = AppColors.of(context);
+    final l10n = context.l10n;
 
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
             PageHeader(
-              title: 'DNS',
+              title: l10n.dnsTitle,
               actions: [
                 HelpButton(
                   topic: () => dnsHelp(fakeDnsAllowed: dns.fakeDnsAllowed),
@@ -55,18 +57,15 @@ class DnsPage extends StatelessWidget {
                 builder: (context, settings) => ListView(
                   padding: const .fromLTRB(20, 6, 20, 28),
                   children: [
-                    const SectionHeader(
-                      'Remote DNS — queries via tunnel',
-                      top: 12,
-                    ),
+                    SectionHeader(l10n.dnsRemoteHeader, top: 12),
                     SettingsGroup(
                       children: [
                         for (final remote in RemoteDns.values)
                           SettingsRow(
                             iconPath: _remoteIcon(remote),
                             hue: _remoteHue(remote),
-                            title: remoteDnsTitle(remote),
-                            subtitle: remoteDnsSubtitle(remote),
+                            title: remoteDnsTitle(l10n, remote),
+                            subtitle: remoteDnsSubtitle(l10n, remote),
                             subtitleStyle: _monoSubtitle,
                             trailing: RadioDot(
                               selected: remote == settings.remote,
@@ -74,17 +73,19 @@ class DnsPage extends StatelessWidget {
                             onTap: () async {
                               if (remote == settings.remote) return;
                               await dns.setRemote(remote);
-                              notifyIfTunnelActive(vpn);
+                              if (context.mounted) {
+                                notifyIfTunnelActive(l10n, vpn);
+                              }
                             },
                           ),
                       ],
                     ),
-                    const SectionHeader('Direct DNS — for bypassed traffic'),
+                    SectionHeader(l10n.dnsDirectHeader),
                     BlocBuilder<RuBypassCubit, RuBypassMode>(
                       bloc: ruBypass,
                       builder: (context, mode) {
                         final active = directDnsActive(mode);
-                        final hint = directDnsHint(active: active);
+                        final hint = directDnsHint(l10n, active: active);
                         return Column(
                           crossAxisAlignment: .stretch,
                           children: [
@@ -94,8 +95,8 @@ class DnsPage extends StatelessWidget {
                                   SettingsRow(
                                     iconPath: _directIcon(direct),
                                     hue: _directHue(direct),
-                                    title: directDnsTitle(direct),
-                                    subtitle: directDnsSubtitle(direct),
+                                    title: directDnsTitle(l10n, direct),
+                                    subtitle: directDnsSubtitle(l10n, direct),
                                     subtitleStyle: direct == DirectDns.yandex
                                         ? _monoSubtitle
                                         : null,
@@ -106,7 +107,9 @@ class DnsPage extends StatelessWidget {
                                     onTap: () async {
                                       if (direct == settings.direct) return;
                                       await dns.setDirect(direct);
-                                      notifyIfTunnelActive(vpn);
+                                      if (context.mounted) {
+                                        notifyIfTunnelActive(l10n, vpn);
+                                      }
                                     },
                                   ),
                               ],
@@ -128,7 +131,7 @@ class DnsPage extends StatelessWidget {
                       },
                     ),
                     if (dns.fakeDnsAllowed) ...[
-                      const SectionHeader('Options'),
+                      SectionHeader(l10n.dnsOptions),
                       SettingsGroup(
                         children: [
                           SettingsRow(
@@ -136,12 +139,15 @@ class DnsPage extends StatelessWidget {
                             hue: TileHue.pink,
                             title: 'Fake DNS',
                             subtitle: fakeDnsSubtitle(
+                              l10n,
                               enabled: settings.fakeDns,
                             ),
                             switchValue: settings.fakeDns,
                             onSwitch: (value) async {
                               await dns.setFakeDns(enabled: value);
-                              notifyIfTunnelActive(vpn);
+                              if (context.mounted) {
+                                notifyIfTunnelActive(l10n, vpn);
+                              }
                             },
                           ),
                         ],

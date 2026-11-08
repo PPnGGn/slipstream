@@ -3,34 +3,36 @@ import 'package:slipstream/features/split_tunnel/data/split_tunnel_mode.dart';
 import 'package:slipstream/features/split_tunnel/data/split_tunnel_settings.dart';
 import 'package:slipstream/features/split_tunnel/ui/split_tunnel_labels.dart';
 
+import '../../helpers/l10n.dart';
+
 void main() {
   test('off', () {
-    expect(splitTunnelSummary(const SplitTunnelSettings()), 'Off');
+    expect(splitTunnelSummary(l10nEn, const SplitTunnelSettings()), 'Off');
   });
 
   test('off even with apps picked', () {
     const settings = SplitTunnelSettings(packages: {'a'});
-    expect(splitTunnelSummary(settings), 'Off');
+    expect(splitTunnelSummary(l10nEn, settings), 'Off');
   });
 
   test('on with nothing picked says so', () {
     const settings = SplitTunnelSettings(enabled: true);
-    expect(splitTunnelSummary(settings), 'No apps selected');
+    expect(splitTunnelSummary(l10nEn, settings), 'No apps selected');
   });
 
   test('bypass with one app', () {
     const settings = SplitTunnelSettings(enabled: true, packages: {'a'});
-    expect(splitTunnelSummary(settings), 'Bypass · 1 app');
+    expect(splitTunnelSummary(l10nEn, settings), 'Bypass · 1 app');
   });
 
   test('each mode explains which side the picked apps end up on', () {
     expect(
-      splitTunnelHint(SplitTunnelMode.proxy),
+      splitTunnelHint(l10nEn, SplitTunnelMode.proxy),
       'Only selected apps go through the tunnel; everything else connects '
       'directly.',
     );
     expect(
-      splitTunnelHint(SplitTunnelMode.bypass),
+      splitTunnelHint(l10nEn, SplitTunnelMode.bypass),
       'Selected apps connect directly; everything else goes through the '
       'tunnel.',
     );
@@ -38,11 +40,21 @@ void main() {
 
   test('the counter says how many of the listed apps are picked', () {
     expect(
-      splitTunnelCounter(selected: 3, total: 41, mode: SplitTunnelMode.bypass),
+      splitTunnelCounter(
+        l10nEn,
+        selected: 3,
+        total: 41,
+        mode: SplitTunnelMode.bypass,
+      ),
       '3 of 41 apps bypassed',
     );
     expect(
-      splitTunnelCounter(selected: 0, total: 5, mode: SplitTunnelMode.proxy),
+      splitTunnelCounter(
+        l10nEn,
+        selected: 0,
+        total: 5,
+        mode: SplitTunnelMode.proxy,
+      ),
       '0 of 5 apps proxied',
     );
   });
@@ -53,6 +65,6 @@ void main() {
       mode: SplitTunnelMode.proxy,
       packages: {'a', 'b', 'c'},
     );
-    expect(splitTunnelSummary(settings), 'Proxy · 3 apps');
+    expect(splitTunnelSummary(l10nEn, settings), 'Proxy · 3 apps');
   });
 }

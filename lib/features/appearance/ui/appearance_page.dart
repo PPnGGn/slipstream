@@ -38,12 +38,15 @@ class AppearancePage extends StatelessWidget {
             body: SafeArea(
               child: Column(
                 children: [
-                  const PageHeader(title: 'Appearance'),
+                  PageHeader(title: context.l10n.appearanceTitle),
                   Expanded(
                     child: ListView(
                       padding: const .fromLTRB(16, 6, 16, 32),
                       children: [
-                        const SectionHeader('Theme', top: 10),
+                        SectionHeader(
+                          context.l10n.appearanceThemeHeader,
+                          top: 10,
+                        ),
                         Padding(
                           padding: const .symmetric(horizontal: 4),
                           child: Row(
@@ -55,7 +58,7 @@ class AppearancePage extends StatelessWidget {
                                   child: _ChoiceCard(
                                     colors: colors,
                                     selected: mode == theme.mode,
-                                    label: mode.label,
+                                    label: mode.label(context.l10n),
                                     frameHeight: 156,
                                     frameColor: AppThemeState(
                                       mode: mode,
@@ -74,7 +77,7 @@ class AppearancePage extends StatelessWidget {
                         Padding(
                           padding: const .fromLTRB(4, 12, 4, 0),
                           child: Text(
-                            theme.mode.hint,
+                            theme.mode.hint(context.l10n),
                             textAlign: .center,
                             style: TextStyle(
                               fontSize: 11.5,
@@ -82,7 +85,10 @@ class AppearancePage extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const SectionHeader('Connection style', top: 26),
+                        SectionHeader(
+                          context.l10n.appearanceLayoutHeader,
+                          top: 26,
+                        ),
                         Padding(
                           padding: const .symmetric(horizontal: 4),
                           child: Row(
@@ -94,8 +100,8 @@ class AppearancePage extends StatelessWidget {
                                   child: _ChoiceCard(
                                     colors: colors,
                                     selected: option == layout,
-                                    label: option.label,
-                                    hint: option.hint,
+                                    label: option.label(context.l10n),
+                                    hint: option.hint(context.l10n),
                                     frameHeight: 176,
                                     frameColor: colors.background,
                                     onTap: () => layoutCubit.setLayout(option),

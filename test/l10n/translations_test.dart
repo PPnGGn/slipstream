@@ -29,6 +29,21 @@ void main() {
       expect(l10nEn.serverCountUpper(2), '2 SERVERS');
     });
 
+    test('Russian counts apps and rules in the right case', () {
+      expect(l10nRu.rulesCount(1), '1 правило');
+      expect(l10nRu.rulesCount(3), '3 правила');
+      expect(l10nRu.rulesCount(11), '11 правил');
+      expect(l10nRu.splitAppsCount(21), '21 приложение');
+      expect(
+        l10nRu.splitCounterBypassed(2, 5),
+        '2 из 5 приложений идут в обход VPN',
+      );
+      expect(
+        l10nRu.splitCounterProxied(0, 1),
+        '0 из 1 приложения идут через VPN',
+      );
+    });
+
     test('Chinese and Persian have a single form', () {
       final zh = lookupAppLocalizations(const Locale('zh'));
       final fa = lookupAppLocalizations(const Locale('fa'));

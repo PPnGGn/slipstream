@@ -6,6 +6,7 @@ import 'package:slipstream/features/auto_connect/data/auto_connect_support.dart'
 import 'package:slipstream/features/auto_connect/presentation/auto_connect_decision.dart';
 import 'package:slipstream/features/auto_connect/ui/auto_connect_labels.dart';
 
+import '../../helpers/l10n.dart';
 import '../subscriptions/reality_fixtures.dart';
 
 void main() {
@@ -88,14 +89,14 @@ void main() {
   group('autoConnectSubtitle', () {
     test('on: says what happens at launch', () {
       expect(
-        autoConnectSubtitle(enabled: true),
+        autoConnectSubtitle(l10nEn, enabled: true),
         'Connects to the selected server when the app opens',
       );
     });
 
     test('off: says how to connect instead', () {
       expect(
-        autoConnectSubtitle(enabled: false),
+        autoConnectSubtitle(l10nEn, enabled: false),
         'Off · tap the ring to connect',
       );
     });

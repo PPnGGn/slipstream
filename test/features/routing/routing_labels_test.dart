@@ -5,6 +5,8 @@ import 'package:slipstream/features/routing/data/ad_block_mode.dart';
 import 'package:slipstream/features/routing/data/ru_bypass_mode.dart';
 import 'package:slipstream/features/routing/ui/routing_labels.dart';
 
+import '../../helpers/l10n.dart';
+
 final _ready = GeoState.ready(
   catalog: const GeoCatalog.empty(),
   tag: 'v1.2',
@@ -21,16 +23,20 @@ final _updateAvailable = GeoState.updateAvailable(
 void main() {
   group('geoStatusText', () {
     test('absent', () {
-      expect(geoStatusText(const GeoState.absent()), 'Not downloaded');
+      expect(geoStatusText(l10nEn, const GeoState.absent()), 'Not downloaded');
     });
 
     test('checking', () {
-      expect(geoStatusText(const GeoState.checking()), 'Checking for updates…');
+      expect(
+        geoStatusText(l10nEn, const GeoState.checking()),
+        'Checking for updates…',
+      );
     });
 
     test('downloading shows the percent', () {
       expect(
         geoStatusText(
+          l10nEn,
           const GeoState.downloading(fraction: 0.426, received: 1, total: 2),
         ),
         'Downloading… 43%',
@@ -38,30 +44,34 @@ void main() {
     });
 
     test('ready shows the tag and the date', () {
-      expect(geoStatusText(_ready), 'Up to date · v1.2 · 08.11.2026');
+      expect(geoStatusText(l10nEn, _ready), 'Up to date · v1.2 · 08.11.2026');
     });
 
     test('update available names the new tag', () {
-      expect(geoStatusText(_updateAvailable), 'Update available: v1.3');
+      expect(geoStatusText(l10nEn, _updateAvailable), 'Update available: v1.3');
     });
 
     test('failed shows the message as it is', () {
-      expect(geoStatusText(const GeoState.failed('No network')), 'No network');
+      expect(
+        geoStatusText(l10nEn, const GeoState.failed('No network')),
+        'No network',
+      );
     });
   });
 
   group('geoActionLabel', () {
     test('has a button where the user can act', () {
-      expect(geoActionLabel(const GeoState.absent()), 'Download');
-      expect(geoActionLabel(_ready), 'Update');
-      expect(geoActionLabel(_updateAvailable), 'Update');
-      expect(geoActionLabel(const GeoState.failed('x')), 'Retry');
+      expect(geoActionLabel(l10nEn, const GeoState.absent()), 'Download');
+      expect(geoActionLabel(l10nEn, _ready), 'Update');
+      expect(geoActionLabel(l10nEn, _updateAvailable), 'Update');
+      expect(geoActionLabel(l10nEn, const GeoState.failed('x')), 'Retry');
     });
 
     test('has none while busy', () {
-      expect(geoActionLabel(const GeoState.checking()), isNull);
+      expect(geoActionLabel(l10nEn, const GeoState.checking()), isNull);
       expect(
         geoActionLabel(
+          l10nEn,
           const GeoState.downloading(fraction: 0, received: 0, total: 1),
         ),
         isNull,
@@ -76,6 +86,7 @@ void main() {
       int rules = 0,
       GeoState geo = const GeoState.absent(),
     }) => routingSummary(
+      l10nEn,
       ruBypass: ru,
       adBlock: ads,
       customRules: rules,

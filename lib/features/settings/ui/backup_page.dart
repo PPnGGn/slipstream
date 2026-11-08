@@ -5,6 +5,7 @@ import 'package:slipstream/core/ui/widgets/accent_button.dart';
 import 'package:slipstream/core/ui/widgets/icon_tile.dart';
 import 'package:slipstream/features/settings/ui/widgets/coming_soon_page.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_card.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 /// Settings → Backup & restore. Not built yet: every button is inactive.
 class BackupPage extends StatelessWidget {
@@ -15,9 +16,9 @@ class BackupPage extends StatelessWidget {
     final colors = AppColors.of(context);
 
     return ComingSoonPage(
-      title: 'Backup & restore',
+      title: context.l10n.backupTitle,
       children: [
-        const SectionHeader('Export — subscriptions · rules · settings'),
+        SectionHeader(context.l10n.backupExportHeader),
         Container(
           padding: const .all(14),
           decoration: BoxDecoration(
@@ -29,8 +30,8 @@ class BackupPage extends StatelessWidget {
             crossAxisAlignment: .stretch,
             spacing: 10,
             children: [
-              const AccentButton(
-                label: 'Export encrypted file (.ssbk)',
+              AccentButton(
+                label: context.l10n.backupExportButton,
                 height: 46,
                 radius: 14,
                 fontSize: 13,
@@ -40,16 +41,21 @@ class BackupPage extends StatelessWidget {
                 spacing: 10,
                 children: [
                   Expanded(
-                    child: _ChipButton(colors: colors, label: 'Show as QR'),
+                    child: _ChipButton(
+                      colors: colors,
+                      label: context.l10n.backupShowQr,
+                    ),
                   ),
                   Expanded(
-                    child: _ChipButton(colors: colors, label: 'Copy deep link'),
+                    child: _ChipButton(
+                      colors: colors,
+                      label: context.l10n.backupCopyLink,
+                    ),
                   ),
                 ],
               ),
               Text(
-                'Encrypted with your passphrase. Scan the QR with SlipStream '
-                'on another device to transfer everything.',
+                context.l10n.backupExportNote,
                 style: TextStyle(
                   fontSize: 10.5,
                   height: 1.5,
@@ -59,7 +65,7 @@ class BackupPage extends StatelessWidget {
             ],
           ),
         ),
-        const SectionHeader('Restore', top: 18),
+        SectionHeader(context.l10n.backupRestoreHeader, top: 18),
         Opacity(
           opacity: 0.45,
           child: CustomPaint(
@@ -79,7 +85,7 @@ class BackupPage extends StatelessWidget {
                       spacing: 2,
                       children: [
                         Text(
-                          'Import backup file or scan QR',
+                          context.l10n.backupImportTitle,
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: .w500,
@@ -87,7 +93,7 @@ class BackupPage extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '.ssbk file, QR code or slipstream:// link',
+                          context.l10n.backupImportSubtitle,
                           style: TextStyle(
                             fontSize: 10.5,
                             color: colors.textMuted,

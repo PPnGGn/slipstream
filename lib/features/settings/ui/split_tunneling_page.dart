@@ -20,6 +20,7 @@ import 'package:slipstream/features/split_tunnel/data/split_tunnel_settings.dart
 import 'package:slipstream/features/split_tunnel/ui/split_tunnel_labels.dart';
 import 'package:slipstream/features/split_tunnel/ui/widgets/app_selection_row.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/subscription_search_bar.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 /// Settings → Split tunneling (Android): which apps go through the tunnel and
 /// which connect directly. The choice lives in [SplitTunnelCubit] and applies
@@ -62,7 +63,7 @@ class _SplitTunnelingPageState extends State<SplitTunnelingPage> {
         child: Column(
           children: [
             PageHeader(
-              title: 'Split tunneling',
+              title: context.l10n.splitTitle,
               actions: [HelpButton(topic: splitTunnelHelp)],
             ),
             Expanded(
@@ -103,32 +104,32 @@ class _SplitTunnelingPageState extends State<SplitTunnelingPage> {
               SettingsRow(
                 iconPath: AppAssets.split,
                 hue: TileHue.split,
-                title: 'Split tunneling',
-                subtitle: splitTunnelSummary(settings),
+                title: context.l10n.splitTitle,
+                subtitle: splitTunnelSummary(context.l10n, settings),
                 switchValue: settings.enabled,
                 onSwitch: (enabled) {
                   _split.setEnabled(enabled: enabled);
-                  notifyIfTunnelActive(_vpn);
+                  notifyIfTunnelActive(context.l10n, _vpn);
                 },
               ),
             ],
           ),
           const SizedBox(height: 14),
           SegmentedPill<SplitTunnelMode>(
-            options: const [
-              (SplitTunnelMode.proxy, 'Proxy selected'),
-              (SplitTunnelMode.bypass, 'Bypass selected'),
+            options: [
+              (SplitTunnelMode.proxy, context.l10n.splitModeProxy),
+              (SplitTunnelMode.bypass, context.l10n.splitModeBypass),
             ],
             selected: settings.mode,
             onChanged: (mode) {
               _split.setMode(mode);
-              notifyIfTunnelActive(_vpn);
+              notifyIfTunnelActive(context.l10n, _vpn);
             },
           ),
           Padding(
             padding: const .fromLTRB(2, 8, 2, 12),
             child: Text(
-              splitTunnelHint(settings.mode),
+              splitTunnelHint(context.l10n, settings.mode),
               style: TextStyle(
                 fontSize: 11,
                 height: 1.5,
@@ -141,8 +142,8 @@ class _SplitTunnelingPageState extends State<SplitTunnelingPage> {
               SettingsRow(
                 iconPath: AppAssets.sysApps,
                 hue: TileHue.slate,
-                title: 'Include system apps',
-                subtitle: 'WebView, Play Services and other services',
+                title: context.l10n.splitSystemTitle,
+                subtitle: context.l10n.splitSystemSubtitle,
                 switchValue: settings.includeSystem,
                 onSwitch: (include) => _split.setIncludeSystem(include: include),
               ),
@@ -152,11 +153,12 @@ class _SplitTunnelingPageState extends State<SplitTunnelingPage> {
           SubscriptionSearchBar(
             colors: colors,
             controller: _search,
-            hintText: 'Search apps',
+            hintText: context.l10n.splitSearchHint,
           ),
           if (shown != null)
             SectionHeader(
               splitTunnelCounter(
+                context.l10n,
                 selected: shown
                     .where((a) => settings.packages.contains(a.packageName))
                     .length,
@@ -189,10 +191,13 @@ class _SplitTunnelingPageState extends State<SplitTunnelingPage> {
               spacing: 10,
               children: [
                 Text(
-                  'Could not load the app list',
+                  context.l10n.splitLoadFailed,
                   style: TextStyle(fontSize: 12.5, color: colors.textMuted),
                 ),
-                TextButton(onPressed: _apps.load, child: const Text('Retry')),
+                TextButton(
+                  onPressed: _apps.load,
+                  child: Text(context.l10n.commonRetry),
+                ),
               ],
             ),
           ),
@@ -217,7 +222,7 @@ class _SplitTunnelingPageState extends State<SplitTunnelingPage> {
           child: Padding(
             padding: const .symmetric(horizontal: 20, vertical: 28),
             child: Text(
-              'No apps found',
+              context.l10n.splitNoApps,
               textAlign: .center,
               style: TextStyle(fontSize: 12.5, color: colors.textMuted),
             ),
@@ -247,7 +252,7 @@ class _SplitTunnelingPageState extends State<SplitTunnelingPage> {
                 loadIcon: _apps.iconFor,
                 onChanged: (selected) {
                   _split.setAppSelected(app.packageName, selected: selected);
-                  notifyIfTunnelActive(_vpn);
+                  notifyIfTunnelActive(context.l10n, _vpn);
                 },
               );
             },

@@ -45,6 +45,8 @@ import 'package:slipstream/features/update/data/updater_api.g.dart';
 import 'package:slipstream/features/update/ui/update_toasts.dart';
 import 'package:slipstream/features/update/ui/widgets/update_dialog.dart';
 import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
+import 'package:slipstream/features/language/cubit/language_cubit.dart';
+import 'package:slipstream/features/language/data/app_language.dart';
 import 'package:slipstream/l10n/l10n_context.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -105,7 +107,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         Padding(
                           padding: const .fromLTRB(4, 2, 4, 16),
                           child: Text(
-                            'Settings',
+                            context.l10n.settingsTitle,
                             style: TextStyle(
                               fontSize: 30,
                               fontWeight: .w700,
@@ -116,18 +118,26 @@ class _SettingsPageState extends State<SettingsPage> {
                         ),
                         SettingsGroup(
                           children: [
-                            SettingsRow(
-                              iconPath: AppAssets.palette,
-                              hue: TileHue.appearance,
-                              title: 'Appearance',
-                              subtitle: '${layout.label} layout · English',
-                              value: themeState.mode.label,
-                              showChevron: true,
-                              onTap: () => context.push('/settings/appearance'),
+                            BlocBuilder<LanguageCubit, AppLanguage>(
+                              bloc: getIt<LanguageCubit>(),
+                              builder: (context, language) => SettingsRow(
+                                iconPath: AppAssets.palette,
+                                hue: TileHue.appearance,
+                                title: context.l10n.appearanceTitle,
+                                subtitle: appearanceSubtitle(
+                                  context.l10n,
+                                  layout: layout,
+                                  language: language,
+                                ),
+                                value: themeState.mode.label(context.l10n),
+                                showChevron: true,
+                                onTap: () =>
+                                    context.push('/settings/appearance'),
+                              ),
                             ),
                           ],
                         ),
-                        const SectionHeader('Connection'),
+                        SectionHeader(context.l10n.sectionConnection),
                         SettingsGroup(
                           children: [
                             if (isAutoConnectSupported(defaultTargetPlatform))
@@ -136,8 +146,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                 builder: (context, enabled) => SettingsRow(
                                   iconPath: AppAssets.bolt,
                                   hue: TileHue.auto,
-                                  title: 'Auto-connect on launch',
+                                  title: context.l10n.autoConnectTitle,
                                   subtitle: autoConnectSubtitle(
+                                    context.l10n,
                                     enabled: enabled,
                                   ),
                                   switchValue: enabled,
@@ -151,8 +162,9 @@ class _SettingsPageState extends State<SettingsPage> {
                               builder: (context, ping) => SettingsRow(
                                 iconPath: AppAssets.ping,
                                 hue: TileHue.speed,
-                                title: 'Ping',
+                                title: context.l10n.pingTitle,
                                 subtitle: _pingSubtitle(
+                                  context.l10n,
                                   getIt<PingSettingsStore>()
                                       .loadPingOnAppStart(),
                                   ping,
@@ -169,9 +181,10 @@ class _SettingsPageState extends State<SettingsPage> {
                               builder: (context, autoUpdate) => SettingsRow(
                                 iconPath: AppAssets.refresh,
                                 hue: TileHue.teal,
-                                title: 'Subscriptions',
-                                subtitle: 'Auto-update of subscription links',
-                                value: autoUpdate.label,
+                                title: context.l10n.subscriptionsTitle,
+                                subtitle:
+                                    context.l10n.settingsSubscriptionsSubtitle,
+                                value: autoUpdate.label(context.l10n),
                                 showChevron: true,
                                 onTap: () =>
                                     context.push('/settings/subscriptions'),
@@ -186,9 +199,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                 builder: (context, split) => SettingsRow(
                                   iconPath: AppAssets.split,
                                   hue: TileHue.split,
-                                  title: 'Split tunneling',
-                                  subtitle: 'Choose which apps use the tunnel',
-                                  value: splitTunnelSummary(split),
+                                  title: context.l10n.splitTitle,
+                                  subtitle: context.l10n.settingsSplitSubtitle,
+                                  value: splitTunnelSummary(context.l10n, split),
                                   showChevron: true,
                                   onTap: () => context.push('/settings/split'),
                                 ),
@@ -197,37 +210,37 @@ class _SettingsPageState extends State<SettingsPage> {
                               SettingsRow(
                                 iconPath: AppAssets.shield,
                                 hue: TileHue.security,
-                                title: 'Security & tunnel',
-                                subtitle: 'Kill switch, IPv6',
+                                title: context.l10n.securityTitle,
+                                subtitle: context.l10n.settingsSecuritySubtitle,
                                 showChevron: true,
                                 onTap: () => context.push('/settings/security'),
                               ),
                             const _DnsRow(),
                           ],
                         ),
-                        const SectionHeader('General'),
+                        SectionHeader(context.l10n.sectionGeneral),
                         SettingsGroup(
                           children: [
                             SettingsRow(
                               iconPath: AppAssets.backup,
                               hue: TileHue.backup,
-                              title: 'Backup & restore',
-                              subtitle: 'Encrypted file, QR or deep link',
+                              title: context.l10n.backupTitle,
+                              subtitle: context.l10n.settingsBackupSubtitle,
                               showChevron: true,
                               onTap: () => context.push('/settings/backup'),
                             ),
-                            const SettingsRow(
+                            SettingsRow(
                               iconPath: AppAssets.bell,
                               hue: TileHue.notif,
-                              title: 'Notifications',
+                              title: context.l10n.notificationsTitle,
                               subtitle:
-                                  'Connection drops & subscription updates',
+                                  context.l10n.settingsNotificationsSubtitle,
                               switchValue: false,
                               enabled: false,
                             ),
                           ],
                         ),
-                        const SectionHeader('Diagnostics'),
+                        SectionHeader(context.l10n.sectionDiagnostics),
                         SettingsGroup(
                           children: [
                             BlocBuilder<MemoryMonitorCubit, MemoryMonitorMode>(
@@ -235,11 +248,10 @@ class _SettingsPageState extends State<SettingsPage> {
                               builder: (context, mode) => SettingsRow(
                                 iconPath: AppAssets.memory,
                                 hue: TileHue.amber,
-                                title: 'Memory monitor',
+                                title: context.l10n.memoryMonitorTitle,
                                 subtitle: Platform.isIOS
-                                    ? 'Tunnel footprint on the home screen · '
-                                          '50 MB limit'
-                                    : 'Xray-core memory on the home screen',
+                                    ? context.l10n.settingsMemoryIosSubtitle
+                                    : context.l10n.settingsMemorySubtitle,
                                 switchValue: mode.enabled,
                                 onSwitch: (enabled) =>
                                     getIt<MemoryMonitorCubit>().setEnabled(
@@ -249,14 +261,14 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                           ],
                         ),
-                        const SectionHeader('About'),
+                        SectionHeader(context.l10n.sectionAbout),
                         SettingsGroup(
                           children: [
                             SettingsRow(
                               iconPath: AppAssets.logs,
                               hue: TileHue.logs,
-                              title: 'Xray core logs',
-                              subtitle: 'Live tunnel output',
+                              title: context.l10n.logsTitle,
+                              subtitle: context.l10n.settingsLogsSubtitle,
                               showChevron: true,
                               onTap: () => context.push('/logs'),
                             ),
@@ -282,11 +294,17 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  static String _pingSubtitle(bool pingOnAppStart, PingViewState ping) {
+  static String _pingSubtitle(
+    AppLocalizations l10n,
+    bool pingOnAppStart,
+    PingViewState ping,
+  ) {
     final parts = [
-      pingOnAppStart ? 'on launch' : 'manual only',
-      ping.sortByPing ? 'sorted' : 'unsorted',
-      ping.displayMode == PingDisplayMode.dots ? 'dots' : 'numbers',
+      pingOnAppStart ? l10n.pingSummaryOnLaunch : l10n.pingSummaryManual,
+      ping.sortByPing ? l10n.pingSummarySorted : l10n.pingSummaryUnsorted,
+      ping.displayMode == PingDisplayMode.dots
+          ? l10n.pingSummaryDots
+          : l10n.pingSummaryNumbers,
     ];
     return parts.join(' · ');
   }
@@ -302,8 +320,8 @@ class _DnsRow extends StatelessWidget {
       builder: (context, dns) => SettingsRow(
         iconPath: AppAssets.globe,
         hue: TileHue.dns,
-        title: 'DNS',
-        subtitle: dnsSummary(dns),
+        title: context.l10n.dnsTitle,
+        subtitle: dnsSummary(context.l10n, dns),
         showChevron: true,
         onTap: () => context.push('/settings/dns'),
       ),
@@ -328,8 +346,9 @@ class _RoutingRow extends StatelessWidget {
                 builder: (context, geo) => SettingsRow(
                   iconPath: AppAssets.routing,
                   hue: TileHue.routing,
-                  title: 'Routing',
+                  title: context.l10n.routingTitle,
                   subtitle: routingSummary(
+                    context.l10n,
                     ruBypass: ruBypass,
                     adBlock: adBlock,
                     customRules: rules.length,
@@ -367,7 +386,7 @@ class _CheckingBadge extends StatelessWidget {
           ),
         ),
         Text(
-          'CHECKING',
+          context.l10n.versionChecking,
           style: TextStyle(
             fontFamily: 'monospace',
             fontSize: 10,
@@ -414,14 +433,14 @@ class _VersionRowState extends State<_VersionRow> {
         return SettingsRow(
           iconPath: AppAssets.version,
           hue: TileHue.version,
-          title: 'Version',
+          title: context.l10n.versionTitle,
           subtitle: snapshot.hasError
-              ? 'Unavailable'
+              ? context.l10n.versionUnavailable
               : xrayVersion == null
               ? '…'
               : widget.onTap == null
-              ? 'Xray $xrayVersion'
-              : 'Xray $xrayVersion · Tap to check for updates',
+              ? context.l10n.versionSubtitle(xrayVersion)
+              : context.l10n.versionSubtitleTap(xrayVersion),
           onTap: widget.onTap,
           trailing: BlocBuilder<UpdateServiceCubit, UpdateState>(
             bloc: getIt<UpdateServiceCubit>(),

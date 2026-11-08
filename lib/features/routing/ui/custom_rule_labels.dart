@@ -1,50 +1,44 @@
 import 'package:slipstream/features/routing/data/custom_rule.dart';
 import 'package:slipstream/features/routing/data/custom_rule_value.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 /// Texts of the Custom rules list and its sheet, as pure functions: the page
 /// only draws what these say, so they can be tested without a widget.
 
-String ruleActionTitle(RuleAction action) => switch (action) {
-  RuleAction.proxy => 'Proxy',
-  RuleAction.direct => 'Direct',
-  RuleAction.block => 'Block',
-};
+String ruleActionTitle(AppLocalizations l10n, RuleAction action) =>
+    switch (action) {
+      RuleAction.proxy => l10n.ruleProxy,
+      RuleAction.direct => l10n.ruleDirect,
+      RuleAction.block => l10n.ruleBlock,
+    };
 
 /// Under the action picker: what the chosen action does with the traffic.
-String ruleActionHint(RuleAction action) => switch (action) {
-  RuleAction.proxy => 'Always sent through the VPN',
-  RuleAction.direct => 'Always sent directly, bypassing the VPN',
-  RuleAction.block => 'Connections are dropped',
-};
+String ruleActionHint(AppLocalizations l10n, RuleAction action) =>
+    switch (action) {
+      RuleAction.proxy => l10n.ruleProxyHint,
+      RuleAction.direct => l10n.ruleDirectHint,
+      RuleAction.block => l10n.ruleBlockHint,
+    };
 
 /// Shown under the field when a value is refused. Each says what to type
 /// instead, not only what was wrong.
-String ruleInputErrorText(RuleInputError error) => switch (error) {
-  RuleInputError.empty => 'Type a domain or an IP address',
-  RuleInputError.invalid =>
-    'Not a domain or an IP address. Try example.com or 1.2.3.0/24',
-  RuleInputError.nonAscii =>
-    'Use the xn-- form of the name, e.g. xn--p1ai for .рф',
-  RuleInputError.badPrefix =>
-    'The range prefix is 0–32 for IPv4 and 0–128 for IPv6',
-  RuleInputError.duplicate => 'There is already a rule for this value',
-};
+String ruleInputErrorText(AppLocalizations l10n, RuleInputError error) =>
+    switch (error) {
+      RuleInputError.empty => l10n.ruleErrEmpty,
+      RuleInputError.invalid => l10n.ruleErrInvalid,
+      // The zone is Cyrillic on purpose: it is the example of a name that
+      // needs the xn-- form, and the translations stay free of it.
+      RuleInputError.nonAscii => l10n.ruleErrNonAscii('.рф'),
+      RuleInputError.badPrefix => l10n.ruleErrPrefix,
+      RuleInputError.duplicate => l10n.ruleErrDuplicate,
+    };
 
 /// What a row says about its value, under the value itself.
-String ruleKindLabel(CustomRule rule) {
-  if (!rule.isIp) return 'Domain and subdomains';
-  return rule.value.contains('/') ? 'IP range' : 'IP address';
+String ruleKindLabel(AppLocalizations l10n, CustomRule rule) {
+  if (!rule.isIp) return l10n.ruleKindDomain;
+  return rule.value.contains('/') ? l10n.ruleKindRange : l10n.ruleKindIp;
 }
 
 /// The count shown in the Routing row of Settings; null with no rules.
-String? customRulesSummary(int count) => switch (count) {
-  0 => null,
-  1 => '1 rule',
-  _ => '$count rules',
-};
-
-/// The notice on the Routing page while the selected server has a routing of
-/// its own.
-const routingOwnConfigNotice =
-    'The selected server brings its own routing, so RU bypass, ad blocking '
-    'and LAN bypass do not apply to it. Your custom rules do.';
+String? customRulesSummary(AppLocalizations l10n, int count) =>
+    count == 0 ? null : l10n.rulesCount(count);

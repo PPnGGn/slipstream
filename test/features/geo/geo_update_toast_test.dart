@@ -3,10 +3,12 @@ import 'package:slipstream/core/service/toast/toast_message.dart';
 import 'package:slipstream/features/geo/cubit/geo_cubit.dart';
 import 'package:slipstream/features/geo/presentation/geo_update_toast.dart';
 
+import '../../helpers/l10n.dart';
+
 void main() {
   test('updated bases are a success', () {
     expect(
-      geoUpdateToast(GeoUpdateOutcome.updated),
+      geoUpdateToast(l10nEn, GeoUpdateOutcome.updated),
       const ToastSpec(
         'Geo bases updated',
         subtitle: 'GEOIP · GEOSITE',
@@ -17,14 +19,14 @@ void main() {
 
   test('nothing newer is information, not a success', () {
     expect(
-      geoUpdateToast(GeoUpdateOutcome.upToDate),
+      geoUpdateToast(l10nEn, GeoUpdateOutcome.upToDate),
       const ToastSpec('Geo bases are up to date', kind: ToastKind.info),
     );
   });
 
   test('a failed check is an error with a hint', () {
     expect(
-      geoUpdateToast(GeoUpdateOutcome.failed),
+      geoUpdateToast(l10nEn, GeoUpdateOutcome.failed),
       const ToastSpec(
         "Couldn't update geo bases",
         subtitle: 'CHECK CONNECTION · TRY AGAIN',

@@ -8,6 +8,7 @@ import 'package:slipstream/features/ping/data/ping_settings_store.dart';
 import 'package:slipstream/features/ping/presentation/ping_cubit.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_card.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_row.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 /// Ping feature settings (spec's last checklist item): display mode,
 /// the app-start trigger toggle and the sort-by-latency toggle.
@@ -30,8 +31,8 @@ class _PingSettingsSectionState extends State<PingSettingsSection> {
           SettingsRow(
             iconPath: AppAssets.bolt,
             hue: TileHue.speed,
-            title: 'Ping on launch',
-            subtitle: 'Measure all servers on start and on return',
+            title: context.l10n.pingOnLaunchTitle,
+            subtitle: context.l10n.pingOnLaunchSubtitle,
             switchValue: _pingOnAppStart,
             onSwitch: (enabled) {
               setState(() => _pingOnAppStart = enabled);
@@ -41,20 +42,20 @@ class _PingSettingsSectionState extends State<PingSettingsSection> {
           SettingsRow(
             iconPath: AppAssets.arrowDown,
             hue: TileHue.violet,
-            title: 'Sort servers by latency',
-            subtitle: 'Reorders the list after measuring finishes',
+            title: context.l10n.pingSortTitle,
+            subtitle: context.l10n.pingSortSubtitle,
             switchValue: view.sortByPing,
             onSwitch: getIt<PingCubit>().setSortByPing,
           ),
           SettingsRow(
             iconPath: AppAssets.ping,
             hue: TileHue.teal,
-            title: 'Latency display',
-            subtitle: 'Colored dot or value in the server list',
+            title: context.l10n.pingDisplayTitle,
+            subtitle: context.l10n.pingDisplaySubtitle,
             footer: SegmentedPill<PingDisplayMode>(
-              options: const [
-                (PingDisplayMode.numbers, 'Numbers'),
-                (PingDisplayMode.dots, 'Dots'),
+              options: [
+                (PingDisplayMode.numbers, context.l10n.pingDisplayNumbers),
+                (PingDisplayMode.dots, context.l10n.pingDisplayDots),
               ],
               selected: view.displayMode,
               onChanged: getIt<PingCubit>().setDisplayMode,

@@ -4,6 +4,8 @@ import 'package:slipstream/core/service/toast/toast_message.dart';
 import 'package:slipstream/core/service/vpn_service/vpn_service_cubit.dart';
 import 'package:slipstream/features/settings/ui/widgets/reconnect_hint.dart';
 
+import '../../helpers/l10n.dart';
+
 void main() {
   const server = VpnServer(
     id: 'ams',
@@ -34,9 +36,10 @@ void main() {
       kind: ToastKind.info,
     );
 
-    expect(reconnectHintToast(const VpnState.connecting()), hint);
+    expect(reconnectHintToast(l10nEn, const VpnState.connecting()), hint);
     expect(
       reconnectHintToast(
+        l10nEn,
         VpnState.connected(server, connectedAt: DateTime(2026)),
       ),
       hint,
@@ -44,8 +47,8 @@ void main() {
   });
 
   test('without a running tunnel there is nothing to say', () {
-    expect(reconnectHintToast(const VpnState.disconnected()), isNull);
-    expect(reconnectHintToast(const VpnState.disconnecting()), isNull);
-    expect(reconnectHintToast(const VpnState.error('x')), isNull);
+    expect(reconnectHintToast(l10nEn, const VpnState.disconnected()), isNull);
+    expect(reconnectHintToast(l10nEn, const VpnState.disconnecting()), isNull);
+    expect(reconnectHintToast(l10nEn, const VpnState.error('x')), isNull);
   });
 }

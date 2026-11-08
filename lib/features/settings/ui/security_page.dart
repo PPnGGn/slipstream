@@ -13,6 +13,7 @@ import 'package:slipstream/features/security/ui/security_labels.dart';
 import 'package:slipstream/features/settings/ui/widgets/reconnect_hint.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_card.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_row.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 /// Settings → Security & tunnel (Android). The choices live in their cubits
 /// and reach the VPN service with the next connection.
@@ -35,7 +36,7 @@ class _SecurityPageState extends State<SecurityPage> {
         child: Column(
           children: [
             PageHeader(
-              title: 'Security & tunnel',
+              title: context.l10n.securityTitle,
               actions: [HelpButton(topic: securityHelp)],
             ),
             Expanded(
@@ -50,11 +51,14 @@ class _SecurityPageState extends State<SecurityPage> {
                           iconPath: AppAssets.kill,
                           hue: TileHue.red,
                           title: 'Kill switch',
-                          subtitle: killSwitchSubtitle(enabled: enabled),
+                          subtitle: killSwitchSubtitle(
+                            context.l10n,
+                            enabled: enabled,
+                          ),
                           switchValue: enabled,
                           onSwitch: (value) {
                             _killSwitch.setEnabled(enabled: value);
-                            notifyIfTunnelActive(_vpn);
+                            notifyIfTunnelActive(context.l10n, _vpn);
                           },
                         ),
                       ),
@@ -64,11 +68,11 @@ class _SecurityPageState extends State<SecurityPage> {
                           iconPath: AppAssets.ipv6,
                           hue: TileHue.blue,
                           title: 'IPv6',
-                          subtitle: ipv6Subtitle(enabled: enabled),
+                          subtitle: ipv6Subtitle(context.l10n, enabled: enabled),
                           switchValue: enabled,
                           onSwitch: (value) {
                             _ipv6.setEnabled(enabled: value);
-                            notifyIfTunnelActive(_vpn);
+                            notifyIfTunnelActive(context.l10n, _vpn);
                           },
                         ),
                       ),

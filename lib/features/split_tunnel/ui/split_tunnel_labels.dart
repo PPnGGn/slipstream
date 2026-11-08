@@ -1,31 +1,28 @@
 import 'package:slipstream/features/split_tunnel/data/split_tunnel_mode.dart';
 import 'package:slipstream/features/split_tunnel/data/split_tunnel_settings.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
-String splitTunnelHint(SplitTunnelMode mode) => switch (mode) {
-  SplitTunnelMode.proxy =>
-    'Only selected apps go through the tunnel; everything else connects '
-        'directly.',
-  SplitTunnelMode.bypass =>
-    'Selected apps connect directly; everything else goes through the '
-        'tunnel.',
-};
+String splitTunnelHint(AppLocalizations l10n, SplitTunnelMode mode) =>
+    switch (mode) {
+      SplitTunnelMode.proxy => l10n.splitHintProxy,
+      SplitTunnelMode.bypass => l10n.splitHintBypass,
+    };
 
-String splitTunnelCounter({
+String splitTunnelCounter(
+  AppLocalizations l10n, {
   required int selected,
   required int total,
   required SplitTunnelMode mode,
-}) {
-  final side = mode == SplitTunnelMode.proxy ? 'proxied' : 'bypassed';
-  return '$selected of $total apps $side';
-}
+}) => mode == SplitTunnelMode.proxy
+    ? l10n.splitCounterProxied(selected, total)
+    : l10n.splitCounterBypassed(selected, total);
 
-String splitTunnelSummary(SplitTunnelSettings settings) {
-  if (!settings.enabled) return 'Off';
-  if (settings.packages.isEmpty) return 'No apps selected';
+String splitTunnelSummary(AppLocalizations l10n, SplitTunnelSettings settings) {
+  if (!settings.enabled) return l10n.commonOff;
+  if (settings.packages.isEmpty) return l10n.splitSummaryNone;
   final mode = switch (settings.mode) {
-    SplitTunnelMode.proxy => 'Proxy',
-    SplitTunnelMode.bypass => 'Bypass',
+    SplitTunnelMode.proxy => l10n.splitModeProxyShort,
+    SplitTunnelMode.bypass => l10n.splitModeBypassShort,
   };
-  final count = settings.packages.length;
-  return '$mode · $count ${count == 1 ? 'app' : 'apps'}';
+  return '$mode · ${l10n.splitAppsCount(settings.packages.length)}';
 }

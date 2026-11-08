@@ -1,4 +1,5 @@
+import 'package:slipstream/l10n/l10n_context.dart';
+
 /// Subtitle of the auto-connect row: what happens at launch right now.
-String autoConnectSubtitle({required bool enabled}) => enabled
-    ? 'Connects to the selected server when the app opens'
-    : 'Off · tap the ring to connect';
+String autoConnectSubtitle(AppLocalizations l10n, {required bool enabled}) =>
+    enabled ? l10n.autoConnectOn : l10n.autoConnectOff;

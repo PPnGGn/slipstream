@@ -268,5 +268,240 @@
   "updateUninstall": "Uninstall",
   "updateInstalling": "Installing…",
   "updateInstall": "Install",
-  "updateLater": "Later"
+  "updateLater": "Later",
+
+  "commonOff": "Off",
+  "commonSave": "Save",
+  "commonRetry": "Retry",
+
+  "settingsTitle": "Settings",
+  "appearanceTitle": "Appearance",
+  "appearanceSubtitle": "{layout} layout · {language}",
+  "@appearanceSubtitle": {
+    "placeholders": {
+      "layout": {"type": "String"},
+      "language": {"type": "String"}
+    }
+  },
+  "sectionConnection": "Connection",
+  "sectionGeneral": "General",
+  "sectionDiagnostics": "Diagnostics",
+  "sectionAbout": "About",
+  "autoConnectTitle": "Auto-connect on launch",
+  "autoConnectOn": "Connects to the selected server when the app opens",
+  "autoConnectOff": "Off · tap the ring to connect",
+  "pingTitle": "Ping",
+  "pingSummaryOnLaunch": "on launch",
+  "pingSummaryManual": "manual only",
+  "pingSummarySorted": "sorted",
+  "pingSummaryUnsorted": "unsorted",
+  "pingSummaryDots": "dots",
+  "pingSummaryNumbers": "numbers",
+  "subscriptionsTitle": "Subscriptions",
+  "settingsSubscriptionsSubtitle": "Auto-update of subscription links",
+  "splitTitle": "Split tunneling",
+  "settingsSplitSubtitle": "Choose which apps use the tunnel",
+  "securityTitle": "Security & tunnel",
+  "settingsSecuritySubtitle": "Kill switch, IPv6",
+  "dnsTitle": "DNS",
+  "routingTitle": "Routing",
+  "backupTitle": "Backup & restore",
+  "settingsBackupSubtitle": "Encrypted file, QR or deep link",
+  "notificationsTitle": "Notifications",
+  "settingsNotificationsSubtitle": "Connection drops & subscription updates",
+  "memoryMonitorTitle": "Memory monitor",
+  "settingsMemoryIosSubtitle": "Tunnel footprint on the home screen · 50 MB limit",
+  "settingsMemorySubtitle": "Xray-core memory on the home screen",
+  "settingsLogsSubtitle": "Live tunnel output",
+  "versionTitle": "Version",
+  "versionUnavailable": "Unavailable",
+  "versionSubtitle": "Xray {xray}",
+  "@versionSubtitle": {
+    "placeholders": {
+      "xray": {"type": "String"}
+    }
+  },
+  "versionSubtitleTap": "Xray {xray} · Tap to check for updates",
+  "@versionSubtitleTap": {
+    "placeholders": {
+      "xray": {"type": "String"}
+    }
+  },
+  "versionChecking": "CHECKING",
+
+  "killSwitchOn": "Blocks traffic if the tunnel is lost",
+  "killSwitchOff": "Off · a lost tunnel just closes the VPN",
+  "ipv6On": "IPv6 goes through the tunnel",
+  "ipv6Off": "Off · apps use IPv4 only",
+
+  "dnsXrayTitle": "Xray built-in",
+  "dnsXraySubtitle": "UDP 1.1.1.1:53 VIA TUNNEL",
+  "dnsSystemTitle": "System resolver",
+  "dnsSystemSubtitle": "The phone's own DNS, usually the operator's",
+  "dnsDirectHint": "Used only while the RU bypass is on (Routing).",
+  "fakeDnsOn": "Apps get made-up addresses at once, faster first connect",
+  "fakeDnsOff": "Off · apps wait for a real answer",
+  "dnsRemoteHeader": "Remote DNS — queries via tunnel",
+  "dnsDirectHeader": "Direct DNS — for bypassed traffic",
+  "dnsOptions": "Options",
+
+  "ruBypassTitle": "RU bypass",
+  "summaryRuBypassOff": "RU bypass off",
+  "summaryAdsOff": "ads off",
+  "summaryAdsBasic": "ads: basic",
+  "summaryAdsFull": "ads: full",
+  "summaryGeoAbsent": "geo databases not downloaded",
+  "summaryGeoChecking": "checking geo databases…",
+  "summaryGeoDownloading": "geo databases: {percent}%",
+  "@summaryGeoDownloading": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "summaryGeoReady": "geo databases up to date",
+  "summaryGeoUpdate": "geo update available",
+  "summaryGeoFailed": "geo download failed",
+  "geoNotDownloaded": "Not downloaded",
+  "geoChecking": "Checking for updates…",
+  "geoDownloading": "Downloading… {percent}%",
+  "@geoDownloading": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "geoUpToDate": "Up to date · {tag} · {date}",
+  "@geoUpToDate": {
+    "placeholders": {
+      "tag": {"type": "String"},
+      "date": {"type": "String"}
+    }
+  },
+  "geoUpdateAvailable": "Update available: {tag}",
+  "@geoUpdateAvailable": {
+    "placeholders": {
+      "tag": {"type": "String"}
+    }
+  },
+  "geoActionDownload": "Download",
+  "geoActionUpdate": "Update",
+  "geoRowTitle": "Geo databases (geosite / geoip)",
+  "geoToastUpdatedTitle": "Geo bases updated",
+  "geoToastUpdatedHint": "GEOIP · GEOSITE",
+  "geoToastUpToDate": "Geo bases are up to date",
+  "geoToastFailed": "Couldn't update geo bases",
+  "routingRuleProfiles": "Rule profiles",
+  "adBlockTitle": "Ad & tracker blocking",
+  "adBlockBasic": "Basic",
+  "adBlockFull": "Full",
+  "lanBypassTitle": "LAN bypass",
+  "routingCustomRulesHeader": "Custom rules",
+  "ruleAddTitle": "Add rule",
+  "ruleAddSubtitle": "Domain or IP → proxy, direct or block",
+  "ruleEditTitle": "Edit rule",
+  "ruleDelete": "Delete rule",
+  "ruleProxy": "Proxy",
+  "ruleDirect": "Direct",
+  "ruleBlock": "Block",
+  "ruleProxyHint": "Always sent through the VPN",
+  "ruleDirectHint": "Always sent directly, bypassing the VPN",
+  "ruleBlockHint": "Connections are dropped",
+  "ruleErrEmpty": "Type a domain or an IP address",
+  "ruleErrInvalid": "Not a domain or an IP address. Try example.com or 1.2.3.0/24",
+  "ruleErrNonAscii": "Use the xn-- form of the name, e.g. xn--p1ai for {zone}",
+  "@ruleErrNonAscii": {
+    "placeholders": {
+      "zone": {"type": "String"}
+    }
+  },
+  "ruleErrPrefix": "The range prefix is 0–32 for IPv4 and 0–128 for IPv6",
+  "ruleErrDuplicate": "There is already a rule for this value",
+  "ruleKindDomain": "Domain and subdomains",
+  "ruleKindRange": "IP range",
+  "ruleKindIp": "IP address",
+  "rulesCount": "{count, plural, one{{count} rule} other{{count} rules}}",
+  "@rulesCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "routingOwnConfigNotice": "The selected server brings its own routing, so RU bypass, ad blocking and LAN bypass do not apply to it. Your custom rules do.",
+
+  "reconnectToastTitle": "Applies on reconnect",
+  "reconnectToastHint": "RECONNECT TO USE NEW SETTINGS",
+
+  "appearanceThemeHeader": "Theme",
+  "appearanceLayoutHeader": "Connection style",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "themePhosphor": "Phosphor",
+  "themeLightHint": "Soft lavender paper — for daylight",
+  "themeDarkHint": "Ink-blue night",
+  "themePhosphorHint": "True-black OLED with terminal-green accents",
+  "layoutClassic": "Classic",
+  "layoutCompact": "Compact",
+  "layoutClassicHint": "Big ring above the list",
+  "layoutCompactHint": "Slim bar at the bottom",
+
+  "autoUpdateHeader": "Auto-update",
+  "autoUpdateOffHint": "Only from the ⋯ menu of a subscription",
+  "autoUpdateEveryHour": "Every hour",
+  "autoUpdateEveryHours": "{hours, plural, one{Every {hours} hour} other{Every {hours} hours}}",
+  "@autoUpdateEveryHours": {
+    "placeholders": {
+      "hours": {"type": "int"}
+    }
+  },
+
+  "pingOnLaunchTitle": "Ping on launch",
+  "pingOnLaunchSubtitle": "Measure all servers on start and on return",
+  "pingSortTitle": "Sort servers by latency",
+  "pingSortSubtitle": "Reorders the list after measuring finishes",
+  "pingDisplayTitle": "Latency display",
+  "pingDisplaySubtitle": "Colored dot or value in the server list",
+  "pingDisplayNumbers": "Numbers",
+  "pingDisplayDots": "Dots",
+
+  "splitModeProxy": "Proxy selected",
+  "splitModeBypass": "Bypass selected",
+  "splitHintProxy": "Only selected apps go through the tunnel; everything else connects directly.",
+  "splitHintBypass": "Selected apps connect directly; everything else goes through the tunnel.",
+  "splitSystemTitle": "Include system apps",
+  "splitSystemSubtitle": "WebView, Play Services and other services",
+  "splitSearchHint": "Search apps",
+  "splitLoadFailed": "Could not load the app list",
+  "splitNoApps": "No apps found",
+  "splitSummaryNone": "No apps selected",
+  "splitModeProxyShort": "Proxy",
+  "splitModeBypassShort": "Bypass",
+  "splitAppsCount": "{count, plural, one{{count} app} other{{count} apps}}",
+  "@splitAppsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "splitCounterProxied": "{selected} of {total, plural, one{{total} app} other{{total} apps}} proxied",
+  "@splitCounterProxied": {
+    "placeholders": {
+      "selected": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "splitCounterBypassed": "{selected} of {total, plural, one{{total} app} other{{total} apps}} bypassed",
+  "@splitCounterBypassed": {
+    "placeholders": {
+      "selected": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+
+  "comingSoonTitle": "Coming soon",
+  "comingSoonBody": "A preview of the screen — these settings are not active yet.",
+  "backupExportHeader": "Export — subscriptions · rules · settings",
+  "backupExportButton": "Export encrypted file (.ssbk)",
+  "backupShowQr": "Show as QR",
+  "backupCopyLink": "Copy deep link",
+  "backupExportNote": "Encrypted with your passphrase. Scan the QR with SlipStream on another device to transfer everything.",
+  "backupRestoreHeader": "Restore",
+  "backupImportTitle": "Import backup file or scan QR",
+  "backupImportSubtitle": ".ssbk file, QR code or slipstream:// link"
 }

@@ -13,6 +13,7 @@ import 'package:slipstream/features/routing/data/custom_rule.dart';
 import 'package:slipstream/features/routing/data/custom_rule_value.dart';
 import 'package:slipstream/features/routing/ui/custom_rule_labels.dart';
 import 'package:slipstream/features/settings/ui/widgets/reconnect_hint.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 /// Opens the sheet that adds a rule, or edits (and can delete) [rule].
 Future<void> showCustomRuleSheet(BuildContext context, {CustomRule? rule}) {
@@ -63,7 +64,7 @@ class _CustomRuleSheetState extends State<_CustomRuleSheet> {
       });
       return;
     }
-    notifyIfTunnelActive(_vpn);
+    notifyIfTunnelActive(context.l10n, _vpn);
     Navigator.of(context).pop();
   }
 
@@ -73,7 +74,7 @@ class _CustomRuleSheetState extends State<_CustomRuleSheet> {
     setState(() => _saving = true);
     await _cubit.remove(rule.id);
     if (!mounted) return;
-    notifyIfTunnelActive(_vpn);
+    notifyIfTunnelActive(context.l10n, _vpn);
     Navigator.of(context).pop();
   }
 
@@ -102,7 +103,9 @@ class _CustomRuleSheetState extends State<_CustomRuleSheet> {
                   const SheetGrabber(),
                   SheetTitleRow(
                     iconPath: AppAssets.routing,
-                    title: _editing ? 'Edit rule' : 'Add rule',
+                    title: _editing
+                        ? context.l10n.ruleEditTitle
+                        : context.l10n.ruleAddTitle,
                   ),
                   const SizedBox(height: 16),
                   TextField(
@@ -130,7 +133,7 @@ class _CustomRuleSheetState extends State<_CustomRuleSheet> {
                   if (error != null) ...[
                     const SizedBox(height: 8),
                     Text(
-                      ruleInputErrorText(error),
+                      ruleInputErrorText(context.l10n, error),
                       style: TextStyle(
                         fontSize: 11.5,
                         height: 1.4,
@@ -142,19 +145,21 @@ class _CustomRuleSheetState extends State<_CustomRuleSheet> {
                   SegmentedPill<RuleAction>(
                     options: [
                       for (final action in RuleAction.values)
-                        (action, ruleActionTitle(action)),
+                        (action, ruleActionTitle(context.l10n, action)),
                     ],
                     selected: _action,
                     onChanged: (action) => setState(() => _action = action),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    ruleActionHint(_action),
+                    ruleActionHint(context.l10n, _action),
                     style: TextStyle(fontSize: 10.5, color: colors.textMuted),
                   ),
                   const SizedBox(height: 16),
                   AccentButton(
-                    label: _editing ? 'Save' : 'Add rule',
+                    label: _editing
+                        ? context.l10n.commonSave
+                        : context.l10n.ruleAddTitle,
                     fontSize: 14.5,
                     loading: _saving,
                     onPressed: _save,
@@ -164,7 +169,7 @@ class _CustomRuleSheetState extends State<_CustomRuleSheet> {
                     TextButton(
                       onPressed: _saving ? null : _delete,
                       child: Text(
-                        'Delete rule',
+                        context.l10n.ruleDelete,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: .w600,

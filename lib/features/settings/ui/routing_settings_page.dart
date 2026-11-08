@@ -28,6 +28,7 @@ import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart
 import 'package:slipstream/features/settings/ui/widgets/reconnect_hint.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_card.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_row.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 class RoutingSettingsPage extends StatelessWidget {
   const RoutingSettingsPage({super.key});
@@ -42,13 +43,14 @@ class RoutingSettingsPage extends StatelessWidget {
     final geoService = getIt<GeoUpdateService>();
     final vpn = getIt<VpnServiceCubit>();
     final colors = AppColors.of(context);
+    final l10n = context.l10n;
 
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
             PageHeader(
-              title: 'Routing',
+              title: l10n.routingTitle,
               actions: [
                 HelpButton(
                   topic: () =>
@@ -70,7 +72,7 @@ class RoutingSettingsPage extends StatelessWidget {
                         ? const SizedBox.shrink()
                         : const _OwnRoutingNotice(),
                   ),
-                  const SectionHeader('Rule profiles', top: 4),
+                  SectionHeader(l10n.routingRuleProfiles, top: 4),
                   SettingsGroup(
                     children: [
                       BlocBuilder<RuBypassCubit, RuBypassMode>(
@@ -78,12 +80,12 @@ class RoutingSettingsPage extends StatelessWidget {
                         builder: (context, mode) => SettingsRow(
                           iconPath: AppAssets.pin,
                           hue: TileHue.blue,
-                          title: 'RU bypass',
+                          title: l10n.ruBypassTitle,
                           subtitle: 'geosite:ru + geoip:ru → direct',
                           switchValue: mode == RuBypassMode.bypassRu,
                           onSwitch: (enabled) async {
                             await ruBypassCubit.setBypassRu(enabled: enabled);
-                            notifyIfTunnelActive(vpn);
+                            notifyIfTunnelActive(l10n, vpn);
                           },
                         ),
                       ),
@@ -92,25 +94,25 @@ class RoutingSettingsPage extends StatelessWidget {
                         builder: (context, mode) => SettingsRow(
                           iconPath: AppAssets.block,
                           hue: TileHue.red,
-                          title: 'Ad & tracker blocking',
+                          title: l10n.adBlockTitle,
                           subtitle: mode.enabled
                               ? '${mode.token} → block'
-                              : 'Off',
+                              : l10n.commonOff,
                           switchValue: mode.enabled,
                           onSwitch: (enabled) async {
                             await adBlockCubit.setEnabled(enabled: enabled);
-                            notifyIfTunnelActive(vpn);
+                            notifyIfTunnelActive(l10n, vpn);
                           },
                           footer: mode.enabled && adBlockCubit.fullAllowed
                               ? SegmentedPill<AdBlockMode>(
-                                  options: const [
-                                    (AdBlockMode.basic, 'Basic'),
-                                    (AdBlockMode.full, 'Full'),
+                                  options: [
+                                    (AdBlockMode.basic, l10n.adBlockBasic),
+                                    (AdBlockMode.full, l10n.adBlockFull),
                                   ],
                                   selected: mode,
                                   onChanged: (value) async {
                                     await adBlockCubit.setMode(value);
-                                    notifyIfTunnelActive(vpn);
+                                    notifyIfTunnelActive(l10n, vpn);
                                   },
                                 )
                               : null,
@@ -121,12 +123,12 @@ class RoutingSettingsPage extends StatelessWidget {
                         builder: (context, enabled) => SettingsRow(
                           iconPath: AppAssets.home,
                           hue: TileHue.teal,
-                          title: 'LAN bypass',
+                          title: l10n.lanBypassTitle,
                           subtitle: '192.168/16 · 10/8 · localhost → direct',
                           switchValue: enabled,
                           onSwitch: (value) async {
                             await lanBypassCubit.setEnabled(enabled: value);
-                            notifyIfTunnelActive(vpn);
+                            notifyIfTunnelActive(l10n, vpn);
                           },
                         ),
                       ),
@@ -137,7 +139,7 @@ class RoutingSettingsPage extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SectionHeader('Custom rules', top: 18),
+                  SectionHeader(l10n.routingCustomRulesHeader, top: 18),
                   BlocBuilder<CustomRulesCubit, List<CustomRule>>(
                     bloc: customRulesCubit,
                     builder: (context, rules) => SettingsGroup(
@@ -147,9 +149,9 @@ class RoutingSettingsPage extends StatelessWidget {
                             iconPath: _ruleIcon(rule.action),
                             hue: _ruleHue(rule.action),
                             title: rule.value,
-                            subtitle: ruleKindLabel(rule),
+                            subtitle: ruleKindLabel(l10n, rule),
                             trailing: Text(
-                              ruleActionTitle(rule.action).toUpperCase(),
+                              ruleActionTitle(l10n, rule.action).toUpperCase(),
                               style: TextStyle(
                                 fontFamily: 'monospace',
                                 fontSize: 10,
@@ -164,8 +166,8 @@ class RoutingSettingsPage extends StatelessWidget {
                         SettingsRow(
                           iconPath: AppAssets.plus,
                           hue: TileHue.slate,
-                          title: 'Add rule',
-                          subtitle: 'Domain or IP → proxy, direct or block',
+                          title: l10n.ruleAddTitle,
+                          subtitle: l10n.ruleAddSubtitle,
                           onTap: () => showCustomRuleSheet(context),
                         ),
                       ],
@@ -186,20 +188,21 @@ class RoutingSettingsPage extends StatelessWidget {
     AppColors colors,
     GeoUpdateService geoService,
   ) {
-    final label = geoActionLabel(state);
+    final l10n = context.l10n;
+    final label = geoActionLabel(l10n, state);
     final Future<void> Function()? onAction = switch (state) {
       GeoAbsent() ||
       GeoUpdateAvailable() ||
       GeoFailed() => () => geoService.downloadNow(),
-      GeoReady() => () => _update(geoService),
+      GeoReady() => () => _update(l10n, geoService),
       _ => null,
     };
 
     return SettingsRow(
       iconPath: AppAssets.database,
       hue: TileHue.indigo,
-      title: 'Geo databases (geosite / geoip)',
-      subtitle: geoStatusText(state),
+      title: l10n.geoRowTitle,
+      subtitle: geoStatusText(l10n, state),
       subtitleStyle: TextStyle(
         fontFamily: 'monospace',
         fontSize: 10,
@@ -234,9 +237,12 @@ class RoutingSettingsPage extends StatelessWidget {
     RuleAction.block => TileHue.red,
   };
 
-  static Future<void> _update(GeoUpdateService service) async {
+  static Future<void> _update(
+    AppLocalizations l10n,
+    GeoUpdateService service,
+  ) async {
     final outcome = await service.updateNow();
-    showToastSpec(geoUpdateToast(outcome));
+    showToastSpec(geoUpdateToast(l10n, outcome));
   }
 }
 
@@ -268,7 +274,7 @@ class _OwnRoutingNotice extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              routingOwnConfigNotice,
+              context.l10n.routingOwnConfigNotice,
               style: TextStyle(
                 fontSize: 11.5,
                 height: 1.45,

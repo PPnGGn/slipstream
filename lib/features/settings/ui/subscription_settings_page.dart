@@ -12,6 +12,7 @@ import 'package:slipstream/features/settings/ui/widgets/settings_row.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscription_auto_update_cubit.dart';
 import 'package:slipstream/features/subscriptions/data/auto_update/auto_update_interval.dart';
 import 'package:slipstream/features/subscriptions/ui/auto_update_labels.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 /// Settings → Subscriptions: how often URL subscriptions refresh.
 class SubscriptionSettingsPage extends StatelessWidget {
@@ -25,7 +26,7 @@ class SubscriptionSettingsPage extends StatelessWidget {
         child: Column(
           children: [
             PageHeader(
-              title: 'Subscriptions',
+              title: context.l10n.subscriptionsTitle,
               actions: [
                 HelpButton(
                   topic: () =>
@@ -40,14 +41,14 @@ class SubscriptionSettingsPage extends StatelessWidget {
                     builder: (context, selected) => ListView(
                       padding: const .fromLTRB(20, 0, 20, 28),
                       children: [
-                        const SectionHeader('Auto-update', top: 14),
+                        SectionHeader(context.l10n.autoUpdateHeader, top: 14),
                         SettingsGroup(
                           children: [
                             for (final interval in AutoUpdateInterval.values)
                               SettingsRow(
-                                title: interval.label,
+                                title: interval.label(context.l10n),
                                 subtitle: interval == AutoUpdateInterval.off
-                                    ? 'Only from the ⋯ menu of a subscription'
+                                    ? context.l10n.autoUpdateOffHint
                                     : null,
                                 trailing: RadioDot(
                                   selected: interval == selected,

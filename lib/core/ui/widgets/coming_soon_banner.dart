@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:slipstream/app/app_assets.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 
 /// Top of a page whose feature is not built yet: the page shows the future
 /// layout, but nothing on it works.
@@ -33,7 +34,7 @@ class ComingSoonBanner extends StatelessWidget {
               spacing: 2,
               children: [
                 Text(
-                  'Coming soon',
+                  context.l10n.comingSoonTitle,
                   style: TextStyle(
                     fontSize: 13.5,
                     fontWeight: .w700,
@@ -41,8 +42,7 @@ class ComingSoonBanner extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'A preview of the screen — these settings are not active '
-                  'yet.',
+                  context.l10n.comingSoonBody,
                   style: TextStyle(fontSize: 11.5, color: colors.textMuted),
                 ),
               ],
