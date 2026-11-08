@@ -9,4 +9,10 @@
 
     <string name="tile_blocked">Трафик заблокирован</string>
     <string name="tile_disconnecting">Отключение…</string>
+
+    <string name="alert_channel_name">Оповещения VPN</string>
+    <string name="alert_blocked_title">Трафик заблокирован</string>
+    <string name="alert_blocked_text">Туннель потерян, kill switch удерживает ваш трафик. Нажмите «Переподключить».</string>
+    <string name="alert_start_failed_title">VPN не удалось запустить</string>
+    <string name="alert_start_failed_text">Откройте Slipstream, чтобы увидеть причину.</string>
 </resources>

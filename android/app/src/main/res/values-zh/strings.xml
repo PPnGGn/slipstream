@@ -9,4 +9,10 @@
 
     <string name="tile_blocked">流量已拦截</string>
     <string name="tile_disconnecting">正在断开…</string>
+
+    <string name="alert_channel_name">VPN 提醒</string>
+    <string name="alert_blocked_title">流量已拦截</string>
+    <string name="alert_blocked_text">隧道已中断，kill switch 正在阻断你的流量。请点击“重新连接”。</string>
+    <string name="alert_start_failed_title">VPN 无法启动</string>
+    <string name="alert_start_failed_text">请打开 Slipstream 查看原因。</string>
 </resources>

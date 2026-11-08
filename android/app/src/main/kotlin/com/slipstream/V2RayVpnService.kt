@@ -52,6 +52,8 @@ class V2RayVpnService : VpnService() {
     companion object {
         private const val NOTIFICATION_CHANNEL_ID = "slipstream_vpn_status"
         private const val NOTIFICATION_ID = 1
+        private const val ALERT_CHANNEL_ID = "slipstream_alerts"
+        private const val ALERT_NOTIFICATION_ID = 2
         // The two the quick settings tile sends (VpnTileService).
         internal const val ACTION_STOP_VPN = "ACTION_STOP_VPN"
 
@@ -192,6 +194,8 @@ class V2RayVpnService : VpnService() {
             Log.w("VPN_SERVICE", "Could not mark the start: ${e.javaClass.simpleName}")
         }
         notificationPhase = NotificationPhase.CONNECTING
+        // A new attempt: the alert of the last one is history.
+        cancelAlert()
         startForegroundWithNotification(buildNotification(NotificationPhase.CONNECTING))
         VpnEventBridge.notifyStatus(VpnStatus.CONNECTING)
         Android.setHandler(VpnEventBridge)
@@ -324,6 +328,7 @@ class V2RayVpnService : VpnService() {
             val connectedAtMs = System.currentTimeMillis()
             VpnEventBridge.notifyStatus(VpnStatus.CONNECTED, connectedAtEpochMs = connectedAtMs)
             updateNotification(buildNotification(NotificationPhase.CONNECTED))
+            cancelAlert()
             startTrafficPolling()
         } catch (e: Exception) {
             Log.e("VPN_SERVICE", "Critical error in setupVpn: ${e.message}")
@@ -334,9 +339,10 @@ class V2RayVpnService : VpnService() {
             // A tunnel lost and not coming back is held; a server that never worked
             // is just an error (see shouldBlockOnFailure).
             if (shouldBlockOnFailure(launch.killSwitch, trigger, alreadyBlocked = blockingTunnel != null)) {
-                holdBlockingTunnel(launch, reason)
+                holdBlockingTunnel(launch, reason, trigger)
             } else {
                 VpnEventBridge.notifyStatus(VpnStatus.ERROR, reason)
+                raiseAlertAfterFailure(blocked = false, trigger = trigger)
                 stopVpn(dueToError = true)
             }
         }
@@ -346,7 +352,7 @@ class V2RayVpnService : VpnService() {
     // would let every app's traffic out the moment the interface is gone, build the
     // interface again and read nothing from it. The user ends it with Reconnect (a
     // new interface replaces this one) or Disconnect (stopVpn closes it).
-    private fun holdBlockingTunnel(launch: VpnLaunchConfig, reason: String) {
+    private fun holdBlockingTunnel(launch: VpnLaunchConfig, reason: String, trigger: StartTrigger) {
         try {
             // Nothing of the core may keep running while the traffic is held. Safe to
             // call whether or not a start got far.
@@ -364,12 +370,14 @@ class V2RayVpnService : VpnService() {
             notificationPhase = NotificationPhase.BLOCKED
             updateNotification(buildNotification(NotificationPhase.BLOCKED))
             VpnEventBridge.notifyStatus(VpnStatus.BLOCKED, reason)
+            raiseAlertAfterFailure(blocked = true, trigger = trigger)
             Log.w("VPN_SERVICE", "Kill switch: traffic is blocked, reason: $reason")
         } catch (e: Exception) {
             // Not even a blocking interface (the VPN permission is gone, say): the
             // honest thing left is to close the VPN and say it failed.
             Log.e("VPN_SERVICE", "Kill switch could not hold the traffic: ${e.message}")
             VpnEventBridge.notifyStatus(VpnStatus.ERROR, reason)
+            raiseAlertAfterFailure(blocked = false, trigger = trigger)
             stopVpn(dueToError = true)
         }
     }
@@ -501,7 +509,12 @@ class V2RayVpnService : VpnService() {
         releaseBlockingTunnel()
         activeLaunch = null
 
-        if (!dueToError) VpnEventBridge.notifyStatus(VpnStatus.DISCONNECTED)
+        if (!dueToError) {
+            VpnEventBridge.notifyStatus(VpnStatus.DISCONNECTED)
+            // The user ended it (or the system did): a "blocked" alert is out of date.
+            // After an error the alert just posted for it must stay.
+            cancelAlert()
+        }
 
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
@@ -611,9 +624,68 @@ class V2RayVpnService : VpnService() {
                 .build()
     }
 
+    // Alerts: a separate notification, noticeable (sound, pops up), next to the quiet
+    // foreground one. What to say and when is decided by ConnectionAlert.kt; the user's
+    // switches are the ones the app last sent (NativePrefsStore), known with the app closed.
+
+    private fun alertPrefs(): AlertPrefs {
+        val store = NativePrefsStore.of(this)
+        return AlertPrefs(
+                trafficBlocked = store.alertTrafficBlocked(),
+                startFailed = store.alertStartFailed(),
+        )
+    }
+
+    // Called when a start has failed, [blocked] when the kill switch holds the traffic.
+    // Posting is a no-op while Android blocks the app's notifications.
+    private fun raiseAlertAfterFailure(blocked: Boolean, trigger: StartTrigger) {
+        val alert = alertAfterFailure(blocked, trigger, alertPrefs()) ?: return
+        val content = alertContent(alert)
+        val texts = localized()
+        val builder =
+                NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
+                        .setContentTitle(texts.getString(content.title))
+                        .setContentText(texts.getString(content.text))
+                        .setStyle(
+                                NotificationCompat.BigTextStyle()
+                                        .bigText(texts.getString(content.text)),
+                        )
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setContentIntent(openAppPendingIntent())
+                        .setAutoCancel(true)
+                        .setCategory(NotificationCompat.CATEGORY_ERROR)
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
+        serverTitle?.trim()?.takeIf { it.isNotEmpty() }?.let { builder.setSubText(it) }
+        if (content.canReconnect) {
+            builder.addAction(
+                    0,
+                    texts.getString(R.string.notification_action_reconnect),
+                    reconnectPendingIntent(),
+            )
+        }
+        try {
+            getSystemService(NotificationManager::class.java)
+                    ?.notify(ALERT_NOTIFICATION_ID, builder.build())
+        } catch (e: SecurityException) {
+            Log.w("VPN_SERVICE", "Alert refused: ${e.javaClass.simpleName}")
+        }
+    }
+
+    // The tunnel is up again, or the user ended it: an old alert would be a lie.
+    private fun cancelAlert() {
+        getSystemService(NotificationManager::class.java)?.cancel(ALERT_NOTIFICATION_ID)
+    }
+
     private fun ensureNotificationChannel() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = getSystemService(NotificationManager::class.java) ?: return
+        manager.createNotificationChannel(
+                NotificationChannel(
+                        ALERT_CHANNEL_ID,
+                        localized().getString(R.string.alert_channel_name),
+                        NotificationManager.IMPORTANCE_HIGH,
+                ),
+        )
         // Created on every start, not only the first: creating a channel that
         // exists changes its name (what the user sees in the system settings)
         // and leaves its importance alone. That is how the name follows the

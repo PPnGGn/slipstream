@@ -9,4 +9,10 @@
 
     <string name="tile_blocked">ترافیک مسدود شد</string>
     <string name="tile_disconnecting">در حال قطع اتصال…</string>
+
+    <string name="alert_channel_name">هشدارهای VPN</string>
+    <string name="alert_blocked_title">ترافیک مسدود شد</string>
+    <string name="alert_blocked_text">تونل قطع شد و kill switch ترافیک شما را نگه داشته است. «اتصال مجدد» را بزنید.</string>
+    <string name="alert_start_failed_title">VPN شروع نشد</string>
+    <string name="alert_start_failed_text">برای دیدن علت، Slipstream را باز کنید.</string>
 </resources>
