@@ -10,6 +10,7 @@ List<StoredSubscription> orderSubscriptions(
     ..sort((a, b) => a.subscription.id.compareTo(b.subscription.id));
   return [...known, ...rest];
 }
+
 List<T> moveItem<T>(List<T> items, int oldIndex, int newIndex) {
   final moved = [...items];
   moved.insert(newIndex, moved.removeAt(oldIndex));

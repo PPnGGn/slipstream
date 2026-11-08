@@ -1,7 +1,7 @@
 import 'package:slipstream/core/service/toast/toast_message.dart';
 import 'package:slipstream/features/geo/cubit/geo_cubit.dart';
 
-/// The toast for the result of the manual "Обновить" on the Routing page.
+/// The toast for the result of the manual "Update" on the Routing page.
 /// Nothing newer is information, not a success: nothing changed.
 ToastSpec geoUpdateToast(GeoUpdateOutcome outcome) => switch (outcome) {
   GeoUpdateOutcome.updated => const ToastSpec(

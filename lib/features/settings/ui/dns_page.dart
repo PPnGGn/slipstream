@@ -13,7 +13,8 @@ import 'package:slipstream/features/dns/data/remote_dns.dart';
 import 'package:slipstream/features/dns/ui/dns_labels.dart';
 import 'package:slipstream/features/routing/cubit/ru_bypass_cubit.dart';
 import 'package:slipstream/features/routing/data/ru_bypass_mode.dart';
-import 'package:slipstream/features/settings/ui/widgets/help_sheet.dart';
+import 'package:slipstream/features/help/ui/help_button.dart';
+import 'package:slipstream/features/help/ui/help_topics.dart';
 import 'package:slipstream/features/settings/ui/widgets/reconnect_hint.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_card.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_row.dart';
@@ -43,10 +44,8 @@ class DnsPage extends StatelessWidget {
             PageHeader(
               title: 'DNS',
               actions: [
-                BoxIconButton(
-                  iconPath: AppAssets.info,
-                  onTap: () =>
-                      _showHelp(context, fakeDnsAllowed: dns.fakeDnsAllowed),
+                HelpButton(
+                  topic: () => dnsHelp(fakeDnsAllowed: dns.fakeDnsAllowed),
                 ),
               ],
             ),
@@ -179,47 +178,4 @@ class DnsPage extends StatelessWidget {
     DirectDns.yandex => TileHue.blue,
     DirectDns.system => TileHue.slate,
   };
-
-  static void _showHelp(BuildContext context, {required bool fakeDnsAllowed}) {
-    showHelpSheet(
-      context,
-      title: 'DNS',
-      entries: [
-        const HelpEntry(
-          title: 'Remote DNS',
-          body:
-              'Looks up names for traffic that goes through the VPN. '
-              'Cloudflare and Google use DNS over HTTPS (encrypted). Xray '
-              'built-in is plain DNS to 1.1.1.1 inside the tunnel: your '
-              'provider does not see it, the VPN server does.',
-        ),
-        const HelpEntry(
-          title: 'Direct DNS',
-          body:
-              'Looks up Russian names (.ru, .рф, Russian services) for '
-              'traffic that bypasses the VPN. Yandex DNS is encrypted. The '
-              'system resolver is the phone\'s own DNS, usually your '
-              'operator\'s: sites open the same, but the operator sees these '
-              'names. Used only while the RU bypass is on.',
-        ),
-        if (fakeDnsAllowed)
-          const HelpEntry(
-            title: 'Fake DNS',
-            body:
-                'Apps get a made-up address at once and the VPN finds the '
-                'real one later, so the first connection is faster. If an '
-                'app stops opening, turn it off.',
-          ),
-        const HelpEntry(
-          title: 'When applied',
-          body:
-              'Changes take effect on reconnect.\n'
-              'Not applied to servers whose config has its own routing '
-              'rules (set by the VPN provider).\n'
-              'With strict Private DNS in Android settings, apps look names '
-              'up through it and not through these resolvers.',
-        ),
-      ],
-    );
-  }
 }

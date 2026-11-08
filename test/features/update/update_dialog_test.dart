@@ -90,7 +90,9 @@ void main() {
 
     await updates.check();
     if (conflict) {
-      repository.installAnswer = const Success(InstallOutcome.signatureConflict);
+      repository.installAnswer = const Success(
+        InstallOutcome.signatureConflict,
+      );
       await updates.install();
       repository.installAnswer = const Success(InstallOutcome.launched);
     }
@@ -258,9 +260,7 @@ void main() {
       );
     });
 
-    testDialog('Save APK confirms with a toast and stays open', (
-      tester,
-    ) async {
+    testDialog('Save APK confirms with a toast and stays open', (tester) async {
       await openDialog(tester, conflict: true);
 
       await tester.tap(find.text('Save APK'));

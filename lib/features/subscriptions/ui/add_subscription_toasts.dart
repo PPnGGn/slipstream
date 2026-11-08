@@ -84,9 +84,7 @@ ToastSpec subscriptionFailedToast(
       "Server didn't respond",
       'CHECK CONNECTION · TRY AGAIN',
     ),
-    SocketException() ||
-    TlsException() ||
-    http.ClientException() => (
+    SocketException() || TlsException() || http.ClientException() => (
       "Can't reach the server",
       'CHECK CONNECTION · TRY AGAIN',
     ),

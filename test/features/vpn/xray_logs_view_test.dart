@@ -48,9 +48,10 @@ void main() {
     test('WARN keeps both spellings of a warning', () {
       final both = [_log('warning', 'a'), _log('warn', 'b'), _log('info', 'c')];
 
-      expect([
-        for (final l in filterLogs(both, LogLevelFilter.warn)) l.message,
-      ], ['a', 'b']);
+      expect(
+        [for (final l in filterLogs(both, LogLevelFilter.warn)) l.message],
+        ['a', 'b'],
+      );
     });
 
     test('ERROR keeps only errors', () {
@@ -73,12 +74,10 @@ void main() {
   });
 
   test('the chips are labelled ALL, INFO, WARN and ERROR', () {
-    expect([for (final f in LogLevelFilter.values) f.label], [
-      'ALL',
-      'INFO',
-      'WARN',
-      'ERROR',
-    ]);
+    expect(
+      [for (final f in LogLevelFilter.values) f.label],
+      ['ALL', 'INFO', 'WARN', 'ERROR'],
+    );
   });
 
   group('logSeverityOf', () {
@@ -103,8 +102,14 @@ void main() {
   });
 
   test('the time is hours, minutes and seconds of the device', () {
-    expect(logTimeOf(DateTime(2026, 10, 27, 0, 11, 58).millisecondsSinceEpoch), '00:11:58');
-    expect(logTimeOf(DateTime(2026, 10, 27, 13, 5, 9).millisecondsSinceEpoch), '13:05:09');
+    expect(
+      logTimeOf(DateTime(2026, 10, 27, 0, 11, 58).millisecondsSinceEpoch),
+      '00:11:58',
+    );
+    expect(
+      logTimeOf(DateTime(2026, 10, 27, 13, 5, 9).millisecondsSinceEpoch),
+      '13:05:09',
+    );
   });
 
   group('logsAsText', () {

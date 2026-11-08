@@ -41,11 +41,7 @@ void main() {
 
   setUp(() {
     installer = _FakeInstaller();
-    repository = UpdateRepository(
-      Talker(),
-      installer,
-      Directory.systemTemp,
-    );
+    repository = UpdateRepository(Talker(), installer, Directory.systemTemp);
   });
 
   tearDown(() => repository.dispose());
@@ -79,10 +75,7 @@ void main() {
     test('when the system installer starts, it is launched', () async {
       final result = await repository.install('update.apk');
 
-      expect(
-        (result as Success<InstallOutcome>).data,
-        InstallOutcome.launched,
-      );
+      expect((result as Success<InstallOutcome>).data, InstallOutcome.launched);
       expect(installer.installed, ['update.apk']);
     });
 

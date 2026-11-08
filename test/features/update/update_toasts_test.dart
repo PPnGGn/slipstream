@@ -16,11 +16,8 @@ void main() {
   group('updateCheckFeedback', () {
     const installed = '2.1.0 (36)';
 
-    Matcher showsToast(ToastSpec spec) => isA<ShowUpdateToast>().having(
-      (f) => f.spec,
-      'spec',
-      spec,
-    );
+    Matcher showsToast(ToastSpec spec) =>
+        isA<ShowUpdateToast>().having((f) => f.spec, 'spec', spec);
 
     test('an up-to-date app says which version is the latest', () {
       expect(
@@ -37,7 +34,9 @@ void main() {
     test('a failed check is an error with a hint, no raw exception', () {
       expect(
         updateCheckFeedback(
-          const UpdateState.error('Failed to check for updates: SocketException'),
+          const UpdateState.error(
+            'Failed to check for updates: SocketException',
+          ),
           installed,
         ),
         showsToast(
@@ -136,10 +135,7 @@ void main() {
   test('Later promises a reminder, and the reminder is real', () {
     expect(
       updateLaterToast,
-      const ToastSpec(
-        "We'll remind you on next launch",
-        kind: ToastKind.info,
-      ),
+      const ToastSpec("We'll remind you on next launch", kind: ToastKind.info),
     );
   });
 

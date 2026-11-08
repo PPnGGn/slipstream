@@ -13,12 +13,18 @@ void main() {
       InstalledAppsCubit(InstalledAppsRepository(api, Talker()));
 
   test('starts in loading', () {
-    expect(cubitOver(FakeInstalledAppsApi()).state, isA<InstalledAppsLoading>());
+    expect(
+      cubitOver(FakeInstalledAppsApi()).state,
+      isA<InstalledAppsLoading>(),
+    );
   });
 
   test('load ends in loaded with the sorted apps and an empty query', () async {
     final api = FakeInstalledAppsApi(
-      apps: [app('p.b', label: 'B'), app('p.a', label: 'A')],
+      apps: [
+        app('p.b', label: 'B'),
+        app('p.a', label: 'A'),
+      ],
     );
     final cubit = cubitOver(api);
     await cubit.load();

@@ -32,10 +32,7 @@ void main() {
   late ToastCubit toasts;
   String? clipboard;
 
-  Future<void> openPage(
-    WidgetTester tester,
-    List<VpnLogMessage> logs,
-  ) async {
+  Future<void> openPage(WidgetTester tester, List<VpnLogMessage> logs) async {
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(400, 800);
     addTearDown(tester.view.reset);

@@ -6,6 +6,8 @@ import 'package:slipstream/core/service/vpn_service/vpn_service_cubit.dart';
 import 'package:slipstream/core/theme/app_colors.dart';
 import 'package:slipstream/core/ui/widgets/page_header.dart';
 import 'package:slipstream/core/ui/widgets/segmented_pill.dart';
+import 'package:slipstream/features/help/ui/help_button.dart';
+import 'package:slipstream/features/help/ui/help_topics.dart';
 import 'package:slipstream/features/settings/ui/widgets/reconnect_hint.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_card.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_row.dart';
@@ -59,7 +61,10 @@ class _SplitTunnelingPageState extends State<SplitTunnelingPage> {
       body: SafeArea(
         child: Column(
           children: [
-            const PageHeader(title: 'Split tunneling'),
+            PageHeader(
+              title: 'Split tunneling',
+              actions: [HelpButton(topic: splitTunnelHelp)],
+            ),
             Expanded(
               child: BlocBuilder<SplitTunnelCubit, SplitTunnelSettings>(
                 bloc: _split,

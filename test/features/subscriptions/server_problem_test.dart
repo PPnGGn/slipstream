@@ -35,18 +35,9 @@ void main() {
     });
 
     test('other security modes are not judged', () {
-      expect(
-        serverProblem(serverWithStream({'security': 'tls'})),
-        isNull,
-      );
-      expect(
-        serverProblem(serverWithStream({'security': 'none'})),
-        isNull,
-      );
-      expect(
-        serverProblem(serverWithStream({'network': 'hysteria'})),
-        isNull,
-      );
+      expect(serverProblem(serverWithStream({'security': 'tls'})), isNull);
+      expect(serverProblem(serverWithStream({'security': 'none'})), isNull);
+      expect(serverProblem(serverWithStream({'network': 'hysteria'})), isNull);
     });
 
     test('a config that is not readable is not this problem', () {

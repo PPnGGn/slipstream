@@ -51,9 +51,7 @@ void main() {
     });
 
     test('matches the package name', () {
-      expect(packages(visibleApps(apps, settings, 'com.web')), [
-        'com.webview',
-      ]);
+      expect(packages(visibleApps(apps, settings, 'com.web')), ['com.webview']);
     });
 
     test('nothing matches', () {
@@ -65,10 +63,13 @@ void main() {
     List<String> order(Iterable<dynamic> list) =>
         list.map((a) => a.packageName as String).toList();
 
-    test('moves the pinned apps to the top, keeping the order in each part', () {
-      final sorted = selectedFirst(apps, {'com.webview', 'com.bank'});
-      expect(order(sorted), ['com.bank', 'com.webview', 'com.chrome']);
-    });
+    test(
+      'moves the pinned apps to the top, keeping the order in each part',
+      () {
+        final sorted = selectedFirst(apps, {'com.webview', 'com.bank'});
+        expect(order(sorted), ['com.bank', 'com.webview', 'com.chrome']);
+      },
+    );
 
     test('nothing pinned keeps the incoming order', () {
       expect(order(selectedFirst(apps, const {})), order(apps));

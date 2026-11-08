@@ -7,10 +7,7 @@ void main() {
     test('an added server is named in caps', () {
       expect(
         favoriteToast(added: true, serverName: 'Germany (BS-6)'),
-        const ToastSpec(
-          'Added to favorites',
-          subtitle: 'GERMANY (BS-6)',
-        ),
+        const ToastSpec('Added to favorites', subtitle: 'GERMANY (BS-6)'),
       );
     });
 

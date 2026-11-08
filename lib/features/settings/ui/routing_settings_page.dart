@@ -11,6 +11,8 @@ import 'package:slipstream/core/ui/widgets/segmented_pill.dart';
 import 'package:slipstream/features/geo/cubit/geo_cubit.dart';
 import 'package:slipstream/features/geo/data/geo_update_service.dart';
 import 'package:slipstream/features/geo/presentation/geo_update_toast.dart';
+import 'package:slipstream/features/help/ui/help_button.dart';
+import 'package:slipstream/features/help/ui/help_topics.dart';
 import 'package:slipstream/features/routing/cubit/ad_block_cubit.dart';
 import 'package:slipstream/features/routing/cubit/custom_rules_cubit.dart';
 import 'package:slipstream/features/routing/cubit/lan_bypass_cubit.dart';
@@ -21,8 +23,8 @@ import 'package:slipstream/features/routing/data/routing_applies.dart';
 import 'package:slipstream/features/routing/data/ru_bypass_mode.dart';
 import 'package:slipstream/features/routing/ui/custom_rule_labels.dart';
 import 'package:slipstream/features/routing/ui/custom_rule_sheet.dart';
+import 'package:slipstream/features/routing/ui/routing_labels.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
-import 'package:slipstream/features/settings/ui/widgets/help_sheet.dart';
 import 'package:slipstream/features/settings/ui/widgets/reconnect_hint.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_card.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_row.dart';
@@ -48,9 +50,9 @@ class RoutingSettingsPage extends StatelessWidget {
             PageHeader(
               title: 'Routing',
               actions: [
-                BoxIconButton(
-                  iconPath: AppAssets.info,
-                  onTap: () => _showHelp(context, adBlockCubit),
+                HelpButton(
+                  topic: () =>
+                      routingHelp(fullAdBlockAllowed: adBlockCubit.fullAllowed),
                 ),
               ],
             ),
@@ -76,8 +78,8 @@ class RoutingSettingsPage extends StatelessWidget {
                         builder: (context, mode) => SettingsRow(
                           iconPath: AppAssets.pin,
                           hue: TileHue.blue,
-                          title: 'Обход РФ',
-                          subtitle: 'geosite:ru + geoip:ru → напрямую',
+                          title: 'RU bypass',
+                          subtitle: 'geosite:ru + geoip:ru → direct',
                           switchValue: mode == RuBypassMode.bypassRu,
                           onSwitch: (enabled) async {
                             await ruBypassCubit.setBypassRu(enabled: enabled);
@@ -90,10 +92,10 @@ class RoutingSettingsPage extends StatelessWidget {
                         builder: (context, mode) => SettingsRow(
                           iconPath: AppAssets.block,
                           hue: TileHue.red,
-                          title: 'Блокировка рекламы и трекеров',
+                          title: 'Ad & tracker blocking',
                           subtitle: mode.enabled
-                              ? '${mode.token} → блокировка'
-                              : 'Выключена',
+                              ? '${mode.token} → block'
+                              : 'Off',
                           switchValue: mode.enabled,
                           onSwitch: (enabled) async {
                             await adBlockCubit.setEnabled(enabled: enabled);
@@ -102,8 +104,8 @@ class RoutingSettingsPage extends StatelessWidget {
                           footer: mode.enabled && adBlockCubit.fullAllowed
                               ? SegmentedPill<AdBlockMode>(
                                   options: const [
-                                    (AdBlockMode.basic, 'Базовая'),
-                                    (AdBlockMode.full, 'Полная'),
+                                    (AdBlockMode.basic, 'Basic'),
+                                    (AdBlockMode.full, 'Full'),
                                   ],
                                   selected: mode,
                                   onChanged: (value) async {
@@ -119,8 +121,8 @@ class RoutingSettingsPage extends StatelessWidget {
                         builder: (context, enabled) => SettingsRow(
                           iconPath: AppAssets.home,
                           hue: TileHue.teal,
-                          title: 'Обход LAN',
-                          subtitle: '192.168/16 · 10/8 · localhost → напрямую',
+                          title: 'LAN bypass',
+                          subtitle: '192.168/16 · 10/8 · localhost → direct',
                           switchValue: enabled,
                           onSwitch: (value) async {
                             await lanBypassCubit.setEnabled(enabled: value);
@@ -184,49 +186,29 @@ class RoutingSettingsPage extends StatelessWidget {
     AppColors colors,
     GeoUpdateService geoService,
   ) {
-    final (String status, _Action? action) = switch (state) {
-      GeoAbsent() => (
-        'Не загружены',
-        _Action('Загрузить', () => geoService.downloadNow()),
-      ),
-      GeoChecking() => ('Проверка обновлений…', null),
-      GeoDownloading(:final fraction) => (
-        'Загрузка… ${(fraction * 100).round()}%',
-        null,
-      ),
-      GeoReady(:final tag, :final updatedAt) => (
-        'Актуально · $tag · ${_date(updatedAt)}',
-        _Action('Обновить', () => _update(geoService)),
-      ),
-      GeoUpdateAvailable(:final latestTag) => (
-        'Доступно обновление: $latestTag',
-        _Action('Обновить', () => geoService.downloadNow()),
-      ),
-      GeoFailed(:final message) => (
-        message,
-        _Action('Повторить', () => geoService.downloadNow()),
-      ),
-      _ => ('', null),
+    final label = geoActionLabel(state);
+    final Future<void> Function()? onAction = switch (state) {
+      GeoAbsent() ||
+      GeoUpdateAvailable() ||
+      GeoFailed() => () => geoService.downloadNow(),
+      GeoReady() => () => _update(geoService),
+      _ => null,
     };
 
     return SettingsRow(
       iconPath: AppAssets.database,
       hue: TileHue.indigo,
-      title: 'Гео-базы (geosite / geoip)',
-      subtitle: status,
+      title: 'Geo databases (geosite / geoip)',
+      subtitle: geoStatusText(state),
       subtitleStyle: TextStyle(
         fontFamily: 'monospace',
         fontSize: 10,
         fontWeight: .w500,
         color: state is GeoFailed ? colors.danger : null,
       ),
-      trailing: action == null
+      trailing: label == null || onAction == null
           ? null
-          : _ChipButton(
-              colors: colors,
-              label: action.label,
-              onTap: () => action.onPressed(),
-            ),
+          : _ChipButton(colors: colors, label: label, onTap: () => onAction()),
       footer: state is GeoDownloading
           ? ClipRRect(
               borderRadius: .circular(2),
@@ -237,68 +219,6 @@ class RoutingSettingsPage extends StatelessWidget {
               ),
             )
           : null,
-    );
-  }
-
-  static void _showHelp(BuildContext context, AdBlockCubit adBlockCubit) {
-    showHelpSheet(
-      context,
-      title: 'Routing',
-      entries: [
-        const HelpEntry(
-          title: 'RU bypass',
-          body:
-              'Sent directly, bypassing the VPN: .ru and .рф domains, '
-              'Russian services and IP addresses, torrents. All other '
-              'traffic goes through the VPN.',
-        ),
-        const HelpEntry(
-          title: 'LAN bypass',
-          body:
-              'Traffic to your local network (router, printer, NAS, '
-              'Chromecast, localhost) is sent directly. Keep it on: '
-              'with it off, those devices go through the VPN server and '
-              'usually stop being found.',
-        ),
-        HelpEntry(
-          title: 'Ad blocking',
-          body: adBlockCubit.fullAllowed
-              ? 'Basic — major ad and tracking networks '
-                    '(~830 domains).\n'
-                    'Full — extended list (~150,000 domains). Higher '
-                    'memory use, possible false positives.'
-              : 'Major ad and tracking networks (~830 domains). The '
-                    'extended list does not fit the memory limit of '
-                    'the iOS VPN extension.',
-        ),
-        const HelpEntry(
-          title: 'Geo databases',
-          body:
-              'Domain and IP lists used by the rules above. '
-              'Downloaded separately from the app, updated manually.\n'
-              'Without them ads are not blocked, and RU bypass covers '
-              'only .ru and .рф.',
-        ),
-        const HelpEntry(
-          title: 'Custom rules',
-          body:
-              'Your own rules for a domain (with its subdomains) or an IP '
-              'address or range. Proxy sends it through the VPN, Direct '
-              'sends it bypassing the VPN, Block drops it.\n'
-              'The most specific rule wins: mail.google.com beats '
-              'google.com. Your rules come before RU bypass, ad blocking '
-              'and LAN bypass.',
-        ),
-        const HelpEntry(
-          title: 'When applied',
-          body:
-              'Changes take effect on reconnect.\n'
-              'Servers whose config has its own routing rules (set by '
-              'the VPN provider or your panel) keep them: RU bypass, ad '
-              'blocking and LAN bypass do not apply to them. Custom rules '
-              'do, and stand ahead of the server\'s own.',
-        ),
-      ],
     );
   }
 
@@ -318,9 +238,6 @@ class RoutingSettingsPage extends StatelessWidget {
     final outcome = await service.updateNow();
     showToastSpec(geoUpdateToast(outcome));
   }
-
-  static String _date(DateTime d) =>
-      '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';
 }
 
 /// Shown while the selected server has a routing of its own: the switches
@@ -363,12 +280,6 @@ class _OwnRoutingNotice extends StatelessWidget {
       ),
     );
   }
-}
-
-class _Action {
-  const _Action(this.label, this.onPressed);
-  final String label;
-  final Future<void> Function() onPressed;
 }
 
 /// Small bordered chip button with a refresh icon (geo bases row).

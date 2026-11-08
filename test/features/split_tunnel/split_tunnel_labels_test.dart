@@ -38,11 +38,7 @@ void main() {
 
   test('the counter says how many of the listed apps are picked', () {
     expect(
-      splitTunnelCounter(
-        selected: 3,
-        total: 41,
-        mode: SplitTunnelMode.bypass,
-      ),
+      splitTunnelCounter(selected: 3, total: 41, mode: SplitTunnelMode.bypass),
       '3 of 41 apps bypassed',
     );
     expect(

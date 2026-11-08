@@ -70,11 +70,17 @@ void main() {
     test('the provider limits the number of devices', () {
       expect(
         addFailedToast(const DeviceLimitReachedException()),
-        error('Device limit reached', 'ASK THE PROVIDER TO REMOVE AN OLD DEVICE'),
+        error(
+          'Device limit reached',
+          'ASK THE PROVIDER TO REMOVE AN OLD DEVICE',
+        ),
       );
       expect(
         addFailedToast(const HwidRequiredException()),
-        error('Provider rejected this device', 'TRY LATER OR CONTACT THE PROVIDER'),
+        error(
+          'Provider rejected this device',
+          'TRY LATER OR CONTACT THE PROVIDER',
+        ),
       );
     });
 

@@ -20,8 +20,7 @@ void main() {
           routes: [
             appRoute(
               path: 'second',
-              builder: (context, state) =>
-                  const Scaffold(body: Text('second')),
+              builder: (context, state) => const Scaffold(body: Text('second')),
             ),
           ],
         ),

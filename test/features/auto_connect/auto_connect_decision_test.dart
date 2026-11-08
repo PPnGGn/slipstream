@@ -94,7 +94,10 @@ void main() {
     });
 
     test('off: says how to connect instead', () {
-      expect(autoConnectSubtitle(enabled: false), 'Off · tap the ring to connect');
+      expect(
+        autoConnectSubtitle(enabled: false),
+        'Off · tap the ring to connect',
+      );
     });
   });
 }

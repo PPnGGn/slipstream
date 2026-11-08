@@ -136,9 +136,7 @@ void main() {
     await finish(tester);
   });
 
-  testWidgets('a toast that arrives during the fade-out stays', (
-    tester,
-  ) async {
+  testWidgets('a toast that arrives during the fade-out stays', (tester) async {
     await pumpApp(tester);
     cubit.show('First');
     await tester.pump(const Duration(milliseconds: 400));

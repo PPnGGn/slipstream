@@ -38,7 +38,7 @@ class AppAssets {
   static const String memory = 'assets/svg/memory.svg';
   static const String check = 'assets/svg/check.svg';
 
-  // Placeholder pages (Security, DNS, Backup, Split tunneling, Assistant).
+  // Settings pages (Security, DNS, Backup, Split tunneling).
   static const String kill = 'assets/svg/kill.svg';
   static const String wifi = 'assets/svg/wifi.svg';
   static const String ipv6 = 'assets/svg/ipv6.svg';

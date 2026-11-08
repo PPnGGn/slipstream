@@ -3,11 +3,7 @@ enum ToastKind { success, error, info }
 /// What a toast says, before it is shown (no id yet). Pure functions that
 /// decide the wording return this, so tests can compare it directly.
 class ToastSpec {
-  const ToastSpec(
-    this.title, {
-    this.subtitle,
-    this.kind = ToastKind.success,
-  });
+  const ToastSpec(this.title, {this.subtitle, this.kind = ToastKind.success});
 
   final String title;
   final String? subtitle;

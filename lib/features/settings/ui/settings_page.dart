@@ -27,7 +27,7 @@ import 'package:slipstream/features/routing/cubit/ru_bypass_cubit.dart';
 import 'package:slipstream/features/routing/data/ad_block_mode.dart';
 import 'package:slipstream/features/routing/data/custom_rule.dart';
 import 'package:slipstream/features/routing/data/ru_bypass_mode.dart';
-import 'package:slipstream/features/routing/ui/custom_rule_labels.dart';
+import 'package:slipstream/features/routing/ui/routing_labels.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_card.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_row.dart';
 import 'package:slipstream/features/split_tunnel/cubit/split_tunnel_cubit.dart';
@@ -247,20 +247,6 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                           ],
                         ),
-                        const SectionHeader('Help'),
-                        SettingsGroup(
-                          children: [
-                            SettingsRow(
-                              iconPath: AppAssets.sparkle,
-                              hue: TileHue.assistant,
-                              title: 'Assistant',
-                              subtitle: 'Ask anything about VPN & the app',
-                              trailing: _AiBadge(colors: colors),
-                              showChevron: true,
-                              onTap: () => context.push('/settings/assistant'),
-                            ),
-                          ],
-                        ),
                         const SectionHeader('About'),
                         SettingsGroup(
                           children: [
@@ -341,73 +327,17 @@ class _RoutingRow extends StatelessWidget {
                   iconPath: AppAssets.routing,
                   hue: TileHue.routing,
                   title: 'Routing',
-                  subtitle: _routingSubtitle(
-                    ruBypass,
-                    adBlock,
-                    rules.length,
-                    geo,
+                  subtitle: routingSummary(
+                    ruBypass: ruBypass,
+                    adBlock: adBlock,
+                    customRules: rules.length,
+                    geo: geo,
                   ),
                   showChevron: true,
                   onTap: () => context.push('/settings/routing'),
                 ),
               ),
             ),
-      ),
-    );
-  }
-
-  static String _routingSubtitle(
-    RuBypassMode ruBypass,
-    AdBlockMode adBlock,
-    int customRules,
-    GeoState geo,
-  ) {
-    final parts = [
-      ruBypass == RuBypassMode.bypassRu ? 'Обход РФ' : 'Обход РФ выкл',
-      switch (adBlock) {
-        AdBlockMode.off => 'реклама выкл',
-        AdBlockMode.basic => 'реклама: базовая',
-        AdBlockMode.full => 'реклама: полная',
-      },
-      ?customRulesSummary(customRules),
-      _geoSubtitle(geo),
-    ];
-    return parts.join(' · ');
-  }
-
-  static String _geoSubtitle(GeoState state) => switch (state) {
-    GeoAbsent() => 'гео-базы не загружены',
-    GeoChecking() => 'проверка гео-баз…',
-    GeoDownloading(:final fraction) => 'гео-базы: ${(fraction * 100).round()}%',
-    GeoReady() => 'гео-базы актуальны',
-    GeoUpdateAvailable() => 'доступно обновление гео-баз',
-    GeoFailed() => 'ошибка загрузки гео-баз',
-    _ => '',
-  };
-}
-
-class _AiBadge extends StatelessWidget {
-  const _AiBadge({required this.colors});
-
-  final AppColors colors;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const .symmetric(horizontal: 7, vertical: 3),
-      decoration: BoxDecoration(
-        color: colors.primarySoft,
-        borderRadius: .circular(6),
-      ),
-      child: Text(
-        'AI',
-        style: TextStyle(
-          fontFamily: 'monospace',
-          fontSize: 8.5,
-          fontWeight: .w700,
-          letterSpacing: 0.7,
-          color: colors.accentIcon,
-        ),
       ),
     );
   }

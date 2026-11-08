@@ -133,10 +133,7 @@ void main() {
   test('a deleted subscription is named in caps', () {
     expect(
       subscriptionDeletedToast('Nebula Premium'),
-      const ToastSpec(
-        'Subscription deleted',
-        subtitle: 'NEBULA PREMIUM',
-      ),
+      const ToastSpec('Subscription deleted', subtitle: 'NEBULA PREMIUM'),
     );
   });
 }

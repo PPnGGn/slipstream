@@ -50,10 +50,7 @@ void main() {
 
   group('install', () {
     test('only works once an update is downloaded', () async {
-      final idle = UpdateServiceCubit(
-        repository: repository,
-        talker: Talker(),
-      );
+      final idle = UpdateServiceCubit(repository: repository, talker: Talker());
       addTearDown(idle.close);
 
       expect(await idle.install(), InstallAttempt.failed);
@@ -65,14 +62,17 @@ void main() {
       expect(isReady(), isTrue);
     });
 
-    test('a missing permission is reported and does not break the state', () async {
-      repository.installAnswer = const Success(
-        InstallOutcome.permissionRequired,
-      );
+    test(
+      'a missing permission is reported and does not break the state',
+      () async {
+        repository.installAnswer = const Success(
+          InstallOutcome.permissionRequired,
+        );
 
-      expect(await cubit.install(), InstallAttempt.permissionRequired);
-      expect(isReady(), isTrue);
-    });
+        expect(await cubit.install(), InstallAttempt.permissionRequired);
+        expect(isReady(), isTrue);
+      },
+    );
 
     test('a failure is reported and the update stays ready to retry', () async {
       repository.installAnswer = const Failure('INSTALL_FAILED');
@@ -82,7 +82,9 @@ void main() {
     });
 
     test('a signature conflict moves to the reinstall state', () async {
-      repository.installAnswer = const Success(InstallOutcome.signatureConflict);
+      repository.installAnswer = const Success(
+        InstallOutcome.signatureConflict,
+      );
 
       expect(await cubit.install(), InstallAttempt.signatureConflict);
       expect(

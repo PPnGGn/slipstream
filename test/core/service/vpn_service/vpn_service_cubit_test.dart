@@ -173,11 +173,14 @@ void main() {
     test('a blocked status without a reason still says something', () async {
       await native(VpnStatus.blocked);
 
-      expect(cubit.state, isA<VpnState>().having(
-        (s) => s.maybeWhen(blocked: (m) => m, orElse: () => null),
-        'message',
-        isNotEmpty,
-      ));
+      expect(
+        cubit.state,
+        isA<VpnState>().having(
+          (s) => s.maybeWhen(blocked: (m) => m, orElse: () => null),
+          'message',
+          isNotEmpty,
+        ),
+      );
     });
 
     test('toggle while blocked turns the VPN off', () async {
@@ -225,11 +228,15 @@ void main() {
 
       await native(VpnStatus.connected);
 
-      expect(cubit.state, isA<VpnState>().having(
-        (s) => s.maybeWhen(connected: (_, _, _, _) => true, orElse: () => false),
-        'connected',
-        isTrue,
-      ));
+      expect(
+        cubit.state,
+        isA<VpnState>().having(
+          (s) =>
+              s.maybeWhen(connected: (_, _, _, _) => true, orElse: () => false),
+          'connected',
+          isTrue,
+        ),
+      );
     });
   });
 }

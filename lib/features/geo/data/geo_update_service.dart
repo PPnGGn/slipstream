@@ -10,7 +10,7 @@ import 'package:slipstream/features/geo/cubit/geo_cubit.dart';
 ///    connection (in Russia, GitHub may be unreachable without the VPN). So if
 ///    nothing is installed, wait for the first `connected` and pull it then —
 ///    the config was gated to strip geo, nothing holds the files.
-///  - **Updates:** only when the user taps "Обновить" on the geo settings page.
+///  - **Updates:** only when the user taps "Update" on the geo settings page.
 ///    [updateNow] checks the latest release and downloads it only if it's newer
 ///    than what's installed.
 @lazySingleton

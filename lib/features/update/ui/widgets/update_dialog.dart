@@ -436,7 +436,10 @@ class _VersionChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const .symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(color: background, borderRadius: .circular(100)),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: .circular(100),
+      ),
       child: Text(
         text,
         style: TextStyle(

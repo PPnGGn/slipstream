@@ -56,12 +56,7 @@ class CustomJsonParser {
     return result;
   }
 
-  static const _utilityProtocols = {
-    'freedom',
-    'blackhole',
-    'dns',
-    'loopback',
-  };
+  static const _utilityProtocols = {'freedom', 'blackhole', 'dns', 'loopback'};
 
   // Prefers the conventional `proxy` / `proxy-*` tags; panels that name the
   // exit differently (e.g. `exit-germany-...`) fall back to the first outbound

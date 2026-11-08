@@ -35,7 +35,10 @@ void main() {
 
     test('lists what is new, from the release notes', () {
       expect(content.sectionLabel, "WHAT'S NEW");
-      expect(content.items, ['Search in split tunneling', 'Fixed reconnect loop']);
+      expect(content.items, [
+        'Search in split tunneling',
+        'Fixed reconnect loop',
+      ]);
     });
 
     test('says honestly what happens next', () {

@@ -16,12 +16,7 @@ void main() {
   group('pinFavorites', () {
     test('puts favorites first and keeps the order inside both groups', () {
       final pinned = pinFavorites(
-        [
-          _server('a:#0'),
-          _server('b:#1'),
-          _server('c:#2'),
-          _server('d:#3'),
-        ],
+        [_server('a:#0'), _server('b:#1'), _server('c:#2'), _server('d:#3')],
         ['d:#3', 'b:#1'],
       );
 
@@ -32,11 +27,7 @@ void main() {
       // Two entries of one panel: the same host, port and credential, told
       // apart only by the position at the end of the id.
       final pinned = pinFavorites(
-        [
-          _server('h:443:u:#0'),
-          _server('h:443:u:#1'),
-          _server('h:443:u:#2'),
-        ],
+        [_server('h:443:u:#0'), _server('h:443:u:#1'), _server('h:443:u:#2')],
         ['h:443:u:#1'],
       );
 
@@ -129,7 +120,10 @@ void main() {
     });
 
     test('drops an id the old list never had', () {
-      expect(remapFavoriteIds(['x:#0'], [_server('a:#0')], [_server('x:#1')]), isEmpty);
+      expect(
+        remapFavoriteIds(['x:#0'], [_server('a:#0')], [_server('x:#1')]),
+        isEmpty,
+      );
     });
   });
 }

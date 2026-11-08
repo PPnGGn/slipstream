@@ -50,7 +50,8 @@ class _XrayLogsPageState extends State<XrayLogsPage> {
   void _onScroll() {
     if (!_scroll.hasClients) return;
     final position = _scroll.position;
-    final atBottom = position.pixels >= position.maxScrollExtent - _bottomThreshold;
+    final atBottom =
+        position.pixels >= position.maxScrollExtent - _bottomThreshold;
     if (atBottom != _following) setState(() => _following = atBottom);
   }
 

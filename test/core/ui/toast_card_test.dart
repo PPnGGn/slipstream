@@ -132,9 +132,7 @@ void main() {
     expect(width(), 0);
   });
 
-  testWidgets('a toast with a subtitle has a longer timer bar', (
-    tester,
-  ) async {
+  testWidgets('a toast with a subtitle has a longer timer bar', (tester) async {
     await pumpCard(tester, detailed);
 
     double width() => tester
