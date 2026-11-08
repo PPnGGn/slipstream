@@ -43,6 +43,8 @@ import '../../features/geo/data/geo_config_gate.dart' as _i951;
 import '../../features/geo/data/geo_paths.dart' as _i262;
 import '../../features/geo/data/geo_repository.dart' as _i236;
 import '../../features/geo/data/geo_update_service.dart' as _i196;
+import '../../features/language/cubit/language_cubit.dart' as _i353;
+import '../../features/language/data/language_store.dart' as _i668;
 import '../../features/launch_sync/presentation/launch_sync_runner.dart'
     as _i348;
 import '../../features/ping/data/host_resolver.dart' as _i371;
@@ -214,6 +216,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i781.DnsSettingsStore>(
       () => _i781.DnsSettingsStore(gh<_i460.SharedPreferences>()),
     );
+    gh.lazySingleton<_i668.LanguageStore>(
+      () => _i668.LanguageStore(gh<_i460.SharedPreferences>()),
+    );
     gh.lazySingleton<_i384.PingSettingsStore>(
       () => _i384.PingSettingsStore(gh<_i460.SharedPreferences>()),
     );
@@ -298,6 +303,9 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i500.Ipv6Cubit>(
       () => _i500.Ipv6Cubit(store: gh<_i926.Ipv6Store>()),
+    );
+    gh.lazySingleton<_i353.LanguageCubit>(
+      () => _i353.LanguageCubit(store: gh<_i668.LanguageStore>()),
     );
     gh.lazySingleton<_i1021.UpdateServiceCubit>(
       () => _i1021.UpdateServiceCubit(

@@ -9,7 +9,11 @@ import 'package:slipstream/core/service/vpn_service/vpn_service_cubit.dart';
 import 'package:slipstream/core/theme/app_theme.dart';
 import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
 import 'package:slipstream/core/ui/toast/toast_host.dart';
+import 'package:slipstream/features/language/cubit/language_cubit.dart';
+import 'package:slipstream/features/language/data/app_language.dart';
+import 'package:slipstream/features/language/data/resolve_app_locale.dart';
 import 'package:slipstream/features/update/ui/widgets/update_dialog.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 import 'router.dart';
 
 class MainApp extends StatelessWidget {
@@ -18,25 +22,36 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeCubit = getIt<AppThemeCubit>();
+    final languageCubit = getIt<LanguageCubit>();
 
-    return BlocBuilder<AppThemeCubit, AppThemeState>(
-      bloc: themeCubit,
-      builder: (context, state) {
-        return MaterialApp.router(
-          routerConfig: appRouter,
-          // One theme built from the chosen palette; there is no system mode,
-          // so no darkTheme/themeMode pair is needed.
-          theme: AppTheme.fromPalette(state.palette),
-          builder: (context, child) {
-            // The toast layer is outermost, above the Navigator: a toast is
-            // visible over bottom sheets and the update dialog too.
-            return ToastHost(
-              cubit: getIt<ToastCubit>(),
-              child: _UpdaterHost(child: child ?? const SizedBox.shrink()),
-            );
-          },
-        );
-      },
+    return BlocBuilder<LanguageCubit, AppLanguage>(
+      bloc: languageCubit,
+      builder: (context, language) => BlocBuilder<AppThemeCubit, AppThemeState>(
+        bloc: themeCubit,
+        builder: (context, state) {
+          return MaterialApp.router(
+            routerConfig: appRouter,
+            // One theme built from the chosen palette; there is no system
+            // mode, so no darkTheme/themeMode pair is needed.
+            theme: AppTheme.fromPalette(state.palette),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: supportedAppLocales,
+            // A chosen language is forced; null follows the phone, and then
+            // the callback picks the first language we have (else English).
+            locale: language.locale,
+            localeListResolutionCallback: (deviceLocales, _) =>
+                resolveAppLocale(AppLanguage.system, deviceLocales ?? const []),
+            builder: (context, child) {
+              // The toast layer is outermost, above the Navigator: a toast is
+              // visible over bottom sheets and the update dialog too.
+              return ToastHost(
+                cubit: getIt<ToastCubit>(),
+                child: _UpdaterHost(child: child ?? const SizedBox.shrink()),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }

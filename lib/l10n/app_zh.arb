@@ -1,0 +1,7 @@
+{
+  "@@locale": "zh",
+
+  "appearanceLanguage": "语言",
+  "languageSystem": "跟随系统",
+  "languageSystemHint": "与手机语言一致"
+}

@@ -1,0 +1,8 @@
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+# Generated on `flutter pub get` / `flutter test` / builds; not committed
+# (same as the Pigeon and injectable output).
+output-dir: lib/l10n/gen
+nullable-getter: false

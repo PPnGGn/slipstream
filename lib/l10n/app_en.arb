@@ -1,0 +1,16 @@
+{
+  "@@locale": "en",
+
+  "appearanceLanguage": "Language",
+  "@appearanceLanguage": {
+    "description": "Section title on the Appearance page, above the list of languages"
+  },
+  "languageSystem": "System",
+  "@languageSystem": {
+    "description": "First row of the language list: follow the phone's language"
+  },
+  "languageSystemHint": "Follows your phone",
+  "@languageSystemHint": {
+    "description": "Subtitle of the System row of the language list"
+  }
+}

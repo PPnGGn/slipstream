@@ -9,6 +9,9 @@ dependencies:
   go_router: ^18.1.1
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
   talker_flutter: ^5.1.20
   flutter_bloc: ^9.1.1
   get_it: ^9.3.0
@@ -41,6 +44,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  # Builds AppLocalizations from lib/l10n/*.arb (see l10n.yaml).
+  generate: true
   assets:
     - assets/svg/
     - shorebird.yaml

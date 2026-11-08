@@ -11,9 +11,12 @@ import 'package:slipstream/features/appearance/cubit/home_layout_cubit.dart';
 import 'package:slipstream/features/appearance/data/home_layout.dart';
 import 'package:slipstream/features/appearance/ui/appearance_labels.dart';
 import 'package:slipstream/features/appearance/ui/appearance_previews.dart';
+import 'package:slipstream/features/language/cubit/language_cubit.dart';
+import 'package:slipstream/features/language/data/app_language.dart';
+import 'package:slipstream/l10n/l10n_context.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_card.dart';
 
-/// Settings → Appearance: theme, home layout and (not yet built) language.
+/// Settings → Appearance: theme, home layout and language.
 /// Picking a card only calls a cubit; the cubits store the choice and the
 /// whole app repaints from their state.
 class AppearancePage extends StatelessWidget {
@@ -108,21 +111,8 @@ class AppearancePage extends StatelessWidget {
                             ],
                           ),
                         ),
-                        const SectionHeader('Language', top: 26),
-                        SettingsGroup(
-                          children: [
-                            for (final (flag, native, english) in _languages)
-                              _LanguageRow(
-                                colors: colors,
-                                flag: flag,
-                                name: native,
-                                englishName: english,
-                                // Only English exists for now; the rest are
-                                // shown but inactive.
-                                selected: english == 'English',
-                              ),
-                          ],
-                        ),
+                        SectionHeader(context.l10n.appearanceLanguage, top: 26),
+                        _LanguageSection(colors: colors),
                       ],
                     ),
                   ),
@@ -135,13 +125,56 @@ class AppearancePage extends StatelessWidget {
     );
   }
 
-  static const _languages = [
-    ('🇬🇧', 'English', 'English'),
-    ('🇷🇺', 'Русский', 'Russian'),
-    ('🇮🇷', 'فارسی', 'Persian'),
-    ('🇨🇳', '中文', 'Chinese'),
-    ('🇹🇷', 'Türkçe', 'Turkish'),
-  ];
+}
+
+/// The language list. The names are written in their own language on purpose
+/// (a reader who cannot read the current language must still find theirs),
+/// so only the System row comes from the translations.
+class _LanguageSection extends StatelessWidget {
+  const _LanguageSection({required this.colors});
+
+  final AppColors colors;
+
+  static const _flags = {
+    AppLanguage.system: '🌐',
+    AppLanguage.en: '🇬🇧',
+    AppLanguage.ru: '🇷🇺',
+    AppLanguage.zh: '🇨🇳',
+    AppLanguage.fa: '🇮🇷',
+  };
+
+  static const _names = {
+    AppLanguage.en: ('English', 'English'),
+    AppLanguage.ru: ('Русский', 'Russian'),
+    AppLanguage.zh: ('中文', 'Chinese'),
+    AppLanguage.fa: ('فارسی', 'Persian'),
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final cubit = getIt<LanguageCubit>();
+
+    return BlocBuilder<LanguageCubit, AppLanguage>(
+      bloc: cubit,
+      builder: (context, selected) => SettingsGroup(
+        children: [
+          for (final language in AppLanguage.values)
+            _LanguageRow(
+              colors: colors,
+              flag: _flags[language]!,
+              name: language == AppLanguage.system
+                  ? context.l10n.languageSystem
+                  : _names[language]!.$1,
+              subtitle: language == AppLanguage.system
+                  ? context.l10n.languageSystemHint
+                  : _names[language]!.$2,
+              selected: language == selected,
+              onTap: () => cubit.setLanguage(language),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 /// A preview frame with a radio and a label under it. The selected frame
@@ -255,20 +288,22 @@ class _LanguageRow extends StatelessWidget {
     required this.colors,
     required this.flag,
     required this.name,
-    required this.englishName,
+    required this.subtitle,
     required this.selected,
+    required this.onTap,
   });
 
   final AppColors colors;
   final String flag;
   final String name;
-  final String englishName;
+  final String subtitle;
   final bool selected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Opacity(
-      opacity: selected ? 1 : 0.45,
+    return InkWell(
+      onTap: onTap,
       child: Padding(
         padding: const .symmetric(horizontal: 14, vertical: 11),
         child: Row(
@@ -302,7 +337,7 @@ class _LanguageRow extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    englishName,
+                    subtitle,
                     style: TextStyle(fontSize: 11.5, color: colors.textMuted),
                   ),
                 ],

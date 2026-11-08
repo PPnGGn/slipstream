@@ -70,3 +70,6 @@ ios/Frameworks/
 .zcode/
 CLAUDE.md
 skills-lock.json
+
+# Localization (flutter gen-l10n)
+lib/l10n/gen/
