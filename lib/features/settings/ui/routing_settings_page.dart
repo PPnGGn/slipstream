@@ -100,6 +100,7 @@ class RoutingSettingsPage extends StatelessWidget {
                           subtitle: mode.enabled
                               ? '${mode.token} → block'
                               : l10n.commonOff,
+                          subtitleMaxLines: 2,
                           switchValue: mode.enabled,
                           onSwitch: (enabled) async {
                             await adBlockCubit.setEnabled(enabled: enabled);
@@ -205,6 +206,7 @@ class RoutingSettingsPage extends StatelessWidget {
       hue: TileHue.indigo,
       title: l10n.geoRowTitle,
       subtitle: geoStatusText(l10n, state),
+      subtitleMaxLines: 2,
       subtitleStyle: TextStyle(
         fontFamily: 'monospace',
         fontSize: 10,

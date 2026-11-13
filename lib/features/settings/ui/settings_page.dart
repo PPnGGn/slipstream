@@ -164,6 +164,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                     context.l10n,
                                     enabled: enabled,
                                   ),
+                                  subtitleMaxLines: 2,
                                   switchValue: enabled,
                                   onSwitch: (value) => getIt<AutoConnectCubit>()
                                       .setEnabled(enabled: value),
@@ -182,6 +183,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                       .loadPingOnAppStart(),
                                   ping,
                                 ),
+                                subtitleMaxLines: 2,
                                 showChevron: true,
                                 onTap: () => context.push('/settings/ping'),
                               ),
@@ -385,6 +387,8 @@ class _RoutingRow extends StatelessWidget {
                     customRules: rules.length,
                     geo: geo,
                   ),
+                  // Up to four parts in a long language: three lines.
+                  subtitleMaxLines: 3,
                   showChevron: true,
                   onTap: () => context.push('/settings/routing'),
                 ),
@@ -472,6 +476,7 @@ class _VersionRowState extends State<_VersionRow> {
               : widget.onTap == null
               ? context.l10n.versionSubtitle(xrayVersion)
               : context.l10n.versionSubtitleTap(xrayVersion),
+          subtitleMaxLines: 2,
           onTap: widget.onTap,
           trailing: BlocBuilder<UpdateServiceCubit, UpdateState>(
             bloc: getIt<UpdateServiceCubit>(),
