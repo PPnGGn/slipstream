@@ -80,8 +80,9 @@ bool _applyTo(Map<String, dynamic> stream, ObfuscationSettings settings) {
     final masks = _masksOf(finalmask['udp']);
     final onlyOurs = masks.every((type) => _ownUdpMasks.contains(type));
     if (onlyOurs) {
-      // First in the list is nearest to the wire: the noise goes out as it is,
-      // and the salamander of the real packets stays on top of it.
+      // First in the list. Measured against the real xray: next to salamander
+      // the noise datagram is obfuscated like every other one (8 bytes longer),
+      // so on the wire it is one more random-looking datagram ahead of QUIC.
       final rest = (finalmask['udp'] as List?) ?? const [];
       finalmask['udp'] = [_noiseMask(settings.noise), ...rest];
       changed = true;

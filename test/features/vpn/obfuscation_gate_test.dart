@@ -165,7 +165,7 @@ void main() {
       );
     });
 
-    test('goes first, nearest to the wire, ahead of the Hysteria2 salamander', () {
+    test('goes first in the list, ahead of the Hysteria2 salamander', () {
       final config = configOn(
         'hysteria',
         stream: {
