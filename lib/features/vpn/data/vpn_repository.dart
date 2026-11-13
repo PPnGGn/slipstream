@@ -14,8 +14,10 @@ import 'package:slipstream/features/routing/cubit/ru_bypass_cubit.dart';
 import 'package:slipstream/features/routing/data/routing_policy_gate.dart';
 import 'package:slipstream/features/security/cubit/ipv6_cubit.dart';
 import 'package:slipstream/features/security/cubit/kill_switch_cubit.dart';
+import 'package:slipstream/features/security/cubit/obfuscation_cubit.dart';
 import 'package:slipstream/features/split_tunnel/cubit/split_tunnel_cubit.dart';
 import 'package:slipstream/features/split_tunnel/data/split_tunnel_message.dart';
+import 'package:slipstream/features/vpn/data/obfuscation_gate.dart';
 import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
 import 'package:slipstream/features/vpn/data/vpn_event_receiver.dart';
 import 'package:slipstream/features/vpn/data/xray_log_store.dart';
@@ -38,6 +40,7 @@ class VpnRepository {
   final DnsCubit _dnsCubit;
   final LanBypassCubit _lanBypassCubit;
   final CustomRulesCubit _customRulesCubit;
+  final ObfuscationCubit _obfuscationCubit;
   late final StreamSubscription<VpnLogMessage> _logSubscription;
 
   VpnRepository(
@@ -57,6 +60,7 @@ class VpnRepository {
     this._dnsCubit,
     this._lanBypassCubit,
     this._customRulesCubit,
+    this._obfuscationCubit,
   ) {
     _logSubscription = _events.logs.listen(_xrayLogStore.add);
   }
@@ -90,7 +94,10 @@ class VpnRepository {
       customRules: _customRulesCubit.state,
     );
     // 2. strip geo tokens the installed .dat can't resolve.
-    final configJson = _geoGate.prepare(policy.configJson, _geoCubit.state);
+    final geoPrepared = _geoGate.prepare(policy.configJson, _geoCubit.state);
+    // 3. Fragment and Noise masks on the server's own outbound, for the servers
+    //    they fit (off by default).
+    final configJson = applyObfuscation(geoPrepared, _obfuscationCubit.state);
     final split = splitTunnelMessage(_splitTunnelCubit.state);
     return VpnConfigMessage(
       configJson: configJson,

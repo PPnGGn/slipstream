@@ -9,6 +9,10 @@ import 'package:slipstream/features/help/ui/help_button.dart';
 import 'package:slipstream/features/help/ui/help_topics.dart';
 import 'package:slipstream/features/security/cubit/ipv6_cubit.dart';
 import 'package:slipstream/features/security/cubit/kill_switch_cubit.dart';
+import 'package:slipstream/features/security/cubit/obfuscation_cubit.dart';
+import 'package:slipstream/features/security/data/obfuscation_settings.dart';
+import 'package:slipstream/features/security/ui/obfuscation_labels.dart';
+import 'package:slipstream/features/security/ui/obfuscation_sheet.dart';
 import 'package:slipstream/features/security/ui/security_labels.dart';
 import 'package:slipstream/features/settings/ui/widgets/reconnect_hint.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_card.dart';
@@ -27,6 +31,7 @@ class SecurityPage extends StatefulWidget {
 class _SecurityPageState extends State<SecurityPage> {
   final _killSwitch = getIt<KillSwitchCubit>();
   final _ipv6 = getIt<Ipv6Cubit>();
+  final _obfuscation = getIt<ObfuscationCubit>();
   final _vpn = getIt<VpnServiceCubit>();
 
   @override
@@ -55,6 +60,7 @@ class _SecurityPageState extends State<SecurityPage> {
                             context.l10n,
                             enabled: enabled,
                           ),
+                          subtitleMaxLines: 2,
                           switchValue: enabled,
                           onSwitch: (value) {
                             _killSwitch.setEnabled(enabled: value);
@@ -69,9 +75,47 @@ class _SecurityPageState extends State<SecurityPage> {
                           hue: TileHue.blue,
                           title: 'IPv6',
                           subtitle: ipv6Subtitle(context.l10n, enabled: enabled),
+                          subtitleMaxLines: 2,
                           switchValue: enabled,
                           onSwitch: (value) {
                             _ipv6.setEnabled(enabled: value);
+                            notifyIfTunnelActive(context.l10n, _vpn);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  SectionHeader(context.l10n.obfuscationHeader),
+                  SettingsGroup(
+                    children: [
+                      BlocBuilder<ObfuscationCubit, ObfuscationSettings>(
+                        bloc: _obfuscation,
+                        builder: (context, settings) => SettingsRow(
+                          iconPath: AppAssets.chip,
+                          hue: TileHue.violet,
+                          title: 'Fragment',
+                          subtitle: fragmentSubtitle(context.l10n, settings),
+                          subtitleMaxLines: 2,
+                          switchValue: settings.fragmentEnabled,
+                          onTap: () => showFragmentSheet(context),
+                          onSwitch: (value) {
+                            _obfuscation.setFragmentEnabled(enabled: value);
+                            notifyIfTunnelActive(context.l10n, _vpn);
+                          },
+                        ),
+                      ),
+                      BlocBuilder<ObfuscationCubit, ObfuscationSettings>(
+                        bloc: _obfuscation,
+                        builder: (context, settings) => SettingsRow(
+                          iconPath: AppAssets.sparkle,
+                          hue: TileHue.amber,
+                          title: 'Noise',
+                          subtitle: noiseSubtitle(context.l10n, settings),
+                          subtitleMaxLines: 2,
+                          switchValue: settings.noiseEnabled,
+                          onTap: () => showNoiseSheet(context),
+                          onSwitch: (value) {
+                            _obfuscation.setNoiseEnabled(enabled: value);
                             notifyIfTunnelActive(context.l10n, _vpn);
                           },
                         ),

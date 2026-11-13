@@ -113,7 +113,12 @@ void main() {
     });
 
     test('security', () {
-      expect(_titles(securityHelp(l10nEn)), ['Kill switch', 'IPv6']);
+      expect(_titles(securityHelp(l10nEn)), [
+        'Kill switch',
+        'IPv6',
+        'Fragment',
+        'Noise',
+      ]);
     });
 
     test('notifications', () {

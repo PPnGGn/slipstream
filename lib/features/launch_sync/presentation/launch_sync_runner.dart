@@ -13,6 +13,7 @@ import 'package:slipstream/features/routing/cubit/lan_bypass_cubit.dart';
 import 'package:slipstream/features/routing/cubit/ru_bypass_cubit.dart';
 import 'package:slipstream/features/security/cubit/ipv6_cubit.dart';
 import 'package:slipstream/features/security/cubit/kill_switch_cubit.dart';
+import 'package:slipstream/features/security/cubit/obfuscation_cubit.dart';
 import 'package:slipstream/features/split_tunnel/cubit/split_tunnel_cubit.dart';
 import 'package:slipstream/features/subscriptions/cubit/subscriptions_cubit.dart';
 import 'package:slipstream/features/vpn/data/vpn_repository.dart';
@@ -40,6 +41,7 @@ class LaunchSyncRunner {
     this._dns,
     this._ipv6,
     this._killSwitch,
+    this._obfuscation,
     this._splitTunnel,
     this._geo,
     this._talker,
@@ -57,6 +59,7 @@ class LaunchSyncRunner {
   final DnsCubit _dns;
   final Ipv6Cubit _ipv6;
   final KillSwitchCubit _killSwitch;
+  final ObfuscationCubit _obfuscation;
   final SplitTunnelCubit _splitTunnel;
   final GeoCubit _geo;
   final Talker _talker;
@@ -81,6 +84,7 @@ class LaunchSyncRunner {
       _dns.stream,
       _ipv6.stream,
       _killSwitch.stream,
+      _obfuscation.stream,
       _splitTunnel.stream,
       // Which geo tokens the config keeps depends on what is installed.
       _geo.stream,

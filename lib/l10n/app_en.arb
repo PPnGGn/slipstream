@@ -302,7 +302,7 @@
   "splitTitle": "Split tunneling",
   "settingsSplitSubtitle": "Choose which apps use the tunnel",
   "securityTitle": "Security & tunnel",
-  "settingsSecuritySubtitle": "Kill switch, IPv6",
+  "settingsSecuritySubtitle": "Kill switch, IPv6, obfuscation",
   "dnsTitle": "DNS",
   "routingTitle": "Routing",
   "backupTitle": "Backup & restore",
@@ -598,6 +598,65 @@
   "helpSecurityNoteKillBody": "When Android stops the app, traffic can leave the VPN for a few seconds while the tunnel comes back. If the app itself crashes, the VPN is simply gone.",
   "helpSecurityNoteAlwaysOnTitle": "Always-on VPN",
   "helpSecurityNoteAlwaysOnBody": "With Android's own Always-on VPN turned on, the system brings the VPN back even when you turn it off from the app.",
+
+  "obfuscationHeader": "Obfuscation",
+  "@obfuscationHeader": {
+    "description": "Section title on Security & tunnel above the Fragment and Noise rows"
+  },
+  "fragmentOff": "Off · cuts TCP packets into pieces",
+  "fragmentOn": "{packets} · pieces of {length} bytes · pause {delay} ms",
+  "@fragmentOn": {
+    "description": "Subtitle of the Fragment row when it is on: the values that go to xray. packets is tlshello or a range of packet numbers; length and delay are ranges such as 100-200",
+    "placeholders": {
+      "packets": {"type": "String"},
+      "length": {"type": "String"},
+      "delay": {"type": "String"}
+    }
+  },
+  "noiseOff": "Off · adds junk before UDP packets",
+  "noiseOn": "{size} bytes of junk · pause {delay} ms",
+  "@noiseOn": {
+    "description": "Subtitle of the Noise row when it is on: size and delay are ranges such as 10-20",
+    "placeholders": {
+      "size": {"type": "String"},
+      "delay": {"type": "String"}
+    }
+  },
+  "fragmentSheetTitle": "Fragment settings",
+  "noiseSheetTitle": "Noise settings",
+  "fragmentPacketsLabel": "Packets",
+  "fragmentPacketsHint": "tlshello or a range like 1-3",
+  "fragmentLengthLabel": "Piece size, bytes",
+  "fragmentLengthHint": "for example 100-200",
+  "obfuscationDelayLabel": "Pause, ms",
+  "obfuscationDelayHint": "for example 10-20",
+  "noiseSizeLabel": "Junk size, bytes",
+  "noiseSizeHint": "for example 10-20",
+  "obfuscationReset": "Reset to defaults",
+  "rangeErrEmpty": "Fill in this field",
+  "rangeErrMalformed": "Write a number or a range like 100-200",
+  "rangeErrReversed": "The first number is bigger than the second",
+  "rangeErrTooSmall": "At least {min}",
+  "@rangeErrTooSmall": {
+    "placeholders": {
+      "min": {"type": "int"}
+    }
+  },
+  "rangeErrTooLarge": "At most {max}",
+  "@rangeErrTooLarge": {
+    "placeholders": {
+      "max": {"type": "int"}
+    }
+  },
+  "fragmentPacketsErrMalformed": "Write tlshello or a range like 1-3",
+  "helpSecurityFragmentWhat": "Cuts the first packets of a TCP connection, usually the TLS hello, into small pieces with pauses between them. Works for servers over TCP (VLESS, VMess, Trojan, Shadowsocks); Hysteria2 and mKCP do not use it.",
+  "helpSecurityFragmentWhy": "Some operators find a VPN by the TLS hello of the connection. Cut into pieces, it is harder for the filter to recognise.",
+  "helpSecurityFragmentTip": "Off by default. Turn it on only if a server that used to work stops connecting on your operator's network. Tap the row to change the sizes.",
+  "helpSecurityNoiseWhat": "Sends a few random datagrams before the first real one. Works for servers over UDP (Hysteria2, mKCP); TCP servers do not use it.",
+  "helpSecurityNoiseWhy": "A UDP protocol is recognised by its first packet. Junk in front of it changes how the handshake looks and hides its signature.",
+  "helpSecurityNoiseTip": "Off by default. Try it if a Hysteria2 or mKCP server stops connecting.",
+  "helpSecurityNoteObfuscationTitle": "Not for every server",
+  "helpSecurityNoteObfuscationBody": "A server that brings its own masks in its config keeps them, and these options do not touch it. Pauses add time to every new connection, so keep them short. REALITY already hides the handshake, so Fragment matters only if your operator starts to cut it anyway.",
 
   "helpSplitIntro": "Chooses which apps use the VPN and which connect on their own, app by app.",
   "helpSplitMainWhat": "The main switch. Your choice of mode and apps is kept when you turn it off. With no apps selected it does nothing.",

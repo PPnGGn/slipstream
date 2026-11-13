@@ -219,6 +219,22 @@ HelpTopic securityHelp(AppLocalizations l10n) => HelpTopic(
       why: l10n.helpSecurityIpv6Why,
       tip: l10n.helpSecurityIpv6Tip,
     ),
+    HelpItem(
+      iconPath: AppAssets.chip,
+      hue: TileHue.violet,
+      title: 'Fragment',
+      what: l10n.helpSecurityFragmentWhat,
+      why: l10n.helpSecurityFragmentWhy,
+      tip: l10n.helpSecurityFragmentTip,
+    ),
+    HelpItem(
+      iconPath: AppAssets.sparkle,
+      hue: TileHue.amber,
+      title: 'Noise',
+      what: l10n.helpSecurityNoiseWhat,
+      why: l10n.helpSecurityNoiseWhy,
+      tip: l10n.helpSecurityNoiseTip,
+    ),
   ],
   notes: [
     _reconnectNote(l10n),
@@ -229,6 +245,10 @@ HelpTopic securityHelp(AppLocalizations l10n) => HelpTopic(
     HelpNote(
       title: l10n.helpSecurityNoteAlwaysOnTitle,
       body: l10n.helpSecurityNoteAlwaysOnBody,
+    ),
+    HelpNote(
+      title: l10n.helpSecurityNoteObfuscationTitle,
+      body: l10n.helpSecurityNoteObfuscationBody,
     ),
   ],
 );
