@@ -64,6 +64,10 @@ HelpTopic pingHelp(AppLocalizations l10n) => HelpTopic(
       title: l10n.helpPingNoteColorsTitle,
       body: l10n.helpPingNoteColorsBody,
     ),
+    HelpNote(
+      title: l10n.helpPingNoteRealDelayTitle,
+      body: l10n.helpPingNoteRealDelayBody,
+    ),
   ],
 );
 

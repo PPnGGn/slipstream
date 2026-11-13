@@ -58,6 +58,7 @@ import '../../features/ping/data/host_resolver.dart' as _i371;
 import '../../features/ping/data/ping_settings_store.dart' as _i384;
 import '../../features/ping/data/ping_target_resolver.dart' as _i142;
 import '../../features/ping/data/quic_probe_pinger.dart' as _i874;
+import '../../features/ping/data/real_delay_client.dart' as _i789;
 import '../../features/ping/data/tcp_connect_pinger.dart' as _i970;
 import '../../features/ping/domain/contracts/host_resolver.dart' as _i139;
 import '../../features/ping/domain/contracts/server_pinger.dart' as _i437;
@@ -65,6 +66,7 @@ import '../../features/ping/domain/usecases/measure_ping_use_case.dart'
     as _i283;
 import '../../features/ping/presentation/ping_auto_runner.dart' as _i918;
 import '../../features/ping/presentation/ping_cubit.dart' as _i629;
+import '../../features/ping/presentation/real_delay_cubit.dart' as _i901;
 import '../../features/qr/data/qr_image_import.dart' as _i543;
 import '../../features/qr/data/qr_share_service.dart' as _i698;
 import '../../features/routing/cubit/ad_block_cubit.dart' as _i863;
@@ -429,6 +431,12 @@ extension GetItInjectableX on _i174.GetIt {
         talker: gh<_i207.Talker>(),
       ),
     );
+    gh.lazySingleton<_i789.RealDelayClient>(
+      () => _i789.PlatformRealDelayClient(
+        gh<_i1056.VpnRepository>(),
+        gh<_i207.Talker>(),
+      ),
+    );
     gh.lazySingleton<_i302.SubscriptionParserService>(
       () => _i302.SubscriptionParserService(
         gh<_i207.Talker>(),
@@ -442,6 +450,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i207.Talker>(),
       ),
       dispose: (i) => i.dispose(),
+    );
+    gh.lazySingleton<_i901.RealDelayCubit>(
+      () => _i901.RealDelayCubit(gh<_i789.RealDelayClient>()),
     );
     gh.lazySingleton<_i190.MemoryUsageCubit>(
       () => _i190.MemoryUsageCubit(repository: gh<_i1056.VpnRepository>()),

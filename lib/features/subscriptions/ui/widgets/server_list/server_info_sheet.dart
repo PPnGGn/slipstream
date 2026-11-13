@@ -13,6 +13,7 @@ import 'package:slipstream/core/utils/formatters.dart';
 import 'package:slipstream/features/ping/presentation/ping_cubit.dart';
 import 'package:slipstream/features/ping/presentation/ping_entry.dart';
 import 'package:slipstream/features/ping/presentation/ui/ping_badge.dart';
+import 'package:slipstream/features/ping/presentation/ui/real_delay_row.dart';
 import 'package:slipstream/features/subscriptions/data/vpn_server_display.dart';
 import 'package:slipstream/features/subscriptions/ui/widgets/server_list/protocol_tags.dart';
 import 'package:slipstream/l10n/l10n_context.dart';
@@ -103,6 +104,7 @@ class _ServerInfoSheet extends StatelessWidget {
                     ],
                   ),
                 ],
+                RealDelayRow(server: server),
                 Padding(
                   padding: const EdgeInsetsDirectional.fromSTEB(2, 10, 0, 6),
                   child: Row(

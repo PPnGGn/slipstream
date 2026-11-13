@@ -99,8 +99,22 @@ clean-native-prefs-api:
 	rm -f lib/features/native_prefs/data/native_prefs_api.g.dart
 	rm -f android/app/src/main/kotlin/com/slipstream/nativeprefs/NativePrefsApi.g.kt
 
+# Pigeon Real delay bridge (Android-only: one request through one server, made
+# by the core). Own Kotlin package for the same FlutterError reason as above.
+generate-real-delay-api:
+	dart run pigeon \
+	--input pigeons/real_delay_api.dart \
+	--copyright_header pigeons/copyright_header.txt \
+	--dart_out lib/features/ping/data/real_delay_api.g.dart \
+	--kotlin_out android/app/src/main/kotlin/com/slipstream/ping/RealDelayApi.g.kt \
+	--kotlin_package "com.slipstream.ping"
 
-generate-pigeon: generate-vpn-api generate-updater-api generate-device-info-api generate-sync-api generate-installed-apps-api generate-native-prefs-api
+clean-real-delay-api:
+	rm -f lib/features/ping/data/real_delay_api.g.dart
+	rm -f android/app/src/main/kotlin/com/slipstream/ping/RealDelayApi.g.kt
+
+
+generate-pigeon: generate-vpn-api generate-updater-api generate-device-info-api generate-sync-api generate-installed-apps-api generate-native-prefs-api generate-real-delay-api
 
 
 build-core-android:

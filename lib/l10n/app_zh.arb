@@ -62,6 +62,13 @@
   "searchHint": "搜索服务器、国家或协议",
 
   "serverInfoPort": "端口 {port}",
+  "serverInfoRealDelayTitle": "真实延迟",
+  "serverInfoRealDelayHint": "通过此服务器发送一个请求并计时，路径与真实连接相同。",
+  "realDelayCheck": "检测",
+  "realDelayCheckAgain": "再次检测",
+  "realDelayChecking": "检测中…",
+  "realDelayTimeout": "无响应",
+  "realDelayFailed": "失败",
   "serverInfoXrayConfig": "XRAY 配置",
   "serverInfoConfigCopied": "配置已复制",
   "serverInfoCopiedHint": "XRAY JSON · {name}",
@@ -363,6 +370,9 @@
   "helpPingNoteMeasuredBody": "与服务器建立 TCP 连接（Hysteria2 使用 UDP/QUIC），最多尝试 3 次，取中位数。测量直接从设备发出，绕过 VPN，连接中也是如此。它只能证明服务器可达，不能证明 VPN 可用。",
   "helpPingNoteColorsTitle": "颜色与标记",
   "helpPingNoteColorsBody": "绿色：低于 80 ms\n黄色：80–160 ms\n红色：高于 160 ms\n超时：无响应\n拒绝：连接被拒绝，端口已关闭\n无 DNS：找不到服务器地址\n错误：网络错误，通常出在设备一侧\nn/a：该协议无法测量 (mKCP)",
+
+  "helpPingNoteRealDelayTitle": "真实延迟",
+  "helpPingNoteRealDelayBody": "Ping 只能确认服务器接受连接。真实延迟会通过服务器本身发送一个请求，走完连接的整条路径并计时。打开某个服务器并点击“检测”即可。最多需要 8 秒，一次只检测一个服务器，也不会自动开始。\n数值比 ping 大：低于 300 ms 为绿色，300–700 ms 为黄色，高于 700 ms 为红色。服务器可能 ping 很好，但在这里失败：它接受连接，却不转发流量。",
 
   "helpSubsIntro": "订阅是指向服务商维护的服务器列表的链接。在这里选择应用重新下载它的频率。",
   "helpSubsAutoWhat": "按所选间隔重新下载列表。如果服务商提供了自己的间隔，则使用服务商的。选择“关”会停止所有自动更新。",

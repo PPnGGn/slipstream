@@ -27,6 +27,8 @@ import com.slipstream.sync.MainEngine
 import com.slipstream.nativeprefs.NativePrefsApi
 import com.slipstream.nativeprefs.NativePrefsApiImpl
 import com.slipstream.nativeprefs.NativePrefsStore
+import com.slipstream.ping.RealDelayApi
+import com.slipstream.ping.RealDelayApiImpl
 import com.slipstream.sync.SubscriptionSyncScheduler
 import com.slipstream.sync.SubscriptionSyncSchedulerImpl
 import com.slipstream.updater.AppVersionMessage
@@ -82,6 +84,7 @@ class MainActivity : FlutterActivity(), VpnConnection, UpdateInstaller {
                 flutterEngine.dartExecutor.binaryMessenger,
                 NativePrefsApiImpl(applicationContext, NativePrefsStore.of(applicationContext)),
         )
+        RealDelayApi.setUp(flutterEngine.dartExecutor.binaryMessenger, RealDelayApiImpl())
         VpnEventBridge.receiver = VpnEventReceiver(flutterEngine.dartExecutor.binaryMessenger)
         MainEngine.attached = true
     }

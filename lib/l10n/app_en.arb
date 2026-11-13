@@ -94,6 +94,13 @@
       "port": {"type": "int"}
     }
   },
+  "serverInfoRealDelayTitle": "Real delay",
+  "serverInfoRealDelayHint": "Sends a request through this server and times it, the way a real connection goes.",
+  "realDelayCheck": "Check",
+  "realDelayCheckAgain": "Check again",
+  "realDelayChecking": "Checking…",
+  "realDelayTimeout": "no answer",
+  "realDelayFailed": "failed",
   "serverInfoXrayConfig": "XRAY CONFIG",
   "serverInfoConfigCopied": "Config copied",
   "serverInfoCopiedHint": "XRAY JSON · {name}",
@@ -527,6 +534,9 @@
   "helpPingNoteMeasuredBody": "A TCP connection to the server (UDP/QUIC for Hysteria2), up to 3 attempts, the result is the median. It is measured directly from the device, bypassing the VPN, also while connected. It proves only that the server is reachable, not that the VPN works.",
   "helpPingNoteColorsTitle": "Colors and marks",
   "helpPingNoteColorsBody": "green: under 80 ms\nyellow: 80–160 ms\nred: over 160 ms\ntimeout: no response\nrefused: connection rejected, the port is closed\nno dns: the server address was not found\nerror: network error, usually on the device side\nn/a: cannot be measured for this protocol (mKCP)",
+
+  "helpPingNoteRealDelayTitle": "Real delay",
+  "helpPingNoteRealDelayBody": "The ping only checks that a server accepts connections. Real delay sends a request through the server itself, over the whole way a connection goes, and times it. Open a server and tap Check. It takes up to 8 seconds, runs for one server at a time and never starts by itself.\nThe numbers are larger than the ping's: green under 300 ms, yellow 300–700 ms, red over 700 ms. A server can have a good ping and still fail here: it takes connections but carries no traffic.",
 
   "helpSubsIntro": "A subscription is a link to a server list kept by your provider. Here you choose how often the app re-downloads it.",
   "helpSubsAutoWhat": "Downloads the list again at the chosen interval. When the provider sends its own interval, that one is used. Off stops every automatic update.",
