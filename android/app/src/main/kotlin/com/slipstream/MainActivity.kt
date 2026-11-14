@@ -18,6 +18,8 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
 import androidx.core.content.pm.PackageInfoCompat
+import com.slipstream.alerts.AppAlerts
+import com.slipstream.alerts.AppAlertsApi
 import com.slipstream.android.Android
 import com.slipstream.apps.InstalledAppsApi
 import com.slipstream.apps.InstalledAppsApiImpl
@@ -85,6 +87,7 @@ class MainActivity : FlutterActivity(), VpnConnection, UpdateInstaller {
                 NativePrefsApiImpl(applicationContext, NativePrefsStore.of(applicationContext)),
         )
         RealDelayApi.setUp(flutterEngine.dartExecutor.binaryMessenger, RealDelayApiImpl())
+        AppAlertsApi.setUp(flutterEngine.dartExecutor.binaryMessenger, AppAlerts(applicationContext))
         VpnEventBridge.receiver = VpnEventReceiver(flutterEngine.dartExecutor.binaryMessenger)
         MainEngine.attached = true
     }

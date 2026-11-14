@@ -99,6 +99,20 @@ clean-native-prefs-api:
 	rm -f lib/features/native_prefs/data/native_prefs_api.g.dart
 	rm -f android/app/src/main/kotlin/com/slipstream/nativeprefs/NativePrefsApi.g.kt
 
+# Pigeon app alerts bridge (Android-only: notifications about subscriptions, raised
+# by Dart and shown by Kotlin). Own Kotlin package for the same FlutterError reason.
+generate-alerts-api:
+	dart run pigeon \
+	--input pigeons/alerts_api.dart \
+	--copyright_header pigeons/copyright_header.txt \
+	--dart_out lib/features/notifications/data/alerts_api.g.dart \
+	--kotlin_out android/app/src/main/kotlin/com/slipstream/alerts/AlertsApi.g.kt \
+	--kotlin_package "com.slipstream.alerts"
+
+clean-alerts-api:
+	rm -f lib/features/notifications/data/alerts_api.g.dart
+	rm -f android/app/src/main/kotlin/com/slipstream/alerts/AlertsApi.g.kt
+
 # Pigeon Real delay bridge (Android-only: one request through one server, made
 # by the core). Own Kotlin package for the same FlutterError reason as above.
 generate-real-delay-api:
@@ -114,7 +128,7 @@ clean-real-delay-api:
 	rm -f android/app/src/main/kotlin/com/slipstream/ping/RealDelayApi.g.kt
 
 
-generate-pigeon: generate-vpn-api generate-updater-api generate-device-info-api generate-sync-api generate-installed-apps-api generate-native-prefs-api generate-real-delay-api
+generate-pigeon: generate-vpn-api generate-updater-api generate-device-info-api generate-sync-api generate-installed-apps-api generate-native-prefs-api generate-real-delay-api generate-alerts-api
 
 
 build-core-android:

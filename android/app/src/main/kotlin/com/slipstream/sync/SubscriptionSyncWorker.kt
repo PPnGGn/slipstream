@@ -7,6 +7,8 @@ import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.slipstream.VpnConnection
+import com.slipstream.alerts.AppAlerts
+import com.slipstream.alerts.AppAlertsApi
 import com.slipstream.device.DeviceInfoApi
 import com.slipstream.device.DeviceInfoApiImpl
 import io.flutter.FlutterInjector
@@ -68,6 +70,9 @@ class SubscriptionSyncWorker(context: Context, params: WorkerParameters) :
                     suspendCancellableCoroutine { cont ->
                         val messenger = engine.dartExecutor.binaryMessenger
                         DeviceInfoApi.setUp(messenger, DeviceInfoApiImpl(context))
+                        // "The subscription did not update" is noticed here, with no UI
+                        // engine alive, so the alerts bridge has to exist in this one too.
+                        AppAlertsApi.setUp(messenger, AppAlerts(context))
                         VpnConnection.setUp(messenger, HeadlessVpnConnection(context))
                         BackgroundTaskHost.setUp(
                                 messenger,

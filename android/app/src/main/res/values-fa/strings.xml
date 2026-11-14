@@ -15,6 +15,19 @@
     <string name="alert_blocked_text">تونل قطع شد و kill switch ترافیک شما را نگه داشته است. «اتصال مجدد» را بزنید.</string>
     <string name="alert_start_failed_title">VPN شروع نشد</string>
     <string name="alert_start_failed_text">برای دیدن علت، Slipstream را باز کنید.</string>
+    <string name="alert_sub_failed_title">اشتراک به‌روز نشد</string>
+    <string name="alert_sub_failed_text">«%1$s» به‌روز نشد. برای دیدن علت، Slipstream را باز کنید.</string>
+    <string name="alert_sub_expiring_title">اشتراک به‌زودی تمام می‌شود</string>
+    <plurals name="alert_sub_expiring_text">
+        <item quantity="one">«%1$s» تا %2$d روز دیگر تمام می‌شود.</item>
+        <item quantity="other">«%1$s» تا %2$d روز دیگر تمام می‌شود.</item>
+    </plurals>
+    <string name="alert_sub_expired_title">اشتراک تمام شد</string>
+    <string name="alert_sub_expired_text">«%1$s» منقضی شده است. آن را از ارائه‌دهنده تمدید کنید.</string>
+    <string name="alert_traffic_low_title">ترافیک رو به اتمام است</string>
+    <string name="alert_traffic_low_text">«%1$s»: %2$d%% از ترافیک مصرف شده است.</string>
+    <string name="alert_traffic_exhausted_title">ترافیک تمام شد</string>
+    <string name="alert_traffic_exhausted_text">برای «%1$s» ترافیکی باقی نمانده است.</string>
     <string name="alert_revoked_title">برنامه‌ی دیگری VPN را گرفت</string>
     <string name="alert_revoked_text">Slipstream قطع شد، چون یک برنامه‌ی VPN دیگر شروع به کار کرد. ترافیک شما محافظت نمی‌شود. برای اتصال دوباره Slipstream را باز کنید.</string>
 </resources>

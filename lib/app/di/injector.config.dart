@@ -53,6 +53,7 @@ import '../../features/native_prefs/presentation/native_prefs_runner.dart'
 import '../../features/notifications/cubit/notification_access_cubit.dart'
     as _i197;
 import '../../features/notifications/cubit/notifications_cubit.dart' as _i840;
+import '../../features/notifications/data/app_alerts.dart' as _i504;
 import '../../features/notifications/data/notifications_store.dart' as _i1013;
 import '../../features/ping/data/host_resolver.dart' as _i371;
 import '../../features/ping/data/ping_settings_store.dart' as _i384;
@@ -214,6 +215,9 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i139.HostResolver>(() => const _i371.DnsHostResolver());
     gh.lazySingleton<_i197.NotificationAccessCubit>(
       () => _i197.NotificationAccessCubit(gh<_i838.NativePrefsSink>()),
+    );
+    gh.lazySingleton<_i504.AppAlerts>(
+      () => _i504.PlatformAppAlerts(gh<_i207.Talker>()),
     );
     gh.lazySingleton<_i802.ThemeStore>(
       () => _i802.ThemeStore(gh<_i460.SharedPreferences>()),

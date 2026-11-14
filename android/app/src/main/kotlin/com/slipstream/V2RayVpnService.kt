@@ -19,6 +19,9 @@ import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import com.slipstream.alerts.AppAlertKind
+import com.slipstream.alerts.AppAlertMessage
+import com.slipstream.alerts.AppAlerts
 import com.slipstream.android.Android
 import com.slipstream.nativeprefs.NativePrefsStore
 
@@ -51,7 +54,7 @@ class V2RayVpnService : VpnService() {
     companion object {
         private const val NOTIFICATION_CHANNEL_ID = "slipstream_vpn_status"
         private const val NOTIFICATION_ID = 1
-        private const val ALERT_CHANNEL_ID = "slipstream_alerts"
+        // The channel is AlertChannel's, shared with the subscription alerts (AppAlerts).
         private const val ALERT_NOTIFICATION_ID = 2
         // The two the quick settings tile sends (VpnTileService).
         internal const val ACTION_STOP_VPN = "ACTION_STOP_VPN"
@@ -62,6 +65,7 @@ class V2RayVpnService : VpnService() {
         private const val ACTION_DUMP_HEAP = "com.slipstream.DUMP_HEAP"
         private const val ACTION_SET_GC = "com.slipstream.SET_GC"
         private const val ACTION_MEM_LOG = "com.slipstream.MEM_LOG"
+        private const val ACTION_SHOW_ALERT = "com.slipstream.SHOW_ALERT"
         private const val TRAFFIC_POLL_INTERVAL_MS = 1000L
 
         // For configs that route DNS their own way. The other choice is the DNS
@@ -78,6 +82,9 @@ class V2RayVpnService : VpnService() {
     // changes the core's GC settings on the live session (limit_mb 0 or absent = no limit);
     //   adb shell am broadcast -a com.slipstream.MEM_LOG -p com.slipstream --ez on true|false
     // turns the core's "mem:" logcat line (every 3 s, tag GoLog) on or off; it stays on across switches.
+    //   adb shell am broadcast -a com.slipstream.SHOW_ALERT -p com.slipstream --ei kind 1 --es name "My sub" --ei number 3
+    // posts a subscription alert as AppAlertsApi does (kind: 0 failed, 1 expiring, 2 expired, 3 traffic low,
+    // 4 traffic exhausted); only while the service runs.
     private val debugReceiver =
             object : BroadcastReceiver() {
                 override fun onReceive(context: Context, intent: Intent) {
@@ -101,6 +108,15 @@ class V2RayVpnService : VpnService() {
                                 Android.setMemoryLog(on)
                                 Log.i("VPN_SERVICE", "Memory log ${if (on) "on" else "off"}")
                             }
+                            ACTION_SHOW_ALERT -> {
+                                // The same call Dart makes (AppAlertsApi.show), without Dart.
+                                val kind = AppAlertKind.ofRaw(intent.getIntExtra("kind", 0))!!
+                                val name = intent.getStringExtra("name") ?: "Test VPN"
+                                val number = intent.getIntExtra("number", 3).toLong()
+                                AppAlerts(applicationContext)
+                                        .show(AppAlertMessage(kind, name, number))
+                                Log.i("VPN_SERVICE", "Alert shown: $kind")
+                            }
                         }
                     } catch (e: Exception) {
                         Log.w("VPN_SERVICE", "Debug command ${intent.action} failed: ${e.message}")
@@ -119,6 +135,7 @@ class V2RayVpnService : VpnService() {
                         addAction(ACTION_DUMP_HEAP)
                         addAction(ACTION_SET_GC)
                         addAction(ACTION_MEM_LOG)
+                        addAction(ACTION_SHOW_ALERT)
                     },
                     ContextCompat.RECEIVER_EXPORTED,
             )
@@ -563,15 +580,7 @@ class V2RayVpnService : VpnService() {
         manager.notify(NOTIFICATION_ID, notification)
     }
 
-    private fun openAppPendingIntent(): PendingIntent? {
-        val launchIntent = packageManager.getLaunchIntentForPackage(packageName) ?: return null
-        return PendingIntent.getActivity(
-                this,
-                1,
-                launchIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
-    }
+    private fun openAppPendingIntent(): PendingIntent? = AlertChannel.openApp(this)
 
     // "Reconnect" starts the saved launch again. The service may be only started, not
     // foreground, so from Android 8 it must be a foreground-service PendingIntent.
@@ -649,7 +658,7 @@ class V2RayVpnService : VpnService() {
         val content = alertContent(alert)
         val texts = localized()
         val builder =
-                NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
+                NotificationCompat.Builder(this, AlertChannel.ID)
                         .setContentTitle(texts.getString(content.title))
                         .setContentText(texts.getString(content.text))
                         .setStyle(
@@ -685,13 +694,7 @@ class V2RayVpnService : VpnService() {
     private fun ensureNotificationChannel() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = getSystemService(NotificationManager::class.java) ?: return
-        manager.createNotificationChannel(
-                NotificationChannel(
-                        ALERT_CHANNEL_ID,
-                        localized().getString(R.string.alert_channel_name),
-                        NotificationManager.IMPORTANCE_HIGH,
-                ),
-        )
+        AlertChannel.ensure(this, localized().getString(R.string.alert_channel_name))
         // Created on every start, not only the first: creating a channel that
         // exists changes its name (what the user sees in the system settings)
         // and leaves its importance alone. That is how the name follows the

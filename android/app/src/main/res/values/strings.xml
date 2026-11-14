@@ -24,6 +24,19 @@
     <string name="alert_blocked_text">The tunnel was lost and the kill switch holds your traffic. Tap Reconnect.</string>
     <string name="alert_start_failed_title">VPN could not start</string>
     <string name="alert_start_failed_text">Open Slipstream to see what went wrong.</string>
+    <string name="alert_sub_failed_title">Subscription did not update</string>
+    <string name="alert_sub_failed_text">%1$s could not be updated. Open Slipstream to see why.</string>
+    <string name="alert_sub_expiring_title">Subscription expires soon</string>
+    <plurals name="alert_sub_expiring_text">
+        <item quantity="one">%1$s expires in %2$d day.</item>
+        <item quantity="other">%1$s expires in %2$d days.</item>
+    </plurals>
+    <string name="alert_sub_expired_title">Subscription expired</string>
+    <string name="alert_sub_expired_text">%1$s has expired. Renew it with your provider.</string>
+    <string name="alert_traffic_low_title">Traffic is running out</string>
+    <string name="alert_traffic_low_text">%1$s: %2$d%% of the traffic is used.</string>
+    <string name="alert_traffic_exhausted_title">Traffic is used up</string>
+    <string name="alert_traffic_exhausted_text">%1$s has no traffic left.</string>
     <string name="alert_revoked_title">Another app took the VPN</string>
     <string name="alert_revoked_text">Slipstream was disconnected because another VPN app started. Your traffic is not protected. Open Slipstream to connect again.</string>
 </resources>

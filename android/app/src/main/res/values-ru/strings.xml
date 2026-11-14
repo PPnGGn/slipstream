@@ -15,6 +15,21 @@
     <string name="alert_blocked_text">Туннель потерян, kill switch удерживает ваш трафик. Нажмите «Переподключить».</string>
     <string name="alert_start_failed_title">VPN не удалось запустить</string>
     <string name="alert_start_failed_text">Откройте Slipstream, чтобы увидеть причину.</string>
+    <string name="alert_sub_failed_title">Подписка не обновилась</string>
+    <string name="alert_sub_failed_text">Не удалось обновить «%1$s». Откройте Slipstream, чтобы узнать причину.</string>
+    <string name="alert_sub_expiring_title">Подписка скоро закончится</string>
+    <plurals name="alert_sub_expiring_text">
+        <item quantity="one">«%1$s» закончится через %2$d день.</item>
+        <item quantity="few">«%1$s» закончится через %2$d дня.</item>
+        <item quantity="many">«%1$s» закончится через %2$d дней.</item>
+        <item quantity="other">«%1$s» закончится через %2$d дня.</item>
+    </plurals>
+    <string name="alert_sub_expired_title">Подписка закончилась</string>
+    <string name="alert_sub_expired_text">Срок «%1$s» истёк. Продлите её у провайдера.</string>
+    <string name="alert_traffic_low_title">Трафик на исходе</string>
+    <string name="alert_traffic_low_text">«%1$s»: использовано %2$d%% трафика.</string>
+    <string name="alert_traffic_exhausted_title">Трафик закончился</string>
+    <string name="alert_traffic_exhausted_text">В «%1$s» не осталось трафика.</string>
     <string name="alert_revoked_title">VPN забрало другое приложение</string>
     <string name="alert_revoked_text">Slipstream отключён, потому что запустился другой VPN. Ваш трафик не защищён. Откройте Slipstream, чтобы подключиться снова.</string>
 </resources>
