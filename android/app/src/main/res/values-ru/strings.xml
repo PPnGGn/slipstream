@@ -15,4 +15,6 @@
     <string name="alert_blocked_text">Туннель потерян, kill switch удерживает ваш трафик. Нажмите «Переподключить».</string>
     <string name="alert_start_failed_title">VPN не удалось запустить</string>
     <string name="alert_start_failed_text">Откройте Slipstream, чтобы увидеть причину.</string>
+    <string name="alert_revoked_title">VPN забрало другое приложение</string>
+    <string name="alert_revoked_text">Slipstream отключён, потому что запустился другой VPN. Ваш трафик не защищён. Откройте Slipstream, чтобы подключиться снова.</string>
 </resources>

@@ -309,6 +309,13 @@ HelpTopic notificationsHelp(AppLocalizations l10n) => HelpTopic(
       why: l10n.helpNotifStartWhy,
       tip: l10n.helpNotifStartTip,
     ),
+    HelpItem(
+      iconPath: AppAssets.shield,
+      hue: TileHue.violet,
+      title: l10n.notifyRevokedTitle,
+      what: l10n.helpNotifRevokedWhat,
+      why: l10n.helpNotifRevokedWhy,
+    ),
   ],
   notes: [
     HelpNote(

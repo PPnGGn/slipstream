@@ -24,4 +24,6 @@
     <string name="alert_blocked_text">The tunnel was lost and the kill switch holds your traffic. Tap Reconnect.</string>
     <string name="alert_start_failed_title">VPN could not start</string>
     <string name="alert_start_failed_text">Open Slipstream to see what went wrong.</string>
+    <string name="alert_revoked_title">Another app took the VPN</string>
+    <string name="alert_revoked_text">Slipstream was disconnected because another VPN app started. Your traffic is not protected. Open Slipstream to connect again.</string>
 </resources>

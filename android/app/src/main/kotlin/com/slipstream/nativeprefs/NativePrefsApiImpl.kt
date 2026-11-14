@@ -16,6 +16,7 @@ class NativePrefsApiImpl(
         prefs.language?.let { store.saveLanguage(it) }
         prefs.alertTrafficBlocked?.let { store.saveAlertTrafficBlocked(it) }
         prefs.alertStartFailed?.let { store.saveAlertStartFailed(it) }
+        prefs.alertRevoked?.let { store.saveAlertRevoked(it) }
     }
 
     // False when the permission (Android 13+) was refused or the user turned the app's

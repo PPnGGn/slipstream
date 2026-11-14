@@ -15,4 +15,6 @@
     <string name="alert_blocked_text">تونل قطع شد و kill switch ترافیک شما را نگه داشته است. «اتصال مجدد» را بزنید.</string>
     <string name="alert_start_failed_title">VPN شروع نشد</string>
     <string name="alert_start_failed_text">برای دیدن علت، Slipstream را باز کنید.</string>
+    <string name="alert_revoked_title">برنامه‌ی دیگری VPN را گرفت</string>
+    <string name="alert_revoked_text">Slipstream قطع شد، چون یک برنامه‌ی VPN دیگر شروع به کار کرد. ترافیک شما محافظت نمی‌شود. برای اتصال دوباره Slipstream را باز کنید.</string>
 </resources>

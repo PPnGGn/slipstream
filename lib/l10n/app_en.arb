@@ -315,7 +315,7 @@
   "backupTitle": "Backup & restore",
   "settingsBackupSubtitle": "Encrypted file, QR or deep link",
   "notificationsTitle": "Notifications",
-  "settingsNotificationsSubtitle": "Blocked traffic and failed starts",
+  "settingsNotificationsSubtitle": "Alerts about the VPN connection",
   "memoryMonitorTitle": "Memory monitor",
   "settingsMemoryIosSubtitle": "Tunnel footprint on the home screen · 50 MB limit",
   "settingsMemorySubtitle": "Xray-core memory on the home screen",
@@ -680,12 +680,20 @@
   "helpSplitNoteBody": "This works per app. To send a particular site or address around the VPN, use a custom rule in Routing.",
 
   "notificationsSummaryAll": "All on",
-  "notificationsSummaryOne": "1 of 2 on",
+  "notificationsSummaryCount": "{on} of {total} on",
+  "@notificationsSummaryCount": {
+    "placeholders": {
+      "on": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
   "notificationsSummaryBlocked": "Blocked in system settings",
   "notifyTrafficBlockedTitle": "Traffic blocked",
   "notifyTrafficBlockedSubtitle": "The kill switch is holding your traffic",
   "notifyStartFailedTitle": "VPN could not start",
   "notifyStartFailedSubtitle": "A start from the tile or by the system failed",
+  "notifyRevokedTitle": "Another app took the VPN",
+  "notifyRevokedSubtitle": "Another VPN app started and disconnected Slipstream",
   "notifyDisabledTitle": "Notifications are off for Slipstream",
   "notifyDisabledBody": "Android will not show these alerts. Turn them on in the system settings.",
   "notifyOpenSettings": "Open settings",
@@ -696,6 +704,8 @@
   "helpNotifStartWhat": "Shows a notification when the VPN could not start without the app: from the quick settings tile, by Android's Always-on VPN or after a restart of the service.",
   "helpNotifStartWhy": "The tile and the system start the VPN quietly. Without an alert a failed start looks like a dead tile.",
   "helpNotifStartTip": "A start you make in the app shows its error on the main screen instead.",
+  "helpNotifRevokedWhat": "Shows a notification when another VPN app starts and Android disconnects Slipstream. It only tells you; it has no Reconnect button.",
+  "helpNotifRevokedWhy": "Android allows one VPN at a time. When another app takes it, your traffic goes out unprotected and nothing on the screen says so. Reconnecting would take the VPN back from that app and ask you to confirm, so do it in the app when you want to.",
   "helpNotifNoteSystemTitle": "System permission",
   "helpNotifNoteSystemBody": "On Android 13 and newer the app needs your permission to show notifications. If you refused, turn it on in the system settings (the Open settings button on this page)."
 }

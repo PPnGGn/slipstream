@@ -22,6 +22,12 @@ class NativePrefsStore(private val prefs: SharedPreferences) {
 
     fun alertStartFailed(): Boolean = prefs.getBoolean(KEY_ALERT_START_FAILED, true)
 
+    fun alertRevoked(): Boolean = prefs.getBoolean(KEY_ALERT_REVOKED, true)
+
+    fun saveAlertRevoked(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_ALERT_REVOKED, enabled).apply()
+    }
+
     fun saveAlertTrafficBlocked(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_ALERT_TRAFFIC_BLOCKED, enabled).apply()
     }
@@ -35,6 +41,7 @@ class NativePrefsStore(private val prefs: SharedPreferences) {
         private const val KEY_LANGUAGE = "language"
         private const val KEY_ALERT_TRAFFIC_BLOCKED = "alert_traffic_blocked"
         private const val KEY_ALERT_START_FAILED = "alert_start_failed"
+        private const val KEY_ALERT_REVOKED = "alert_revoked"
 
         fun of(context: Context) =
                 NativePrefsStore(

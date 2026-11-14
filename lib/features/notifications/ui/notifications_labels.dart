@@ -9,9 +9,8 @@ String notificationsSummary(
   required bool allowed,
 }) {
   if (!allowed) return l10n.notificationsSummaryBlocked;
-  return switch ((prefs.trafficBlocked, prefs.startFailed)) {
-    (true, true) => l10n.notificationsSummaryAll,
-    (false, false) => l10n.commonOff,
-    _ => l10n.notificationsSummaryOne,
-  };
+  final on = prefs.enabledCount;
+  if (on == NotificationPrefs.total) return l10n.notificationsSummaryAll;
+  if (on == 0) return l10n.commonOff;
+  return l10n.notificationsSummaryCount(on, NotificationPrefs.total);
 }

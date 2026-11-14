@@ -11,7 +11,7 @@ import 'package:talker_flutter/talker_flutter.dart';
 
 class _FakeSink implements NativePrefsSink {
   final languages = <String>[];
-  final alerts = <(bool, bool)>[];
+  final alerts = <(bool, bool, bool)>[];
   Object? failWith;
 
   @override
@@ -25,10 +25,11 @@ class _FakeSink implements NativePrefsSink {
   Future<void> saveAlerts({
     required bool trafficBlocked,
     required bool startFailed,
+    required bool revoked,
   }) async {
     final error = failWith;
     if (error != null) throw error;
-    alerts.add((trafficBlocked, startFailed));
+    alerts.add((trafficBlocked, startFailed, revoked));
   }
 
   @override
@@ -87,12 +88,18 @@ void main() {
     });
     runner.init();
     await settle();
-    expect(sink.alerts, [(true, false)]);
+    expect(sink.alerts, [(true, false, true)]);
 
     await notifications.setTrafficBlocked(enabled: false);
     await notifications.setStartFailed(enabled: true);
+    await notifications.setRevoked(enabled: false);
     await settle();
-    expect(sink.alerts, [(true, false), (false, false), (false, true)]);
+    expect(sink.alerts, [
+      (true, false, true),
+      (false, false, true),
+      (false, true, true),
+      (false, true, false),
+    ]);
   });
 
   test('a failing bridge does not break the app', () async {

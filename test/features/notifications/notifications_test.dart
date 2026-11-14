@@ -34,6 +34,7 @@ class _FakeAccess implements NativePrefsSink {
   Future<void> saveAlerts({
     required bool trafficBlocked,
     required bool startFailed,
+    required bool revoked,
   }) async {}
 }
 
@@ -52,24 +53,42 @@ void main() {
   });
 
   group('NotificationsStore', () {
-    test('a fresh install has both alerts on', () async {
+    test('a fresh install has every alert on', () async {
       final prefs = (await storeWith({})).load();
       expect(prefs.trafficBlocked, isTrue);
       expect(prefs.startFailed, isTrue);
+      expect(prefs.revoked, isTrue);
     });
 
     test('save round-trips under the documented keys', () async {
       final store = await storeWith({});
       await store.save(
-        const NotificationPrefs(trafficBlocked: false, startFailed: true),
+        const NotificationPrefs(
+          trafficBlocked: false,
+          startFailed: true,
+          revoked: false,
+        ),
       );
       expect(
         store.load(),
-        const NotificationPrefs(trafficBlocked: false, startFailed: true),
+        const NotificationPrefs(
+          trafficBlocked: false,
+          startFailed: true,
+          revoked: false,
+        ),
       );
       final raw = await SharedPreferences.getInstance();
       expect(raw.getBool('notify_traffic_blocked'), isFalse);
       expect(raw.getBool('notify_start_failed'), isTrue);
+      expect(raw.getBool('notify_revoked'), isFalse);
+    });
+
+    test('an install from before the alert existed reads it as on', () async {
+      final prefs = (await storeWith({
+        'notify_traffic_blocked': false,
+        'notify_start_failed': false,
+      })).load();
+      expect(prefs.revoked, isTrue);
     });
   });
 
@@ -96,10 +115,14 @@ void main() {
         cubit.state,
         const NotificationPrefs(trafficBlocked: false, startFailed: false),
       );
-      expect(
-        store.load(),
-        const NotificationPrefs(trafficBlocked: false, startFailed: false),
+      await cubit.setRevoked(enabled: false);
+      const allOff = NotificationPrefs(
+        trafficBlocked: false,
+        startFailed: false,
+        revoked: false,
       );
+      expect(cubit.state, allOff);
+      expect(store.load(), allOff);
     });
 
     test('a call that changes nothing emits nothing', () async {
@@ -150,22 +173,32 @@ void main() {
       AppLocalizations? l10n,
     }) => notificationsSummary(l10n ?? l10nEn, prefs, allowed: allowed);
 
-    test('both on', () {
+    test('all on', () {
       expect(summary(const NotificationPrefs()), 'All on');
     });
 
-    test('one of two', () {
+    test('some on counts them against all the alerts there are', () {
       expect(
         summary(const NotificationPrefs(trafficBlocked: false)),
-        '1 of 2 on',
+        '2 of 3 on',
       );
-      expect(summary(const NotificationPrefs(startFailed: false)), '1 of 2 on');
-    });
-
-    test('both off', () {
+      expect(summary(const NotificationPrefs(revoked: false)), '2 of 3 on');
       expect(
         summary(
           const NotificationPrefs(trafficBlocked: false, startFailed: false),
+        ),
+        '1 of 3 on',
+      );
+    });
+
+    test('all off', () {
+      expect(
+        summary(
+          const NotificationPrefs(
+            trafficBlocked: false,
+            startFailed: false,
+            revoked: false,
+          ),
         ),
         'Off',
       );

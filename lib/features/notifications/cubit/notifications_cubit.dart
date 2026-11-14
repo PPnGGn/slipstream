@@ -19,6 +19,9 @@ class NotificationsCubit extends Cubit<NotificationPrefs> {
   Future<void> setStartFailed({required bool enabled}) =>
       _set(state.copyWith(startFailed: enabled));
 
+  Future<void> setRevoked({required bool enabled}) =>
+      _set(state.copyWith(revoked: enabled));
+
   Future<void> _set(NotificationPrefs next) async {
     if (next == state) return;
     emit(next);

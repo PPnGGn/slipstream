@@ -214,7 +214,7 @@
   "backupTitle": "备份与恢复",
   "settingsBackupSubtitle": "加密文件、二维码或深度链接",
   "notificationsTitle": "通知",
-  "settingsNotificationsSubtitle": "流量拦截与启动失败",
+  "settingsNotificationsSubtitle": "VPN 连接提醒",
   "memoryMonitorTitle": "内存监视",
   "settingsMemoryIosSubtitle": "在主屏幕显示隧道内存 · 上限 50 MB",
   "settingsMemorySubtitle": "在主屏幕显示 Xray 核心内存",
@@ -473,12 +473,20 @@
   "helpSplitNoteBody": "这是按应用生效的。若要让特定网站或地址绕开 VPN，请在“路由”中使用自定义规则。",
 
   "notificationsSummaryAll": "全部开启",
-  "notificationsSummaryOne": "已开启 1/2",
+  "notificationsSummaryCount": "已开启 {on}/{total}",
+  "@notificationsSummaryCount": {
+    "placeholders": {
+      "on": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
   "notificationsSummaryBlocked": "已在系统设置中关闭",
   "notifyTrafficBlockedTitle": "流量已拦截",
   "notifyTrafficBlockedSubtitle": "Kill switch 正在阻断你的流量",
   "notifyStartFailedTitle": "VPN 无法启动",
   "notifyStartFailedSubtitle": "从磁贴或由系统发起的启动失败",
+  "notifyRevokedTitle": "VPN 被其他应用接管",
+  "notifyRevokedSubtitle": "另一个 VPN 应用已启动并断开了 Slipstream",
   "notifyDisabledTitle": "已关闭 Slipstream 的通知",
   "notifyDisabledBody": "Android 不会显示这些提醒。请在系统设置中开启。",
   "notifyOpenSettings": "打开设置",
@@ -489,6 +497,8 @@
   "helpNotifStartWhat": "VPN 无法在不打开应用的情况下启动时显示通知：从快速设置磁贴、Android 的“始终开启的 VPN”，或服务重启之后。",
   "helpNotifStartWhy": "磁贴和系统会悄悄启动 VPN。没有提醒的话，启动失败看起来就像磁贴失灵。",
   "helpNotifStartTip": "在应用里发起的启动会直接在主屏幕上显示错误。",
+  "helpNotifRevokedWhat": "当另一个 VPN 应用启动、Android 断开 Slipstream 时显示通知。它只负责告知，没有“重新连接”按钮。",
+  "helpNotifRevokedWhy": "Android 同一时间只允许一个 VPN。被其他应用接管后，你的流量会在无保护的情况下发出，而屏幕上没有任何提示。重新连接会从那个应用手中夺回 VPN 并要求你确认，所以请在想连接时到应用里操作。",
   "helpNotifNoteSystemTitle": "系统权限",
   "helpNotifNoteSystemBody": "Android 13 及更高版本需要你授权应用显示通知。如果你拒绝了，请在系统设置中开启（本页的“打开设置”按钮）。"
 }

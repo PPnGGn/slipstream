@@ -214,7 +214,7 @@
   "backupTitle": "پشتیبان‌گیری و بازیابی",
   "settingsBackupSubtitle": "فایل رمزگذاری‌شده، QR یا پیوند",
   "notificationsTitle": "اعلان‌ها",
-  "settingsNotificationsSubtitle": "مسدود شدن ترافیک و شروع ناموفق",
+  "settingsNotificationsSubtitle": "هشدارهای اتصال VPN",
   "memoryMonitorTitle": "پایشگر حافظه",
   "settingsMemoryIosSubtitle": "حافظهٔ تونل در صفحهٔ اصلی · سقف 50 MB",
   "settingsMemorySubtitle": "حافظهٔ هستهٔ Xray در صفحهٔ اصلی",
@@ -473,12 +473,20 @@
   "helpSplitNoteBody": "این روی هر برنامه اعمال می‌شود. برای اینکه یک سایت یا نشانی خاص از VPN دور بزند، از یک قانون سفارشی در «مسیریابی» استفاده کنید.",
 
   "notificationsSummaryAll": "همه روشن",
-  "notificationsSummaryOne": "1 از 2 روشن",
+  "notificationsSummaryCount": "{on} از {total} روشن",
+  "@notificationsSummaryCount": {
+    "placeholders": {
+      "on": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
   "notificationsSummaryBlocked": "در تنظیمات سیستم مسدود شده",
   "notifyTrafficBlockedTitle": "ترافیک مسدود شد",
   "notifyTrafficBlockedSubtitle": "Kill switch ترافیک شما را نگه داشته است",
   "notifyStartFailedTitle": "VPN شروع نشد",
   "notifyStartFailedSubtitle": "شروع از کاشی یا توسط سیستم ناموفق بود",
+  "notifyRevokedTitle": "برنامه‌ی دیگری VPN را گرفت",
+  "notifyRevokedSubtitle": "یک برنامه‌ی VPN دیگر شروع شد و Slipstream را قطع کرد",
   "notifyDisabledTitle": "اعلان‌های Slipstream خاموش است",
   "notifyDisabledBody": "اندروید این هشدارها را نشان نمی‌دهد. آن‌ها را در تنظیمات سیستم روشن کنید.",
   "notifyOpenSettings": "باز کردن تنظیمات",
@@ -489,6 +497,8 @@
   "helpNotifStartWhat": "وقتی VPN بدون برنامه شروع نشد اعلانی نشان می‌دهد: از کاشی تنظیمات سریع، با «VPN همیشه روشن» اندروید یا پس از راه‌اندازی مجدد سرویس.",
   "helpNotifStartWhy": "کاشی و سیستم VPN را بی‌صدا شروع می‌کنند. بدون هشدار، شروع ناموفق مثل یک کاشی خراب به نظر می‌رسد.",
   "helpNotifStartTip": "شروعی که از داخل برنامه انجام دهید خطایش را روی صفحهٔ اصلی نشان می‌دهد.",
+  "helpNotifRevokedWhat": "وقتی برنامه‌ی VPN دیگری شروع به کار می‌کند و اندروید Slipstream را قطع می‌کند، اعلانی نشان می‌دهد. فقط خبر می‌دهد و دکمه‌ی «اتصال مجدد» ندارد.",
+  "helpNotifRevokedWhy": "اندروید هر بار فقط یک VPN را اجازه می‌دهد. وقتی برنامه‌ی دیگری آن را می‌گیرد، ترافیک شما بدون محافظت می‌رود و روی صفحه چیزی نشان داده نمی‌شود. اتصال مجدد VPN را از آن برنامه پس می‌گیرد و تأیید شما را می‌خواهد، پس هر وقت خواستید در برنامه انجامش دهید.",
   "helpNotifNoteSystemTitle": "مجوز سیستم",
   "helpNotifNoteSystemBody": "در اندروید 13 و بالاتر برنامه برای نمایش اعلان به اجازهٔ شما نیاز دارد. اگر رد کرده‌اید، آن را در تنظیمات سیستم روشن کنید (دکمهٔ «باز کردن تنظیمات» در همین صفحه)."
 }

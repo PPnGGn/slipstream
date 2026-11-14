@@ -15,4 +15,6 @@
     <string name="alert_blocked_text">隧道已中断，kill switch 正在阻断你的流量。请点击“重新连接”。</string>
     <string name="alert_start_failed_title">VPN 无法启动</string>
     <string name="alert_start_failed_text">请打开 Slipstream 查看原因。</string>
+    <string name="alert_revoked_title">VPN 被其他应用接管</string>
+    <string name="alert_revoked_text">由于另一个 VPN 应用已启动，Slipstream 已断开。你的流量未受保护。请打开 Slipstream 重新连接。</string>
 </resources>

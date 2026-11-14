@@ -125,6 +125,7 @@ void main() {
       expect(_titles(notificationsHelp(l10nEn)), [
         'Traffic blocked',
         'VPN could not start',
+        'Another app took the VPN',
       ]);
     });
 

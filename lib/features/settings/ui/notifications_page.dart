@@ -93,6 +93,17 @@ class _NotificationsPageState extends State<NotificationsPage>
                           onSwitch: (value) =>
                               _prefs.setStartFailed(enabled: value),
                         ),
+                        SettingsRow(
+                          iconPath: AppAssets.shield,
+                          hue: TileHue.violet,
+                          title: l10n.notifyRevokedTitle,
+                          subtitle: l10n.notifyRevokedSubtitle,
+                          // The Russian subtitle takes two lines.
+                          subtitleMaxLines: 2,
+                          switchValue: prefs.revoked,
+                          onSwitch: (value) =>
+                              _prefs.setRevoked(enabled: value),
+                        ),
                       ],
                     ),
                   ),

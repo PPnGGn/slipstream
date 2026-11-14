@@ -214,7 +214,7 @@
   "backupTitle": "Резервная копия",
   "settingsBackupSubtitle": "Зашифрованный файл, QR или ссылка",
   "notificationsTitle": "Уведомления",
-  "settingsNotificationsSubtitle": "Блок трафика и неудачные запуски",
+  "settingsNotificationsSubtitle": "Оповещения о соединении VPN",
   "memoryMonitorTitle": "Монитор памяти",
   "settingsMemoryIosSubtitle": "Память туннеля на главном экране · лимит 50 MB",
   "settingsMemorySubtitle": "Память ядра Xray на главном экране",
@@ -473,12 +473,20 @@
   "helpSplitNoteBody": "Это работает по приложениям. Чтобы пустить конкретный сайт или адрес в обход VPN, используйте своё правило в «Маршрутизации».",
 
   "notificationsSummaryAll": "Все включены",
-  "notificationsSummaryOne": "1 из 2 включено",
+  "notificationsSummaryCount": "{on} из {total} включено",
+  "@notificationsSummaryCount": {
+    "placeholders": {
+      "on": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
   "notificationsSummaryBlocked": "Заблокированы в настройках системы",
   "notifyTrafficBlockedTitle": "Трафик заблокирован",
   "notifyTrafficBlockedSubtitle": "Kill switch удерживает ваш трафик",
   "notifyStartFailedTitle": "VPN не удалось запустить",
   "notifyStartFailedSubtitle": "Не удался запуск с плитки или самой системой",
+  "notifyRevokedTitle": "VPN забрало другое приложение",
+  "notifyRevokedSubtitle": "Запустился другой VPN и отключил Slipstream",
   "notifyDisabledTitle": "Уведомления Slipstream выключены",
   "notifyDisabledBody": "Android не покажет эти оповещения. Включите их в настройках системы.",
   "notifyOpenSettings": "Открыть настройки",
@@ -489,6 +497,8 @@
   "helpNotifStartWhat": "Показывает уведомление, когда VPN не удалось запустить без приложения: с плитки быстрых настроек, через Always-on VPN Android или после перезапуска службы.",
   "helpNotifStartWhy": "Плитка и система запускают VPN тихо. Без оповещения неудачный запуск выглядит как «мёртвая» плитка.",
   "helpNotifStartTip": "Запуск из приложения показывает ошибку на главном экране.",
+  "helpNotifRevokedWhat": "Показывает уведомление, когда запускается другой VPN и Android отключает Slipstream. Оно только сообщает, кнопки «Переподключить» у него нет.",
+  "helpNotifRevokedWhy": "Android допускает один VPN за раз. Когда его забирает другое приложение, трафик идёт без защиты, а на экране об этом ничего нет. Переподключение отобрало бы VPN у того приложения и попросило бы подтверждение, поэтому делайте это в приложении, когда захотите.",
   "helpNotifNoteSystemTitle": "Разрешение системы",
   "helpNotifNoteSystemBody": "На Android 13 и новее приложению нужно ваше разрешение на уведомления. Если вы отказали, включите их в настройках системы (кнопка «Открыть настройки» на этой странице)."
 }

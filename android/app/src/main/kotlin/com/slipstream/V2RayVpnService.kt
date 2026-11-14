@@ -479,7 +479,13 @@ class V2RayVpnService : VpnService() {
     // another VPN took over
     override fun onRevoke() {
         Log.w("VPN_SERVICE", "VPN revoked by system (another VPN started). Emergency shutdown.")
+        // The status before the stop: after it every revoke looks like a plain
+        // disconnect, and a prepare() of our own (docs/security.md, trap 1) or the
+        // user's switch-off must not read as "another app took the VPN".
+        val statusBefore = VpnEventBridge.currentStatus().status
         stopVpn()
+        // After stopVpn: it cancels the alert of the session it ends.
+        alertOnRevoke(statusBefore, alertPrefs())?.let { raiseAlert(it) }
         super.onRevoke()
     }
 
@@ -629,13 +635,17 @@ class V2RayVpnService : VpnService() {
         return AlertPrefs(
                 trafficBlocked = store.alertTrafficBlocked(),
                 startFailed = store.alertStartFailed(),
+                revoked = store.alertRevoked(),
         )
     }
 
     // Called when a start has failed, [blocked] when the kill switch holds the traffic.
-    // Posting is a no-op while Android blocks the app's notifications.
     private fun raiseAlertAfterFailure(blocked: Boolean, trigger: StartTrigger) {
-        val alert = alertAfterFailure(blocked, trigger, alertPrefs()) ?: return
+        alertAfterFailure(blocked, trigger, alertPrefs())?.let { raiseAlert(it) }
+    }
+
+    // Posts the alert. A no-op while Android blocks the app's notifications.
+    private fun raiseAlert(alert: ConnectionAlert) {
         val content = alertContent(alert)
         val texts = localized()
         val builder =

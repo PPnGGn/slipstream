@@ -14,6 +14,9 @@ class NativePrefsMessage {
 
   /// Show the "could not start" alert (a start without the app failed).
   bool? alertStartFailed;
+
+  /// Show the "another app took the VPN" alert (the system revoked ours).
+  bool? alertRevoked;
 }
 
 @HostApi()

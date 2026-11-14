@@ -85,4 +85,55 @@ class ConnectionAlertTest {
         assertTrue(alertContent(ConnectionAlert.TRAFFIC_BLOCKED).canReconnect)
         assertFalse(alertContent(ConnectionAlert.START_FAILED).canReconnect)
     }
+
+    // Another app took the VPN (onRevoke): the user did not do it, so it needs a voice,
+    // but only if our VPN was something to lose.
+    @Test
+    fun aRevokedVpnAlertsWhenItWasUpOrComingUpOrHolding() {
+        for (before in listOf(VpnStatus.CONNECTED, VpnStatus.CONNECTING, VpnStatus.BLOCKED)) {
+            assertEquals(ConnectionAlert.REVOKED, alertOnRevoke(before, allOn))
+        }
+    }
+
+    // Our own VpnService.prepare() calls onRevoke too (docs/security.md, trap 1), and so
+    // does the system when the user switches us off: nothing was taken from anybody.
+    @Test
+    fun aRevokeOfAVpnThatWasNotUpIsSilent() {
+        for (before in listOf(VpnStatus.DISCONNECTED, VpnStatus.DISCONNECTING, VpnStatus.ERROR)) {
+            assertNull(alertOnRevoke(before, allOn))
+        }
+    }
+
+    @Test
+    fun aRevokedVpnIsSilentWhenItsSwitchIsOff() {
+        val prefs = AlertPrefs(trafficBlocked = true, startFailed = true, revoked = false)
+
+        assertNull(alertOnRevoke(VpnStatus.CONNECTED, prefs))
+    }
+
+    @Test
+    fun theRevokedSwitchDoesNotTouchTheOthers() {
+        val prefs = AlertPrefs(trafficBlocked = true, startFailed = true, revoked = false)
+
+        assertEquals(
+                ConnectionAlert.TRAFFIC_BLOCKED,
+                after(blocked = true, trigger = StartTrigger.APP, prefs = prefs),
+        )
+        assertEquals(
+                ConnectionAlert.START_FAILED,
+                after(blocked = false, trigger = StartTrigger.SYSTEM, prefs = prefs),
+        )
+    }
+
+    // Reconnect would call prepare(), and that takes the VPN away from the app that has it
+    // now with a system dialog: the alert only tells, the app is one tap away.
+    @Test
+    fun theRevokedAlertHasItsOwnTextAndNoReconnect() {
+        val revoked = alertContent(ConnectionAlert.REVOKED)
+
+        assertFalse(revoked.canReconnect)
+        assertEquals(R.string.alert_revoked_title, revoked.title)
+        assertEquals(R.string.alert_revoked_text, revoked.text)
+        assertNotEquals(alertContent(ConnectionAlert.TRAFFIC_BLOCKED).title, revoked.title)
+    }
 }

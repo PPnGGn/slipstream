@@ -14,6 +14,7 @@ abstract interface class NativePrefsSink {
   Future<void> saveAlerts({
     required bool trafficBlocked,
     required bool startFailed,
+    required bool revoked,
   });
 
   /// Whether Android lets the app show notifications at all.
@@ -40,12 +41,14 @@ class PlatformNativePrefsSink implements NativePrefsSink {
   Future<void> saveAlerts({
     required bool trafficBlocked,
     required bool startFailed,
+    required bool revoked,
   }) async {
     if (!Platform.isAndroid) return;
     await _api.save(
       NativePrefsMessage(
         alertTrafficBlocked: trafficBlocked,
         alertStartFailed: startFailed,
+        alertRevoked: revoked,
       ),
     );
   }

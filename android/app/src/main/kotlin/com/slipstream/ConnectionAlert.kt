@@ -12,10 +12,28 @@ enum class ConnectionAlert {
     TRAFFIC_BLOCKED,
     // The VPN could not start without the app (the tile, Always-on VPN, a restart).
     START_FAILED,
+    // Another VPN app took over (onRevoke) while ours was up: the user did not switch
+    // it off, and the traffic now goes unprotected.
+    REVOKED,
 }
 
-// The two switches of the Notifications page, as Kotlin knows them (NativePrefsStore).
-data class AlertPrefs(val trafficBlocked: Boolean, val startFailed: Boolean)
+// The switches of the Notifications page, as Kotlin knows them (NativePrefsStore).
+data class AlertPrefs(
+        val trafficBlocked: Boolean,
+        val startFailed: Boolean,
+        val revoked: Boolean = true,
+)
+
+// What a revoke leads to. [statusBefore] is the status the service had when the system
+// called onRevoke: only a VPN that was up (or coming up, or holding the traffic) was
+// taken from the user. onRevoke is also called when our own VpnService.prepare() runs
+// and when the user switches us off; the status is DISCONNECTED or DISCONNECTING then.
+internal fun alertOnRevoke(statusBefore: VpnStatus, prefs: AlertPrefs): ConnectionAlert? =
+        when (statusBefore) {
+            VpnStatus.CONNECTED, VpnStatus.CONNECTING, VpnStatus.BLOCKED ->
+                    ConnectionAlert.REVOKED.takeIf { prefs.revoked }
+            VpnStatus.DISCONNECTED, VpnStatus.DISCONNECTING, VpnStatus.ERROR -> null
+        }
 
 // What a failed start leads to. [blocked]: the kill switch is holding the traffic (see
 // shouldBlockOnFailure); otherwise the VPN is closed with an error.
@@ -54,6 +72,14 @@ internal fun alertContent(alert: ConnectionAlert): AlertContent =
                     AlertContent(
                             R.string.alert_start_failed_title,
                             R.string.alert_start_failed_text,
+                            canReconnect = false,
+                    )
+            // No Reconnect: it would call VpnService.prepare(), which takes the VPN from
+            // the other app through a system dialog. The alert opens the app instead.
+            ConnectionAlert.REVOKED ->
+                    AlertContent(
+                            R.string.alert_revoked_title,
+                            R.string.alert_revoked_text,
                             canReconnect = false,
                     )
         }

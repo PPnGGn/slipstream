@@ -46,6 +46,7 @@ class NativePrefsRunner {
     () => _sink.saveAlerts(
       trafficBlocked: prefs.trafficBlocked,
       startFailed: prefs.startFailed,
+      revoked: prefs.revoked,
     ),
   );
 
