@@ -47,6 +47,7 @@ class NativePrefsRunner {
       trafficBlocked: prefs.trafficBlocked,
       startFailed: prefs.startFailed,
       revoked: prefs.revoked,
+      tunnelLost: prefs.tunnelLost,
     ),
   );
 

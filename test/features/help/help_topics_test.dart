@@ -126,6 +126,7 @@ void main() {
         'Traffic blocked',
         'VPN could not start',
         'Another app took the VPN',
+        'VPN connection lost',
         'Subscription did not update',
         'Subscription expiry and traffic',
       ]);

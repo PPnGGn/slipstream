@@ -15,6 +15,7 @@ abstract interface class NativePrefsSink {
     required bool trafficBlocked,
     required bool startFailed,
     required bool revoked,
+    required bool tunnelLost,
   });
 
   /// Whether Android lets the app show notifications at all.
@@ -42,6 +43,7 @@ class PlatformNativePrefsSink implements NativePrefsSink {
     required bool trafficBlocked,
     required bool startFailed,
     required bool revoked,
+    required bool tunnelLost,
   }) async {
     if (!Platform.isAndroid) return;
     await _api.save(
@@ -49,6 +51,7 @@ class PlatformNativePrefsSink implements NativePrefsSink {
         alertTrafficBlocked: trafficBlocked,
         alertStartFailed: startFailed,
         alertRevoked: revoked,
+        alertTunnelLost: tunnelLost,
       ),
     );
   }

@@ -17,6 +17,10 @@ class NativePrefsMessage {
 
   /// Show the "another app took the VPN" alert (the system revoked ours).
   bool? alertRevoked;
+
+  /// Show the "VPN connection lost" alert (the tunnel died under a connected VPN
+  /// and the kill switch is off, so the VPN was closed).
+  bool? alertTunnelLost;
 }
 
 @HostApi()

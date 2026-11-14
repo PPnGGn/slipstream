@@ -491,6 +491,8 @@
   "notifySubscriptionFailedSubtitle": "订阅的后台更新失败了",
   "notifySubscriptionLimitsTitle": "订阅到期与流量",
   "notifySubscriptionLimitsSubtitle": "订阅即将到期或流量即将用完",
+  "notifyTunnelLostTitle": "VPN 连接已断开",
+  "notifyTunnelLostSubtitle": "隧道已停止工作，VPN 已关闭",
   "notifyDisabledTitle": "已关闭 Slipstream 的通知",
   "notifyDisabledBody": "Android 不会显示这些提醒。请在系统设置中开启。",
   "notifyOpenSettings": "打开设置",
@@ -509,6 +511,8 @@
   "helpNotifSubLimitsWhat": "当订阅剩余三天或更短、已到期、已用掉 90% 流量以及流量用完时显示通知。每种只通知一次，订阅续费后通知会消失。",
   "helpNotifSubLimitsWhy": "到期或流量用完的订阅会在没有任何预警的情况下失效，第一个迹象就是连接断掉。提醒让你有时间续费。",
   "helpNotifSubLimitsTip": "依据服务商提供的到期日期和流量上限；两者都没有的订阅不会被监控。每次更新时都会检查，开启自动更新后也会在后台检查。",
+  "helpNotifTunnelLostWhat": "当 VPN 已连接而隧道失效、且 kill switch 关闭时显示通知，Slipstream 会关闭 VPN。通知带有“重新连接”按钮。开启 kill switch 时，会改为显示“流量已拦截”提醒。",
+  "helpNotifTunnelLostWhy": "在 VPN 看起来仍已连接时失效的隧道不会转发任何流量，也不会给出任何迹象。该提醒会告诉你 VPN 已不再保护你，并让你一键重新连接。",
   "helpNotifNoteSystemTitle": "系统权限",
   "helpNotifNoteSystemBody": "Android 13 及更高版本需要你授权应用显示通知。如果你拒绝了，请在系统设置中开启（本页的“打开设置”按钮）。"
 }

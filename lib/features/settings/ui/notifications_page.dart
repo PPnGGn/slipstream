@@ -105,6 +105,16 @@ class _NotificationsPageState extends State<NotificationsPage>
                               _prefs.setRevoked(enabled: value),
                         ),
                         SettingsRow(
+                          iconPath: AppAssets.bolt,
+                          hue: TileHue.red,
+                          title: l10n.notifyTunnelLostTitle,
+                          subtitle: l10n.notifyTunnelLostSubtitle,
+                          subtitleMaxLines: 2,
+                          switchValue: prefs.tunnelLost,
+                          onSwitch: (value) =>
+                              _prefs.setTunnelLost(enabled: value),
+                        ),
+                        SettingsRow(
                           iconPath: AppAssets.refresh,
                           hue: TileHue.teal,
                           title: l10n.notifySubscriptionFailedTitle,

@@ -14,11 +14,12 @@ class NotificationPrefs {
     this.revoked = true,
     this.subscriptionFailed = true,
     this.subscriptionLimits = true,
+    this.tunnelLost = true,
   });
 
   /// How many alerts there are. The Notifications row counts "N of this many
   /// on"; a new alert raises it.
-  static const total = 5;
+  static const total = 6;
 
   /// The kill switch holds the traffic: the tunnel is gone and nothing gets
   /// out until the user reconnects.
@@ -38,12 +39,17 @@ class NotificationPrefs {
   /// running out or used up. Decided in Dart, like [subscriptionFailed].
   final bool subscriptionLimits;
 
+  /// The tunnel died under a connected VPN and the kill switch is off, so the
+  /// VPN was closed. Shown by the VPN service, like the first three.
+  final bool tunnelLost;
+
   int get enabledCount => [
     trafficBlocked,
     startFailed,
     revoked,
     subscriptionFailed,
     subscriptionLimits,
+    tunnelLost,
   ].where((on) => on).length;
 
   NotificationPrefs copyWith({
@@ -52,12 +58,14 @@ class NotificationPrefs {
     bool? revoked,
     bool? subscriptionFailed,
     bool? subscriptionLimits,
+    bool? tunnelLost,
   }) => NotificationPrefs(
     trafficBlocked: trafficBlocked ?? this.trafficBlocked,
     startFailed: startFailed ?? this.startFailed,
     revoked: revoked ?? this.revoked,
     subscriptionFailed: subscriptionFailed ?? this.subscriptionFailed,
     subscriptionLimits: subscriptionLimits ?? this.subscriptionLimits,
+    tunnelLost: tunnelLost ?? this.tunnelLost,
   );
 
   @override
@@ -67,7 +75,8 @@ class NotificationPrefs {
       other.startFailed == startFailed &&
       other.revoked == revoked &&
       other.subscriptionFailed == subscriptionFailed &&
-      other.subscriptionLimits == subscriptionLimits;
+      other.subscriptionLimits == subscriptionLimits &&
+      other.tunnelLost == tunnelLost;
 
   @override
   int get hashCode => Object.hash(
@@ -76,6 +85,7 @@ class NotificationPrefs {
     revoked,
     subscriptionFailed,
     subscriptionLimits,
+    tunnelLost,
   );
 
   @override
@@ -83,5 +93,5 @@ class NotificationPrefs {
       'NotificationPrefs(trafficBlocked: $trafficBlocked, '
       'startFailed: $startFailed, revoked: $revoked, '
       'subscriptionFailed: $subscriptionFailed, '
-      'subscriptionLimits: $subscriptionLimits)';
+      'subscriptionLimits: $subscriptionLimits, tunnelLost: $tunnelLost)';
 }

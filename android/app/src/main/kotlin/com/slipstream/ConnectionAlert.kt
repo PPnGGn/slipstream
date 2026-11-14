@@ -15,6 +15,10 @@ enum class ConnectionAlert {
     // Another VPN app took over (onRevoke) while ours was up: the user did not switch
     // it off, and the traffic now goes unprotected.
     REVOKED,
+    // The tunnel died under a connected VPN (the core says so) and there is no kill
+    // switch to hold the traffic: the VPN was closed, and the user has to know that
+    // it is not protecting anything.
+    TUNNEL_LOST,
 }
 
 // The switches of the Notifications page, as Kotlin knows them (NativePrefsStore).
@@ -22,7 +26,46 @@ data class AlertPrefs(
         val trafficBlocked: Boolean,
         val startFailed: Boolean,
         val revoked: Boolean = true,
+        val tunnelLost: Boolean = true,
 )
+
+// What the service does when the core reports that the tunnel of a running session
+// died (StatusHandler.OnTunnelLost): xray and the interface are up, and the traffic
+// has stopped without a word.
+enum class TunnelLostAction {
+    // Nothing: the report is stale or not about a connected VPN.
+    IGNORE,
+    // The kill switch is on: hold the traffic in the blocking interface, as after a
+    // failed start (holdBlockingTunnel).
+    HOLD,
+    // No kill switch: close the VPN with an error, so the phone is not left with a
+    // "connected" VPN that carries nothing.
+    CLOSE,
+}
+
+// [status]: what the service says about itself right now. The core also reports the end
+// of a tunnel that we stop ourselves, from another thread and a moment after, so a
+// stopping service ([stopping]) and any status but CONNECTED mean there is nothing to
+// do: the tunnel of a VPN that is connecting, blocked or off is not "lost".
+internal fun tunnelLostAction(
+        status: VpnStatus,
+        stopping: Boolean,
+        killSwitch: Boolean,
+): TunnelLostAction =
+        when {
+            stopping || status != VpnStatus.CONNECTED -> TunnelLostAction.IGNORE
+            killSwitch -> TunnelLostAction.HOLD
+            else -> TunnelLostAction.CLOSE
+        }
+
+// A held tunnel is blocked traffic, whatever blocked it, so it has the alert of the
+// kill switch and its switch; a closed one has its own.
+internal fun alertAfterTunnelLoss(action: TunnelLostAction, prefs: AlertPrefs): ConnectionAlert? =
+        when (action) {
+            TunnelLostAction.HOLD -> ConnectionAlert.TRAFFIC_BLOCKED.takeIf { prefs.trafficBlocked }
+            TunnelLostAction.CLOSE -> ConnectionAlert.TUNNEL_LOST.takeIf { prefs.tunnelLost }
+            TunnelLostAction.IGNORE -> null
+        }
 
 // What a revoke leads to. [statusBefore] is the status the service had when the system
 // called onRevoke: only a VPN that was up (or coming up, or holding the traffic) was
@@ -81,5 +124,12 @@ internal fun alertContent(alert: ConnectionAlert): AlertContent =
                             R.string.alert_revoked_title,
                             R.string.alert_revoked_text,
                             canReconnect = false,
+                    )
+            // Reconnect: the saved launch is still good, only the tunnel is gone.
+            ConnectionAlert.TUNNEL_LOST ->
+                    AlertContent(
+                            R.string.alert_tunnel_lost_title,
+                            R.string.alert_tunnel_lost_text,
+                            canReconnect = true,
                     )
         }

@@ -28,6 +28,9 @@ class NotificationsCubit extends Cubit<NotificationPrefs> {
   Future<void> setSubscriptionLimits({required bool enabled}) =>
       _set(state.copyWith(subscriptionLimits: enabled));
 
+  Future<void> setTunnelLost({required bool enabled}) =>
+      _set(state.copyWith(tunnelLost: enabled));
+
   Future<void> _set(NotificationPrefs next) async {
     if (next == state) return;
     emit(next);

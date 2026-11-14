@@ -17,6 +17,7 @@ class NativePrefsApiImpl(
         prefs.alertTrafficBlocked?.let { store.saveAlertTrafficBlocked(it) }
         prefs.alertStartFailed?.let { store.saveAlertStartFailed(it) }
         prefs.alertRevoked?.let { store.saveAlertRevoked(it) }
+        prefs.alertTunnelLost?.let { store.saveAlertTunnelLost(it) }
     }
 
     // False when the permission (Android 13+) was refused or the user turned the app's

@@ -317,6 +317,13 @@ HelpTopic notificationsHelp(AppLocalizations l10n) => HelpTopic(
       why: l10n.helpNotifRevokedWhy,
     ),
     HelpItem(
+      iconPath: AppAssets.bolt,
+      hue: TileHue.red,
+      title: l10n.notifyTunnelLostTitle,
+      what: l10n.helpNotifTunnelLostWhat,
+      why: l10n.helpNotifTunnelLostWhy,
+    ),
+    HelpItem(
       iconPath: AppAssets.refresh,
       hue: TileHue.teal,
       title: l10n.notifySubscriptionFailedTitle,

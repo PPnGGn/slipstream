@@ -35,6 +35,7 @@ class _FakeAccess implements NativePrefsSink {
     required bool trafficBlocked,
     required bool startFailed,
     required bool revoked,
+    required bool tunnelLost,
   }) async {}
 }
 
@@ -94,6 +95,17 @@ void main() {
       expect(store.load().subscriptionFailed, isFalse);
     });
 
+    test('the lost tunnel alert has its own key and starts on', () async {
+      final store = await storeWith({});
+      expect(store.load().tunnelLost, isTrue);
+
+      await store.save(const NotificationPrefs(tunnelLost: false));
+
+      final raw = await SharedPreferences.getInstance();
+      expect(raw.getBool('notify_tunnel_lost'), isFalse);
+      expect(store.load().tunnelLost, isFalse);
+    });
+
     test(
       'the expiry and traffic alert has its own key and starts on',
       () async {
@@ -143,7 +155,9 @@ void main() {
       await cubit.setRevoked(enabled: false);
       await cubit.setSubscriptionFailed(enabled: false);
       await cubit.setSubscriptionLimits(enabled: false);
+      await cubit.setTunnelLost(enabled: false);
       const allOff = NotificationPrefs(
+        tunnelLost: false,
         trafficBlocked: false,
         startFailed: false,
         revoked: false,
@@ -209,18 +223,18 @@ void main() {
     test('some on counts them against all the alerts there are', () {
       expect(
         summary(const NotificationPrefs(trafficBlocked: false)),
-        '4 of 5 on',
+        '5 of 6 on',
       );
-      expect(summary(const NotificationPrefs(revoked: false)), '4 of 5 on');
+      expect(summary(const NotificationPrefs(revoked: false)), '5 of 6 on');
       expect(
         summary(const NotificationPrefs(subscriptionFailed: false)),
-        '4 of 5 on',
+        '5 of 6 on',
       );
       expect(
         summary(
           const NotificationPrefs(trafficBlocked: false, startFailed: false),
         ),
-        '3 of 5 on',
+        '4 of 6 on',
       );
     });
 
@@ -233,6 +247,7 @@ void main() {
             revoked: false,
             subscriptionFailed: false,
             subscriptionLimits: false,
+            tunnelLost: false,
           ),
         ),
         'Off',

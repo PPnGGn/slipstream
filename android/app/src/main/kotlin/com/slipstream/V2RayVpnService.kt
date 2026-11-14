@@ -23,12 +23,13 @@ import com.slipstream.alerts.AppAlertKind
 import com.slipstream.alerts.AppAlertMessage
 import com.slipstream.alerts.AppAlerts
 import com.slipstream.android.Android
+import com.slipstream.android.StatusHandler
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.slipstream.nativeprefs.NativePrefsStore
 import com.slipstream.sync.SubscriptionSyncWorker
 
-class V2RayVpnService : VpnService() {
+class V2RayVpnService : VpnService(), StatusHandler {
 
     // The interface of the session and the kill switch's blocking one, and who closes
     // them (see TunnelInterfaces). The core runs on a duplicate of the descriptor
@@ -70,6 +71,7 @@ class V2RayVpnService : VpnService() {
         private const val ACTION_MEM_LOG = "com.slipstream.MEM_LOG"
         private const val ACTION_SHOW_ALERT = "com.slipstream.SHOW_ALERT"
         private const val ACTION_SYNC_NOW = "com.slipstream.SYNC_NOW"
+        private const val ACTION_DROP_TUN = "com.slipstream.DROP_TUN"
         private const val TRAFFIC_POLL_INTERVAL_MS = 1000L
 
         // For configs that route DNS their own way. The other choice is the DNS
@@ -92,6 +94,9 @@ class V2RayVpnService : VpnService() {
     //   adb shell am broadcast -a com.slipstream.SYNC_NOW -p com.slipstream
     // runs the background subscription job once, now (close the app first: with the UI engine up
     // the job leaves the refresh to the app's own timer).
+    //   adb shell am broadcast -a com.slipstream.DROP_TUN -p com.slipstream
+    // makes the core lose the tunnel under the running session, to see what the service does
+    // about it: with the kill switch the traffic is held, without it the VPN closes with an alert.
     private val debugReceiver =
             object : BroadcastReceiver() {
                 override fun onReceive(context: Context, intent: Intent) {
@@ -114,6 +119,12 @@ class V2RayVpnService : VpnService() {
                                 val on = intent.getBooleanExtra("on", true)
                                 Android.setMemoryLog(on)
                                 Log.i("VPN_SERVICE", "Memory log ${if (on) "on" else "off"}")
+                            }
+                            ACTION_DROP_TUN -> {
+                                // Makes the loss of the tunnel: the core pulls the device out
+                                // from under the session and reports it (onTunnelLost).
+                                Android.dropTun()
+                                Log.i("VPN_SERVICE", "Tunnel dropped on purpose")
                             }
                             ACTION_SYNC_NOW -> {
                                 // The background job's worker, once, now, with no constraints.
@@ -153,6 +164,7 @@ class V2RayVpnService : VpnService() {
                         addAction(ACTION_MEM_LOG)
                         addAction(ACTION_SHOW_ALERT)
                         addAction(ACTION_SYNC_NOW)
+                        addAction(ACTION_DROP_TUN)
                     },
                     ContextCompat.RECEIVER_EXPORTED,
             )
@@ -337,6 +349,11 @@ class V2RayVpnService : VpnService() {
             // Chatty core logs for debug builds only. The flag comes from the
             // build itself (release APKs are never debuggable), not from Dart.
             Android.setVerboseLogs(isDebuggable())
+            // The core tells us when the tunnel dies under this session (onTunnelLost). Set
+            // with every session, here, and never cleared by onDestroy: a switch off and on
+            // creates the next service before the last one is destroyed, and a destroy that
+            // came late would take the handler away from the session that is running.
+            Android.setStatusHandler(this)
             // The core listens on no port at all. The only listener is the HTTP proxy
             // for the app's own requests, on a Unix socket in the app's private
             // directory; its password is picked by the core (see VpnQueries.localProxy).
@@ -556,6 +573,36 @@ class V2RayVpnService : VpnService() {
         stopSelf()
     }
 
+    // The core calls this from one of its goroutines when the tunnel of the running
+    // session died: xray and the interface are up, and the traffic has stopped without a
+    // word. What to do is decided by tunnelLostAction; the core stops nothing itself.
+    override fun onTunnelLost(reason: String) {
+        mainHandler.post { handleTunnelLost(reason) }
+    }
+
+    private fun handleTunnelLost(reason: String) {
+        val launch = activeLaunch
+        val action =
+                tunnelLostAction(
+                        status = VpnEventBridge.currentStatus().status,
+                        stopping = isStopping,
+                        killSwitch = launch?.killSwitch == true,
+                )
+        Log.w("VPN_SERVICE", "Tunnel lost ($reason): $action")
+        when (action) {
+            TunnelLostAction.IGNORE -> Unit
+            // Held like a failed start would be: the blocking interface takes over, so no
+            // moment of unprotected traffic, and the alert is the kill switch's own.
+            TunnelLostAction.HOLD ->
+                    holdBlockingTunnel(launch!!, "Tunnel lost: $reason", StartTrigger.OTHER)
+            TunnelLostAction.CLOSE -> {
+                VpnEventBridge.notifyStatus(VpnStatus.ERROR, "Tunnel lost: $reason")
+                alertAfterTunnelLoss(action, alertPrefs())?.let { raiseAlert(it) }
+                stopVpn(dueToError = true)
+            }
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         stopVpn()
@@ -662,6 +709,7 @@ class V2RayVpnService : VpnService() {
                 trafficBlocked = store.alertTrafficBlocked(),
                 startFailed = store.alertStartFailed(),
                 revoked = store.alertRevoked(),
+                tunnelLost = store.alertTunnelLost(),
         )
     }
 

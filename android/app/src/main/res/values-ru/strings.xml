@@ -30,6 +30,8 @@
     <string name="alert_traffic_low_text">«%1$s»: использовано %2$d%% трафика.</string>
     <string name="alert_traffic_exhausted_title">Трафик закончился</string>
     <string name="alert_traffic_exhausted_text">В «%1$s» не осталось трафика.</string>
+    <string name="alert_tunnel_lost_title">Соединение VPN потеряно</string>
+    <string name="alert_tunnel_lost_text">Туннель перестал работать, VPN закрыт. Ваш трафик не защищён. Нажмите «Переподключить».</string>
     <string name="alert_revoked_title">VPN забрало другое приложение</string>
     <string name="alert_revoked_text">Slipstream отключён, потому что запустился другой VPN. Ваш трафик не защищён. Откройте Slipstream, чтобы подключиться снова.</string>
 </resources>

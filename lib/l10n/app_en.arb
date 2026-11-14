@@ -698,6 +698,8 @@
   "notifySubscriptionFailedSubtitle": "A background refresh of a subscription failed",
   "notifySubscriptionLimitsTitle": "Subscription expiry and traffic",
   "notifySubscriptionLimitsSubtitle": "A subscription is about to expire or its traffic is running out",
+  "notifyTunnelLostTitle": "VPN connection lost",
+  "notifyTunnelLostSubtitle": "The tunnel stopped working and the VPN was closed",
   "notifyDisabledTitle": "Notifications are off for Slipstream",
   "notifyDisabledBody": "Android will not show these alerts. Turn them on in the system settings.",
   "notifyOpenSettings": "Open settings",
@@ -716,6 +718,8 @@
   "helpNotifSubLimitsWhat": "Shows a notification when a subscription has three days or less left, when it has expired, when 90% of its traffic is used and when the traffic is used up. Each one comes once and goes away when the subscription is renewed.",
   "helpNotifSubLimitsWhy": "A subscription that expires or runs out of traffic stops working with no warning, and the first sign is a dead connection. The alert gives you time to renew it.",
   "helpNotifSubLimitsTip": "It uses the date and the limit your provider reports; a subscription with neither is not watched. It is checked at every refresh and, with auto-update on, in the background.",
+  "helpNotifTunnelLostWhat": "Shows a notification when the tunnel dies under a connected VPN and the kill switch is off, so Slipstream closes the VPN. It has a Reconnect button. With the kill switch on, you get the \"Traffic is blocked\" alert instead.",
+  "helpNotifTunnelLostWhy": "A tunnel that died while the VPN still looks connected carries no traffic and gives no sign. The alert tells you the VPN is no longer protecting you and lets you reconnect in one tap.",
   "helpNotifNoteSystemTitle": "System permission",
   "helpNotifNoteSystemBody": "On Android 13 and newer the app needs your permission to show notifications. If you refused, turn it on in the system settings (the Open settings button on this page)."
 }

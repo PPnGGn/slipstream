@@ -27,6 +27,8 @@
     <string name="alert_traffic_low_text">“%1$s”：已使用 %2$d%% 的流量。</string>
     <string name="alert_traffic_exhausted_title">流量已用完</string>
     <string name="alert_traffic_exhausted_text">“%1$s”已没有剩余流量。</string>
+    <string name="alert_tunnel_lost_title">VPN 连接已断开</string>
+    <string name="alert_tunnel_lost_text">隧道已停止工作，VPN 已关闭。你的流量未受保护。请点击“重新连接”。</string>
     <string name="alert_revoked_title">VPN 被其他应用接管</string>
     <string name="alert_revoked_text">由于另一个 VPN 应用已启动，Slipstream 已断开。你的流量未受保护。请打开 Slipstream 重新连接。</string>
 </resources>

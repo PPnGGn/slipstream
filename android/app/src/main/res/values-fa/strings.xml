@@ -28,6 +28,8 @@
     <string name="alert_traffic_low_text">«%1$s»: %2$d%% از ترافیک مصرف شده است.</string>
     <string name="alert_traffic_exhausted_title">ترافیک تمام شد</string>
     <string name="alert_traffic_exhausted_text">برای «%1$s» ترافیکی باقی نمانده است.</string>
+    <string name="alert_tunnel_lost_title">اتصال VPN قطع شد</string>
+    <string name="alert_tunnel_lost_text">تونل از کار افتاد و VPN بسته شد. ترافیک شما محافظت نمی‌شود. «اتصال مجدد» را بزنید.</string>
     <string name="alert_revoked_title">برنامه‌ی دیگری VPN را گرفت</string>
     <string name="alert_revoked_text">Slipstream قطع شد، چون یک برنامه‌ی VPN دیگر شروع به کار کرد. ترافیک شما محافظت نمی‌شود. برای اتصال دوباره Slipstream را باز کنید.</string>
 </resources>
