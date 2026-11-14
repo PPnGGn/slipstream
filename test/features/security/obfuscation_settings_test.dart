@@ -32,13 +32,19 @@ void main() {
   });
 
   group('settings are values', () {
-    test('equal settings compare equal, so an unchanged save emits nothing', () {
-      expect(const ObfuscationSettings(), equals(const ObfuscationSettings()));
-      expect(
-        const ObfuscationSettings(fragmentEnabled: true),
-        isNot(equals(const ObfuscationSettings())),
-      );
-    });
+    test(
+      'equal settings compare equal, so an unchanged save emits nothing',
+      () {
+        expect(
+          const ObfuscationSettings(),
+          equals(const ObfuscationSettings()),
+        );
+        expect(
+          const ObfuscationSettings(fragmentEnabled: true),
+          isNot(equals(const ObfuscationSettings())),
+        );
+      },
+    );
 
     test('copyWith changes only what it is given', () {
       final changed = const ObfuscationSettings().copyWith(noiseEnabled: true);
@@ -70,8 +76,7 @@ void main() {
   });
 
   group('validateRange', () {
-    RangeInputError? check(String raw) =>
-        validateRange(raw, min: 1, max: 1500);
+    RangeInputError? check(String raw) => validateRange(raw, min: 1, max: 1500);
 
     test('accepts a range and a single number inside the bounds', () {
       expect(check('1-1500'), isNull);
@@ -156,10 +161,7 @@ void main() {
         validateNoise(const NoiseParams(size: '0-10')).size,
         equals(RangeInputError.tooSmall),
       );
-      expect(
-        validateNoise(const NoiseParams(size: '1-1400')).size,
-        isNull,
-      );
+      expect(validateNoise(const NoiseParams(size: '1-1400')).size, isNull);
       expect(
         validateNoise(const NoiseParams(size: '1-1401')).size,
         equals(RangeInputError.tooLarge),

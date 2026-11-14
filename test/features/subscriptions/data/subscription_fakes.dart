@@ -5,7 +5,9 @@ import 'package:slipstream/core/models/result.dart';
 import 'package:slipstream/core/models/stored_subscription/stored_subscription.dart';
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/core/service/vpn_service/vpn_service_cubit.dart';
+import 'package:slipstream/core/models/subscription/subscription.dart';
 import 'package:slipstream/features/notifications/data/app_alerts.dart';
+import 'package:slipstream/features/subscriptions/data/subscription_limit_alerter.dart';
 import 'package:slipstream/features/subscriptions/data/auto_update/background_sync_scheduler.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_parser_service.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_storage/subscription_storage.dart';
@@ -54,6 +56,23 @@ class RecordingAppAlerts implements AppAlerts {
   @override
   Future<void> cancel(AppAlertKind kind, String subscriptionName) async =>
       cancelled.add((kind, subscriptionName));
+}
+
+/// Stands for the alerter about time and traffic: records the subscriptions it
+/// was asked about and, when [marks] is set, puts those marks on them.
+class FakeLimitAlerter extends Fake implements SubscriptionLimitAlerter {
+  final applied = <String>[];
+  final forgotten = <String>[];
+  List<String> marks = const [];
+
+  @override
+  Future<void> forget(Subscription sub) async => forgotten.add(sub.id);
+
+  @override
+  Future<Subscription> apply(Subscription sub) async {
+    applied.add(sub.id);
+    return marks.isEmpty ? sub : sub.copyWith(notifiedAlerts: marks);
+  }
 }
 
 /// A parser that answers with [_answer] and records every input.

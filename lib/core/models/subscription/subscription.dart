@@ -28,6 +28,13 @@ abstract class Subscription with _$Subscription {
     /// cleared by the next successful refresh (SubscriptionFactory.refresh).
     DateTime? failureNotifiedAt,
 
+    /// The alerts about the time and the traffic of this subscription that were
+    /// already raised and whose cause still stands (`expiring`, `expired`,
+    /// `trafficLow`, `trafficExhausted`), so each is said once. A mark goes when
+    /// its cause does: the subscription was renewed, the counter was reset.
+    /// See planLimitAlerts.
+    @Default(<String>[]) List<String> notifiedAlerts,
+
     /// Ids of the servers the user pinned. Kept here, not on the servers: a
     /// refresh replaces them all, and the subscription stays (the factory
     /// carries the ids over, see `remapFavoriteIds`).

@@ -114,6 +114,16 @@ class _NotificationsPageState extends State<NotificationsPage>
                           onSwitch: (value) =>
                               _prefs.setSubscriptionFailed(enabled: value),
                         ),
+                        SettingsRow(
+                          iconPath: AppAssets.database,
+                          hue: TileHue.indigo,
+                          title: l10n.notifySubscriptionLimitsTitle,
+                          subtitle: l10n.notifySubscriptionLimitsSubtitle,
+                          subtitleMaxLines: 2,
+                          switchValue: prefs.subscriptionLimits,
+                          onSwitch: (value) =>
+                              _prefs.setSubscriptionLimits(enabled: value),
+                        ),
                       ],
                     ),
                   ),

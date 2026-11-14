@@ -79,6 +79,7 @@ void main() {
       orderStore: SubscriptionOrderStore(prefs),
       factory: factory,
       refresher: SubscriptionRefresher(parser, factory, now: () => _now),
+      limitAlerter: FakeLimitAlerter(),
       vpnServiceCubit: vpn,
       talker: Talker(),
     );

@@ -696,6 +696,8 @@
   "notifyRevokedSubtitle": "Another VPN app started and disconnected Slipstream",
   "notifySubscriptionFailedTitle": "Subscription did not update",
   "notifySubscriptionFailedSubtitle": "A background refresh of a subscription failed",
+  "notifySubscriptionLimitsTitle": "Subscription expiry and traffic",
+  "notifySubscriptionLimitsSubtitle": "A subscription is about to expire or its traffic is running out",
   "notifyDisabledTitle": "Notifications are off for Slipstream",
   "notifyDisabledBody": "Android will not show these alerts. Turn them on in the system settings.",
   "notifyOpenSettings": "Open settings",
@@ -711,6 +713,9 @@
   "helpNotifSubFailedWhat": "Shows a notification when the automatic refresh of a subscription fails while the app is closed. It comes once for a run of failures, not at every retry, and goes away when the subscription updates again.",
   "helpNotifSubFailedWhy": "A subscription that stops updating slowly goes stale: new servers do not appear and dead ones stay. Without an alert you find out only when a server stops working.",
   "helpNotifSubFailedTip": "It only works while auto-update is on (Settings → Subscriptions). A refresh you start in the app shows its error on the screen instead.",
+  "helpNotifSubLimitsWhat": "Shows a notification when a subscription has three days or less left, when it has expired, when 90% of its traffic is used and when the traffic is used up. Each one comes once and goes away when the subscription is renewed.",
+  "helpNotifSubLimitsWhy": "A subscription that expires or runs out of traffic stops working with no warning, and the first sign is a dead connection. The alert gives you time to renew it.",
+  "helpNotifSubLimitsTip": "It uses the date and the limit your provider reports; a subscription with neither is not watched. It is checked at every refresh and, with auto-update on, in the background.",
   "helpNotifNoteSystemTitle": "System permission",
   "helpNotifNoteSystemBody": "On Android 13 and newer the app needs your permission to show notifications. If you refused, turn it on in the system settings (the Open settings button on this page)."
 }

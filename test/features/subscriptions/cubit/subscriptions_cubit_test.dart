@@ -46,6 +46,9 @@ void main() {
   late InMemoryStorage storage;
   late SelectedServerStore selection;
   late SubscriptionOrderStore orderStore;
+  late FakeLimitAlerter limits;
+
+  setUp(() => limits = FakeLimitAlerter());
 
   Future<SubscriptionsCubit> cubitWith(
     FakeParser parser, {
@@ -68,6 +71,7 @@ void main() {
       orderStore: orderStore,
       factory: factory,
       refresher: SubscriptionRefresher(parser, factory),
+      limitAlerter: limits,
       vpnServiceCubit: FakeVpnCubit(),
       talker: Talker(),
     );
@@ -190,6 +194,69 @@ void main() {
       gate.complete(_parsed(['a:1:u:#0']));
 
       expect(await refresh, isA<RefreshIgnored>());
+    });
+  });
+
+  group('refreshSubscription and the alerts about time and traffic', () {
+    test('looks at the refreshed subscription and saves its marks', () async {
+      limits.marks = ['expiring'];
+      final cubit = await cubitWith(
+        FakeParser((_) async => _parsed(['x:1:u:#0'])),
+        initial: [
+          _stored('a', ['old:1:u:#0']),
+        ],
+      );
+
+      await cubit.refreshSubscription('a');
+
+      expect(limits.applied, ['a']);
+      expect(storage.items['a']!.subscription.notifiedAlerts, ['expiring']);
+      expect(cubit.state.subscriptions.single.subscription.notifiedAlerts, [
+        'expiring',
+      ]);
+    });
+
+    test('looks also when the refresh failed: the days run down', () async {
+      final cubit = await cubitWith(
+        FakeParser((_) async => const Failure('Timeout')),
+        initial: [
+          _stored('a', ['old:1:u:#0']),
+        ],
+      );
+
+      await cubit.refreshSubscription('a');
+
+      expect(limits.applied, ['a']);
+    });
+
+    test('a deleted subscription has its alerts taken back', () async {
+      final cubit = await cubitWith(
+        FakeParser((_) async => _parsed(['x:1:u:#0'])),
+        initial: [
+          _stored('a', ['old:1:u:#0']),
+        ],
+      );
+
+      await cubit.removeSubscription('a');
+
+      expect(limits.forgotten, ['a']);
+    });
+
+    test('does not look at a subscription deleted during the fetch', () async {
+      final gate = Completer<Result<ParsedSubscription>>();
+      final cubit = await cubitWith(
+        FakeParser((_) => gate.future),
+        initial: [
+          _stored('a', ['old:1:u:#0']),
+        ],
+      );
+
+      final refresh = cubit.refreshSubscription('a');
+      await cubit.removeSubscription('a');
+      gate.complete(_parsed(['x:1:u:#0']));
+      await refresh;
+
+      expect(limits.applied, isEmpty);
     });
   });
 

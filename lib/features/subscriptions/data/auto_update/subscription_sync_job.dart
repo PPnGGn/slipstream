@@ -5,6 +5,7 @@ import 'package:slipstream/features/notifications/data/notifications_store.dart'
 import 'package:slipstream/features/subscriptions/data/auto_update/subscription_failure_alert.dart';
 import 'package:slipstream/features/subscriptions/data/auto_update/subscription_update_policy.dart';
 import 'package:slipstream/features/subscriptions/data/auto_update/subscription_update_settings_store.dart';
+import 'package:slipstream/features/subscriptions/data/subscription_limit_alerter.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_refresher.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_storage/subscription_storage.dart';
 import 'package:talker_flutter/talker_flutter.dart';
@@ -24,6 +25,7 @@ class SubscriptionSyncJob {
     this._settings,
     this._notifications,
     this._alerts,
+    this._limits,
     this._talker, {
     @ignoreParam DateTime Function()? now,
   }) : _now = now ?? DateTime.now;
@@ -33,6 +35,7 @@ class SubscriptionSyncJob {
   final SubscriptionUpdateSettingsStore _settings;
   final NotificationsStore _notifications;
   final AppAlerts _alerts;
+  final SubscriptionLimitAlerter _limits;
   final Talker _talker;
   final DateTime Function() _now;
 
@@ -41,11 +44,13 @@ class SubscriptionSyncJob {
   Future<bool> run() async {
     final setting = _settings.loadInterval();
     final now = _now();
+    final all = await _storage.loadAll();
     final due = [
-      for (final stored in await _storage.loadAll())
+      for (final stored in all)
         if (isUpdateDue(stored.subscription, setting, now)) stored,
     ];
     _talker.info('Sync: ${due.length} subscription(s) due');
+    final dueIds = {for (final stored in due) stored.subscription.id};
 
     var ok = true;
     for (final stored in due) {
@@ -67,6 +72,11 @@ class SubscriptionSyncJob {
           subscription: updated.subscription.copyWith(failureNotifiedAt: now),
         );
       }
+      // Looked at after the refresh, which may have brought new figures; with
+      // the old ones when it failed, the days run down all the same.
+      updated = updated.copyWith(
+        subscription: await _limits.apply(updated.subscription),
+      );
       await _storage.save(updated);
       await _raise(action, updated);
 
@@ -74,6 +84,16 @@ class SubscriptionSyncJob {
       if (error != null) {
         ok = false;
         _talker.warning('Sync: $id failed -> $error');
+      }
+    }
+
+    // The subscriptions that were not due: nothing to fetch, but their time and
+    // traffic are looked at as well. Saved only when a mark changed.
+    for (final stored in all) {
+      if (dueIds.contains(stored.subscription.id)) continue;
+      final looked = await _limits.apply(stored.subscription);
+      if (!identical(looked, stored.subscription)) {
+        await _storage.save(stored.copyWith(subscription: looked));
       }
     }
     return ok;

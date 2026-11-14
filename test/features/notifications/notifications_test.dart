@@ -94,6 +94,20 @@ void main() {
       expect(store.load().subscriptionFailed, isFalse);
     });
 
+    test(
+      'the expiry and traffic alert has its own key and starts on',
+      () async {
+        final store = await storeWith({});
+        expect(store.load().subscriptionLimits, isTrue);
+
+        await store.save(const NotificationPrefs(subscriptionLimits: false));
+
+        final raw = await SharedPreferences.getInstance();
+        expect(raw.getBool('notify_subscription_limits'), isFalse);
+        expect(store.load().subscriptionLimits, isFalse);
+      },
+    );
+
     test('an install from before the alert existed reads it as on', () async {
       final prefs = (await storeWith({
         'notify_traffic_blocked': false,
@@ -128,11 +142,13 @@ void main() {
       );
       await cubit.setRevoked(enabled: false);
       await cubit.setSubscriptionFailed(enabled: false);
+      await cubit.setSubscriptionLimits(enabled: false);
       const allOff = NotificationPrefs(
         trafficBlocked: false,
         startFailed: false,
         revoked: false,
         subscriptionFailed: false,
+        subscriptionLimits: false,
       );
       expect(cubit.state, allOff);
       expect(store.load(), allOff);
@@ -193,18 +209,18 @@ void main() {
     test('some on counts them against all the alerts there are', () {
       expect(
         summary(const NotificationPrefs(trafficBlocked: false)),
-        '3 of 4 on',
+        '4 of 5 on',
       );
-      expect(summary(const NotificationPrefs(revoked: false)), '3 of 4 on');
+      expect(summary(const NotificationPrefs(revoked: false)), '4 of 5 on');
       expect(
         summary(const NotificationPrefs(subscriptionFailed: false)),
-        '3 of 4 on',
+        '4 of 5 on',
       );
       expect(
         summary(
           const NotificationPrefs(trafficBlocked: false, startFailed: false),
         ),
-        '2 of 4 on',
+        '3 of 5 on',
       );
     });
 
@@ -216,6 +232,7 @@ void main() {
             startFailed: false,
             revoked: false,
             subscriptionFailed: false,
+            subscriptionLimits: false,
           ),
         ),
         'Off',

@@ -75,9 +75,7 @@ class FragmentParams {
 
   /// Spaces gone, `150` written as `150-150`, `TLSHello` as `tlshello`.
   FragmentParams normalized() => FragmentParams(
-    packets: _isTlsHello(packets)
-        ? tlsHello
-        : normalizeRange(packets),
+    packets: _isTlsHello(packets) ? tlsHello : normalizeRange(packets),
     length: normalizeRange(length),
     delay: normalizeRange(delay),
   );

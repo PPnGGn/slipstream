@@ -324,6 +324,14 @@ HelpTopic notificationsHelp(AppLocalizations l10n) => HelpTopic(
       why: l10n.helpNotifSubFailedWhy,
       tip: l10n.helpNotifSubFailedTip,
     ),
+    HelpItem(
+      iconPath: AppAssets.database,
+      hue: TileHue.indigo,
+      title: l10n.notifySubscriptionLimitsTitle,
+      what: l10n.helpNotifSubLimitsWhat,
+      why: l10n.helpNotifSubLimitsWhy,
+      tip: l10n.helpNotifSubLimitsTip,
+    ),
   ],
   notes: [
     HelpNote(

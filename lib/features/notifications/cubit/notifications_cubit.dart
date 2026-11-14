@@ -25,6 +25,9 @@ class NotificationsCubit extends Cubit<NotificationPrefs> {
   Future<void> setSubscriptionFailed({required bool enabled}) =>
       _set(state.copyWith(subscriptionFailed: enabled));
 
+  Future<void> setSubscriptionLimits({required bool enabled}) =>
+      _set(state.copyWith(subscriptionLimits: enabled));
+
   Future<void> _set(NotificationPrefs next) async {
     if (next == state) return;
     emit(next);

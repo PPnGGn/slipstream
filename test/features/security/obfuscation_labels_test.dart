@@ -18,7 +18,11 @@ void main() {
         l10nEn,
         const ObfuscationSettings(
           fragmentEnabled: true,
-          fragment: FragmentParams(packets: '1-3', length: '50-90', delay: '5-9'),
+          fragment: FragmentParams(
+            packets: '1-3',
+            length: '50-90',
+            delay: '5-9',
+          ),
         ),
       );
 

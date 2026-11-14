@@ -11,26 +11,28 @@ void main() {
 
   /// A config whose `proxy` outbound runs over [network]; [stream] is merged
   /// into its streamSettings (finalmask, for the cases that start with masks).
-  String configOn(String network, {Map<String, dynamic>? stream}) => jsonEncode({
-    'outbounds': [
-      {
-        'tag': 'proxy',
-        'protocol': 'vless',
-        'streamSettings': {'network': network, ...?stream},
-      },
-      {'tag': 'direct', 'protocol': 'freedom'},
-    ],
-  });
+  String configOn(String network, {Map<String, dynamic>? stream}) =>
+      jsonEncode({
+        'outbounds': [
+          {
+            'tag': 'proxy',
+            'protocol': 'vless',
+            'streamSettings': {'network': network, ...?stream},
+          },
+          {'tag': 'direct', 'protocol': 'freedom'},
+        ],
+      });
 
   Map<String, dynamic> proxyOf(String configJson) {
     final config = jsonDecode(configJson) as Map<String, dynamic>;
-    return (config['outbounds'] as List).cast<Map<String, dynamic>>().firstWhere(
-      (o) => o['tag'] == 'proxy',
-    );
+    return (config['outbounds'] as List)
+        .cast<Map<String, dynamic>>()
+        .firstWhere((o) => o['tag'] == 'proxy');
   }
 
   Map<String, dynamic>? finalmaskOf(String configJson) =>
-      (proxyOf(configJson)['streamSettings'] as Map<String, dynamic>?)?['finalmask']
+      (proxyOf(configJson)['streamSettings']
+              as Map<String, dynamic>?)?['finalmask']
           as Map<String, dynamic>?;
 
   const fragmentMask = {
@@ -70,7 +72,11 @@ void main() {
         configOn('tcp'),
         const ObfuscationSettings(
           fragmentEnabled: true,
-          fragment: FragmentParams(packets: '1-3', length: '50-90', delay: '5-9'),
+          fragment: FragmentParams(
+            packets: '1-3',
+            length: '50-90',
+            delay: '5-9',
+          ),
         ),
       );
 
@@ -86,32 +92,49 @@ void main() {
     });
 
     test('applies to every transport that runs over a TCP connection', () {
-      for (final network in ['tcp', 'raw', 'ws', 'grpc', 'httpupgrade', 'xhttp']) {
+      for (final network in [
+        'tcp',
+        'raw',
+        'ws',
+        'grpc',
+        'httpupgrade',
+        'xhttp',
+      ]) {
         final result = applyObfuscation(configOn(network), fragmentOn);
 
         expect(finalmaskOf(result)?['tcp'], isNotNull, reason: network);
       }
     });
 
-    test('treats a stream with no network as tcp, which is the xray default', () {
-      final config = jsonEncode({
-        'outbounds': [
-          {
-            'tag': 'proxy',
-            'protocol': 'vless',
-            'streamSettings': {'security': 'reality'},
-          },
-        ],
-      });
+    test(
+      'treats a stream with no network as tcp, which is the xray default',
+      () {
+        final config = jsonEncode({
+          'outbounds': [
+            {
+              'tag': 'proxy',
+              'protocol': 'vless',
+              'streamSettings': {'security': 'reality'},
+            },
+          ],
+        });
 
-      expect(finalmaskOf(applyObfuscation(config, fragmentOn))?['tcp'], isNotNull);
-    });
+        expect(
+          finalmaskOf(applyObfuscation(config, fragmentOn))?['tcp'],
+          isNotNull,
+        );
+      },
+    );
 
     test('leaves UDP transports alone: there is no TLS hello to cut', () {
       for (final network in ['kcp', 'hysteria']) {
         final config = configOn(network);
 
-        expect(applyObfuscation(config, fragmentOn), same(config), reason: network);
+        expect(
+          applyObfuscation(config, fragmentOn),
+          same(config),
+          reason: network,
+        );
       }
     });
 
@@ -136,8 +159,16 @@ void main() {
       for (final network in ['kcp', 'hysteria']) {
         final result = applyObfuscation(configOn(network), noiseOn);
 
-        expect(finalmaskOf(result)!['udp'], equals([noiseMask]), reason: network);
-        expect(finalmaskOf(result)!.containsKey('tcp'), isFalse, reason: network);
+        expect(
+          finalmaskOf(result)!['udp'],
+          equals([noiseMask]),
+          reason: network,
+        );
+        expect(
+          finalmaskOf(result)!.containsKey('tcp'),
+          isFalse,
+          reason: network,
+        );
       }
     });
 
@@ -185,7 +216,10 @@ void main() {
 
       final mask = finalmaskOf(applyObfuscation(config, noiseOn))!;
 
-      expect((mask['udp'] as List).map((m) => (m as Map)['type']), ['noise', 'salamander']);
+      expect((mask['udp'] as List).map((m) => (m as Map)['type']), [
+        'noise',
+        'salamander',
+      ]);
       expect(
         mask['quicParams'],
         equals({
@@ -251,13 +285,18 @@ void main() {
     test('the other outbounds', () {
       final result = applyObfuscation(configOn('tcp'), bothOn);
       final config = jsonDecode(result) as Map<String, dynamic>;
-      final direct = (config['outbounds'] as List).cast<Map<String, dynamic>>().last;
+      final direct = (config['outbounds'] as List)
+          .cast<Map<String, dynamic>>()
+          .last;
 
       expect(direct, equals({'tag': 'direct', 'protocol': 'freedom'}));
     });
 
     test('the rest of the proxy outbound', () {
-      final result = applyObfuscation(configOn('tcp', stream: {'security': 'reality'}), fragmentOn);
+      final result = applyObfuscation(
+        configOn('tcp', stream: {'security': 'reality'}),
+        fragmentOn,
+      );
       final stream = proxyOf(result)['streamSettings'] as Map<String, dynamic>;
 
       expect(stream['security'], equals('reality'));
@@ -289,10 +328,17 @@ void main() {
       expect(applyObfuscation(config, bothOn), same(config));
     });
 
-    test('text that is not a config, which comes back unchanged and never throws', () {
-      for (final broken in ['', 'not json', '[]', '{"outbounds": 5}']) {
-        expect(applyObfuscation(broken, bothOn), same(broken), reason: broken);
-      }
-    });
+    test(
+      'text that is not a config, which comes back unchanged and never throws',
+      () {
+        for (final broken in ['', 'not json', '[]', '{"outbounds": 5}']) {
+          expect(
+            applyObfuscation(broken, bothOn),
+            same(broken),
+            reason: broken,
+          );
+        }
+      },
+    );
   });
 }

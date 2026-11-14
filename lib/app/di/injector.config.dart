@@ -107,6 +107,8 @@ import '../../features/subscriptions/data/selected_server_store.dart' as _i830;
 import '../../features/subscriptions/data/subscription_description_store.dart'
     as _i811;
 import '../../features/subscriptions/data/subscription_factory.dart' as _i179;
+import '../../features/subscriptions/data/subscription_limit_alerter.dart'
+    as _i88;
 import '../../features/subscriptions/data/subscription_order_store.dart'
     as _i583;
 import '../../features/subscriptions/data/subscription_parser/subscription_fetcher.dart'
@@ -334,6 +336,12 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i500.Ipv6Cubit>(
       () => _i500.Ipv6Cubit(store: gh<_i926.Ipv6Store>()),
     );
+    gh.lazySingleton<_i88.SubscriptionLimitAlerter>(
+      () => _i88.SubscriptionLimitAlerter(
+        gh<_i1013.NotificationsStore>(),
+        gh<_i504.AppAlerts>(),
+      ),
+    );
     gh.lazySingleton<_i353.LanguageCubit>(
       () => _i353.LanguageCubit(store: gh<_i668.LanguageStore>()),
     );
@@ -467,6 +475,17 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i179.SubscriptionFactory>(),
       ),
     );
+    gh.lazySingleton<_i474.SubscriptionSyncJob>(
+      () => _i474.SubscriptionSyncJob(
+        gh<_i505.SubscriptionStorage>(),
+        gh<_i944.SubscriptionRefresher>(),
+        gh<_i331.SubscriptionUpdateSettingsStore>(),
+        gh<_i1013.NotificationsStore>(),
+        gh<_i504.AppAlerts>(),
+        gh<_i88.SubscriptionLimitAlerter>(),
+        gh<_i207.Talker>(),
+      ),
+    );
     gh.lazySingleton<_i83.SubscriptionsCubit>(
       () => _i83.SubscriptionsCubit(
         parser: gh<_i302.SubscriptionParserService>(),
@@ -475,18 +494,9 @@ extension GetItInjectableX on _i174.GetIt {
         orderStore: gh<_i583.SubscriptionOrderStore>(),
         factory: gh<_i179.SubscriptionFactory>(),
         refresher: gh<_i944.SubscriptionRefresher>(),
+        limitAlerter: gh<_i88.SubscriptionLimitAlerter>(),
         vpnServiceCubit: gh<_i202.VpnServiceCubit>(),
         talker: gh<_i207.Talker>(),
-      ),
-    );
-    gh.lazySingleton<_i474.SubscriptionSyncJob>(
-      () => _i474.SubscriptionSyncJob(
-        gh<_i505.SubscriptionStorage>(),
-        gh<_i944.SubscriptionRefresher>(),
-        gh<_i331.SubscriptionUpdateSettingsStore>(),
-        gh<_i1013.NotificationsStore>(),
-        gh<_i504.AppAlerts>(),
-        gh<_i207.Talker>(),
       ),
     );
     gh.lazySingleton<_i918.PingAutoRunner>(

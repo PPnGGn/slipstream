@@ -60,20 +60,27 @@ void main() {
   });
 
   group('saveFragment', () {
-    test('stores the normalized values and keeps the switch as it is', () async {
-      final store = await storeWith({'fragment_enabled': true});
-      final cubit = ObfuscationCubit(store: store);
+    test(
+      'stores the normalized values and keeps the switch as it is',
+      () async {
+        final store = await storeWith({'fragment_enabled': true});
+        final cubit = ObfuscationCubit(store: store);
 
-      final errors = await cubit.saveFragment(
-        const FragmentParams(packets: 'TLSHello', length: '120', delay: '5-9'),
-      );
+        final errors = await cubit.saveFragment(
+          const FragmentParams(
+            packets: 'TLSHello',
+            length: '120',
+            delay: '5-9',
+          ),
+        );
 
-      expect(errors, isNull);
-      expect(cubit.state.fragment.packets, equals('tlshello'));
-      expect(cubit.state.fragment.length, equals('120-120'));
-      expect(cubit.state.fragmentEnabled, isTrue);
-      expect(store.load().fragment.length, equals('120-120'));
-    });
+        expect(errors, isNull);
+        expect(cubit.state.fragment.packets, equals('tlshello'));
+        expect(cubit.state.fragment.length, equals('120-120'));
+        expect(cubit.state.fragmentEnabled, isTrue);
+        expect(store.load().fragment.length, equals('120-120'));
+      },
+    );
 
     test('refuses invalid values and leaves the saved ones alone', () async {
       final store = await storeWith({});

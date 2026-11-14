@@ -10,6 +10,7 @@ class NotificationsStore {
   static const _startFailedKey = 'notify_start_failed';
   static const _revokedKey = 'notify_revoked';
   static const _subscriptionFailedKey = 'notify_subscription_failed';
+  static const _subscriptionLimitsKey = 'notify_subscription_limits';
 
   final SharedPreferences _prefs;
 
@@ -20,6 +21,7 @@ class NotificationsStore {
     startFailed: _prefs.getBool(_startFailedKey) ?? true,
     revoked: _prefs.getBool(_revokedKey) ?? true,
     subscriptionFailed: _prefs.getBool(_subscriptionFailedKey) ?? true,
+    subscriptionLimits: _prefs.getBool(_subscriptionLimitsKey) ?? true,
   );
 
   Future<void> save(NotificationPrefs prefs) async {
@@ -27,5 +29,6 @@ class NotificationsStore {
     await _prefs.setBool(_startFailedKey, prefs.startFailed);
     await _prefs.setBool(_revokedKey, prefs.revoked);
     await _prefs.setBool(_subscriptionFailedKey, prefs.subscriptionFailed);
+    await _prefs.setBool(_subscriptionLimitsKey, prefs.subscriptionLimits);
   }
 }

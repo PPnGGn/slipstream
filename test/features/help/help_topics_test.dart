@@ -127,6 +127,7 @@ void main() {
         'VPN could not start',
         'Another app took the VPN',
         'Subscription did not update',
+        'Subscription expiry and traffic',
       ]);
     });
 

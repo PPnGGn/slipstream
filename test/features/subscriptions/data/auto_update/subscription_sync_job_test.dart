@@ -11,6 +11,7 @@ import 'package:slipstream/features/subscriptions/data/auto_update/auto_update_i
 import 'package:slipstream/features/subscriptions/data/auto_update/subscription_sync_job.dart';
 import 'package:slipstream/features/subscriptions/data/auto_update/subscription_update_settings_store.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_factory.dart';
+import 'package:slipstream/features/subscriptions/data/subscription_limit_alerter.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_parser_service.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_refresher.dart';
 
@@ -64,6 +65,11 @@ void main() {
       settings,
       NotificationsStore(raw),
       alerts,
+      SubscriptionLimitAlerter(
+        NotificationsStore(raw),
+        alerts,
+        now: () => _now,
+      ),
       Talker(),
       now: () => _now,
     );
@@ -259,6 +265,126 @@ void main() {
       await (await jobWith(storage, parser)).run();
 
       expect(alerts.shown, isEmpty);
+    });
+  });
+
+  group('the alerts about expiry and traffic', () {
+    StoredSubscription expiring(
+      String id, {
+      required Duration age,
+      Duration left = const Duration(days: 2),
+    }) {
+      final s = _stored(id, age: age);
+      return s.copyWith(
+        subscription: s.subscription.copyWith(expiresAt: _now.add(left)),
+      );
+    }
+
+    // The job looks at every subscription, not only at the ones it refreshes:
+    // the days run down whether or not anything is fetched.
+    test('come also for a subscription that is not due', () async {
+      final storage = InMemoryStorage([
+        expiring('fresh', age: const Duration(hours: 1)),
+      ]);
+      final parser = FakeParser((_) async => _ok());
+
+      await (await jobWith(storage, parser)).run();
+
+      expect(parser.inputs, isEmpty);
+      expect(alerts.shown, [
+        (kind: AppAlertKind.subscriptionExpiring, name: 'fresh', number: 2),
+      ]);
+      expect(storage.items['fresh']!.subscription.notifiedAlerts, ['expiring']);
+    });
+
+    test('are said once, over runs', () async {
+      final storage = InMemoryStorage([
+        expiring('fresh', age: const Duration(hours: 1)),
+      ]);
+      final job = await jobWith(storage, FakeParser((_) async => _ok()));
+      await job.run();
+      alerts.shown.clear();
+
+      await job.run();
+
+      expect(alerts.shown, isEmpty);
+    });
+
+    test('come after a refresh that brought the new figures', () async {
+      final storage = InMemoryStorage([
+        _stored('stale', age: const Duration(hours: 13)),
+      ]);
+      final parser = FakeParser(
+        (_) async => Success(
+          ParsedSubscription(
+            servers: const [
+              VpnServer(
+                id: 'h:443:u:#0',
+                subscriptionId: 'x',
+                countryCode: 'NL',
+                title: 'NL',
+                configJson: '{}',
+              ),
+            ],
+            usedBytes: 95,
+            dataLimitBytes: 100,
+          ),
+        ),
+      );
+
+      await (await jobWith(storage, parser)).run();
+
+      expect(alerts.shown, [
+        (kind: AppAlertKind.trafficLow, name: 'stale', number: 95),
+      ]);
+      expect(storage.items['stale']!.subscription.notifiedAlerts, [
+        'trafficLow',
+      ]);
+    });
+
+    test(
+      'come also when the refresh failed: the old figures still tell',
+      () async {
+        final storage = InMemoryStorage([
+          expiring('stale', age: const Duration(hours: 13)),
+        ]);
+        final parser = FakeParser((_) async => const Failure('Timeout'));
+
+        await (await jobWith(storage, parser)).run();
+
+        expect(
+          alerts.shown.map((a) => a.kind),
+          containsAll([
+            AppAlertKind.subscriptionFailed,
+            AppAlertKind.subscriptionExpiring,
+          ]),
+        );
+      },
+    );
+
+    test('are silent, and leave no mark, when their switch is off', () async {
+      final storage = InMemoryStorage([
+        expiring('fresh', age: const Duration(hours: 1)),
+      ]);
+
+      await (await jobWith(
+        storage,
+        FakeParser((_) async => _ok()),
+        prefs: {'notify_subscription_limits': false},
+      )).run();
+
+      expect(alerts.shown, isEmpty);
+      expect(storage.items['fresh']!.subscription.notifiedAlerts, isEmpty);
+    });
+
+    test('a subscription that changes nothing is not saved again', () async {
+      final storage = InMemoryStorage([
+        _stored('fresh', age: const Duration(hours: 1)),
+      ]);
+
+      await (await jobWith(storage, FakeParser((_) async => _ok()))).run();
+
+      expect(storage.saved, isEmpty);
     });
   });
 }

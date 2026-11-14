@@ -21,7 +21,12 @@ mixin _$Subscription {
 /// failures it is in, or null when none was. Set by the background job so
 /// that a subscription that keeps failing alerts once, not at every retry;
 /// cleared by the next successful refresh (SubscriptionFactory.refresh).
- DateTime? get failureNotifiedAt;/// Ids of the servers the user pinned. Kept here, not on the servers: a
+ DateTime? get failureNotifiedAt;/// The alerts about the time and the traffic of this subscription that were
+/// already raised and whose cause still stands (`expiring`, `expired`,
+/// `trafficLow`, `trafficExhausted`), so each is said once. A mark goes when
+/// its cause does: the subscription was renewed, the counter was reset.
+/// See planLimitAlerts.
+ List<String> get notifiedAlerts;/// Ids of the servers the user pinned. Kept here, not on the servers: a
 /// refresh replaces them all, and the subscription stays (the factory
 /// carries the ids over, see `remapFavoriteIds`).
  List<String> get favoriteServerIds;
@@ -37,16 +42,16 @@ $SubscriptionCopyWith<Subscription> get copyWith => _$SubscriptionCopyWithImpl<S
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Subscription&&(identical(other.id, id) || other.id == id)&&(identical(other.url, url) || other.url == url)&&(identical(other.name, name) || other.name == name)&&(identical(other.lastUpdatedAt, lastUpdatedAt) || other.lastUpdatedAt == lastUpdatedAt)&&(identical(other.announce, announce) || other.announce == announce)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.updateIntervalHours, updateIntervalHours) || other.updateIntervalHours == updateIntervalHours)&&(identical(other.usedBytes, usedBytes) || other.usedBytes == usedBytes)&&(identical(other.dataLimitBytes, dataLimitBytes) || other.dataLimitBytes == dataLimitBytes)&&(identical(other.lastAttemptAt, lastAttemptAt) || other.lastAttemptAt == lastAttemptAt)&&(identical(other.lastError, lastError) || other.lastError == lastError)&&(identical(other.failureNotifiedAt, failureNotifiedAt) || other.failureNotifiedAt == failureNotifiedAt)&&const DeepCollectionEquality().equals(other.favoriteServerIds, favoriteServerIds));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Subscription&&(identical(other.id, id) || other.id == id)&&(identical(other.url, url) || other.url == url)&&(identical(other.name, name) || other.name == name)&&(identical(other.lastUpdatedAt, lastUpdatedAt) || other.lastUpdatedAt == lastUpdatedAt)&&(identical(other.announce, announce) || other.announce == announce)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.updateIntervalHours, updateIntervalHours) || other.updateIntervalHours == updateIntervalHours)&&(identical(other.usedBytes, usedBytes) || other.usedBytes == usedBytes)&&(identical(other.dataLimitBytes, dataLimitBytes) || other.dataLimitBytes == dataLimitBytes)&&(identical(other.lastAttemptAt, lastAttemptAt) || other.lastAttemptAt == lastAttemptAt)&&(identical(other.lastError, lastError) || other.lastError == lastError)&&(identical(other.failureNotifiedAt, failureNotifiedAt) || other.failureNotifiedAt == failureNotifiedAt)&&const DeepCollectionEquality().equals(other.notifiedAlerts, notifiedAlerts)&&const DeepCollectionEquality().equals(other.favoriteServerIds, favoriteServerIds));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,url,name,lastUpdatedAt,announce,expiresAt,updateIntervalHours,usedBytes,dataLimitBytes,lastAttemptAt,lastError,failureNotifiedAt,const DeepCollectionEquality().hash(favoriteServerIds));
+int get hashCode => Object.hash(runtimeType,id,url,name,lastUpdatedAt,announce,expiresAt,updateIntervalHours,usedBytes,dataLimitBytes,lastAttemptAt,lastError,failureNotifiedAt,const DeepCollectionEquality().hash(notifiedAlerts),const DeepCollectionEquality().hash(favoriteServerIds));
 
 @override
 String toString() {
-  return 'Subscription(id: $id, url: $url, name: $name, lastUpdatedAt: $lastUpdatedAt, announce: $announce, expiresAt: $expiresAt, updateIntervalHours: $updateIntervalHours, usedBytes: $usedBytes, dataLimitBytes: $dataLimitBytes, lastAttemptAt: $lastAttemptAt, lastError: $lastError, failureNotifiedAt: $failureNotifiedAt, favoriteServerIds: $favoriteServerIds)';
+  return 'Subscription(id: $id, url: $url, name: $name, lastUpdatedAt: $lastUpdatedAt, announce: $announce, expiresAt: $expiresAt, updateIntervalHours: $updateIntervalHours, usedBytes: $usedBytes, dataLimitBytes: $dataLimitBytes, lastAttemptAt: $lastAttemptAt, lastError: $lastError, failureNotifiedAt: $failureNotifiedAt, notifiedAlerts: $notifiedAlerts, favoriteServerIds: $favoriteServerIds)';
 }
 
 
@@ -57,7 +62,7 @@ abstract mixin class $SubscriptionCopyWith<$Res>  {
   factory $SubscriptionCopyWith(Subscription value, $Res Function(Subscription) _then) = _$SubscriptionCopyWithImpl;
 @useResult
 $Res call({
- String id, String? url, String name, DateTime lastUpdatedAt, String? announce, DateTime? expiresAt, int? updateIntervalHours, int? usedBytes, int? dataLimitBytes, DateTime? lastAttemptAt, String? lastError, DateTime? failureNotifiedAt, List<String> favoriteServerIds
+ String id, String? url, String name, DateTime lastUpdatedAt, String? announce, DateTime? expiresAt, int? updateIntervalHours, int? usedBytes, int? dataLimitBytes, DateTime? lastAttemptAt, String? lastError, DateTime? failureNotifiedAt, List<String> notifiedAlerts, List<String> favoriteServerIds
 });
 
 
@@ -74,7 +79,7 @@ class _$SubscriptionCopyWithImpl<$Res>
 
 /// Create a copy of Subscription
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? url = freezed,Object? name = null,Object? lastUpdatedAt = null,Object? announce = freezed,Object? expiresAt = freezed,Object? updateIntervalHours = freezed,Object? usedBytes = freezed,Object? dataLimitBytes = freezed,Object? lastAttemptAt = freezed,Object? lastError = freezed,Object? failureNotifiedAt = freezed,Object? favoriteServerIds = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? url = freezed,Object? name = null,Object? lastUpdatedAt = null,Object? announce = freezed,Object? expiresAt = freezed,Object? updateIntervalHours = freezed,Object? usedBytes = freezed,Object? dataLimitBytes = freezed,Object? lastAttemptAt = freezed,Object? lastError = freezed,Object? failureNotifiedAt = freezed,Object? notifiedAlerts = null,Object? favoriteServerIds = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,url: freezed == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
@@ -88,7 +93,8 @@ as int?,dataLimitBytes: freezed == dataLimitBytes ? _self.dataLimitBytes : dataL
 as int?,lastAttemptAt: freezed == lastAttemptAt ? _self.lastAttemptAt : lastAttemptAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,lastError: freezed == lastError ? _self.lastError : lastError // ignore: cast_nullable_to_non_nullable
 as String?,failureNotifiedAt: freezed == failureNotifiedAt ? _self.failureNotifiedAt : failureNotifiedAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,favoriteServerIds: null == favoriteServerIds ? _self.favoriteServerIds : favoriteServerIds // ignore: cast_nullable_to_non_nullable
+as DateTime?,notifiedAlerts: null == notifiedAlerts ? _self.notifiedAlerts : notifiedAlerts // ignore: cast_nullable_to_non_nullable
+as List<String>,favoriteServerIds: null == favoriteServerIds ? _self.favoriteServerIds : favoriteServerIds // ignore: cast_nullable_to_non_nullable
 as List<String>,
   ));
 }
@@ -174,10 +180,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? url,  String name,  DateTime lastUpdatedAt,  String? announce,  DateTime? expiresAt,  int? updateIntervalHours,  int? usedBytes,  int? dataLimitBytes,  DateTime? lastAttemptAt,  String? lastError,  DateTime? failureNotifiedAt,  List<String> favoriteServerIds)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String? url,  String name,  DateTime lastUpdatedAt,  String? announce,  DateTime? expiresAt,  int? updateIntervalHours,  int? usedBytes,  int? dataLimitBytes,  DateTime? lastAttemptAt,  String? lastError,  DateTime? failureNotifiedAt,  List<String> notifiedAlerts,  List<String> favoriteServerIds)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Subscription() when $default != null:
-return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt,_that.announce,_that.expiresAt,_that.updateIntervalHours,_that.usedBytes,_that.dataLimitBytes,_that.lastAttemptAt,_that.lastError,_that.failureNotifiedAt,_that.favoriteServerIds);case _:
+return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt,_that.announce,_that.expiresAt,_that.updateIntervalHours,_that.usedBytes,_that.dataLimitBytes,_that.lastAttemptAt,_that.lastError,_that.failureNotifiedAt,_that.notifiedAlerts,_that.favoriteServerIds);case _:
   return orElse();
 
 }
@@ -195,10 +201,10 @@ return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt,_that.announce
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? url,  String name,  DateTime lastUpdatedAt,  String? announce,  DateTime? expiresAt,  int? updateIntervalHours,  int? usedBytes,  int? dataLimitBytes,  DateTime? lastAttemptAt,  String? lastError,  DateTime? failureNotifiedAt,  List<String> favoriteServerIds)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String? url,  String name,  DateTime lastUpdatedAt,  String? announce,  DateTime? expiresAt,  int? updateIntervalHours,  int? usedBytes,  int? dataLimitBytes,  DateTime? lastAttemptAt,  String? lastError,  DateTime? failureNotifiedAt,  List<String> notifiedAlerts,  List<String> favoriteServerIds)  $default,) {final _that = this;
 switch (_that) {
 case _Subscription():
-return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt,_that.announce,_that.expiresAt,_that.updateIntervalHours,_that.usedBytes,_that.dataLimitBytes,_that.lastAttemptAt,_that.lastError,_that.failureNotifiedAt,_that.favoriteServerIds);case _:
+return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt,_that.announce,_that.expiresAt,_that.updateIntervalHours,_that.usedBytes,_that.dataLimitBytes,_that.lastAttemptAt,_that.lastError,_that.failureNotifiedAt,_that.notifiedAlerts,_that.favoriteServerIds);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -215,10 +221,10 @@ return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt,_that.announce
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? url,  String name,  DateTime lastUpdatedAt,  String? announce,  DateTime? expiresAt,  int? updateIntervalHours,  int? usedBytes,  int? dataLimitBytes,  DateTime? lastAttemptAt,  String? lastError,  DateTime? failureNotifiedAt,  List<String> favoriteServerIds)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String? url,  String name,  DateTime lastUpdatedAt,  String? announce,  DateTime? expiresAt,  int? updateIntervalHours,  int? usedBytes,  int? dataLimitBytes,  DateTime? lastAttemptAt,  String? lastError,  DateTime? failureNotifiedAt,  List<String> notifiedAlerts,  List<String> favoriteServerIds)?  $default,) {final _that = this;
 switch (_that) {
 case _Subscription() when $default != null:
-return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt,_that.announce,_that.expiresAt,_that.updateIntervalHours,_that.usedBytes,_that.dataLimitBytes,_that.lastAttemptAt,_that.lastError,_that.failureNotifiedAt,_that.favoriteServerIds);case _:
+return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt,_that.announce,_that.expiresAt,_that.updateIntervalHours,_that.usedBytes,_that.dataLimitBytes,_that.lastAttemptAt,_that.lastError,_that.failureNotifiedAt,_that.notifiedAlerts,_that.favoriteServerIds);case _:
   return null;
 
 }
@@ -230,7 +236,7 @@ return $default(_that.id,_that.url,_that.name,_that.lastUpdatedAt,_that.announce
 @JsonSerializable()
 
 class _Subscription implements Subscription {
-  const _Subscription({required this.id, required this.url, required this.name, required this.lastUpdatedAt, this.announce, this.expiresAt, this.updateIntervalHours, this.usedBytes, this.dataLimitBytes, this.lastAttemptAt, this.lastError, this.failureNotifiedAt, final  List<String> favoriteServerIds = const <String>[]}): _favoriteServerIds = favoriteServerIds;
+  const _Subscription({required this.id, required this.url, required this.name, required this.lastUpdatedAt, this.announce, this.expiresAt, this.updateIntervalHours, this.usedBytes, this.dataLimitBytes, this.lastAttemptAt, this.lastError, this.failureNotifiedAt, final  List<String> notifiedAlerts = const <String>[], final  List<String> favoriteServerIds = const <String>[]}): _notifiedAlerts = notifiedAlerts,_favoriteServerIds = favoriteServerIds;
   factory _Subscription.fromJson(Map<String, dynamic> json) => _$SubscriptionFromJson(json);
 
 @override final  String id;
@@ -251,6 +257,23 @@ class _Subscription implements Subscription {
 /// that a subscription that keeps failing alerts once, not at every retry;
 /// cleared by the next successful refresh (SubscriptionFactory.refresh).
 @override final  DateTime? failureNotifiedAt;
+/// The alerts about the time and the traffic of this subscription that were
+/// already raised and whose cause still stands (`expiring`, `expired`,
+/// `trafficLow`, `trafficExhausted`), so each is said once. A mark goes when
+/// its cause does: the subscription was renewed, the counter was reset.
+/// See planLimitAlerts.
+ final  List<String> _notifiedAlerts;
+/// The alerts about the time and the traffic of this subscription that were
+/// already raised and whose cause still stands (`expiring`, `expired`,
+/// `trafficLow`, `trafficExhausted`), so each is said once. A mark goes when
+/// its cause does: the subscription was renewed, the counter was reset.
+/// See planLimitAlerts.
+@override@JsonKey() List<String> get notifiedAlerts {
+  if (_notifiedAlerts is EqualUnmodifiableListView) return _notifiedAlerts;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_notifiedAlerts);
+}
+
 /// Ids of the servers the user pinned. Kept here, not on the servers: a
 /// refresh replaces them all, and the subscription stays (the factory
 /// carries the ids over, see `remapFavoriteIds`).
@@ -278,16 +301,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Subscription&&(identical(other.id, id) || other.id == id)&&(identical(other.url, url) || other.url == url)&&(identical(other.name, name) || other.name == name)&&(identical(other.lastUpdatedAt, lastUpdatedAt) || other.lastUpdatedAt == lastUpdatedAt)&&(identical(other.announce, announce) || other.announce == announce)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.updateIntervalHours, updateIntervalHours) || other.updateIntervalHours == updateIntervalHours)&&(identical(other.usedBytes, usedBytes) || other.usedBytes == usedBytes)&&(identical(other.dataLimitBytes, dataLimitBytes) || other.dataLimitBytes == dataLimitBytes)&&(identical(other.lastAttemptAt, lastAttemptAt) || other.lastAttemptAt == lastAttemptAt)&&(identical(other.lastError, lastError) || other.lastError == lastError)&&(identical(other.failureNotifiedAt, failureNotifiedAt) || other.failureNotifiedAt == failureNotifiedAt)&&const DeepCollectionEquality().equals(other._favoriteServerIds, _favoriteServerIds));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Subscription&&(identical(other.id, id) || other.id == id)&&(identical(other.url, url) || other.url == url)&&(identical(other.name, name) || other.name == name)&&(identical(other.lastUpdatedAt, lastUpdatedAt) || other.lastUpdatedAt == lastUpdatedAt)&&(identical(other.announce, announce) || other.announce == announce)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.updateIntervalHours, updateIntervalHours) || other.updateIntervalHours == updateIntervalHours)&&(identical(other.usedBytes, usedBytes) || other.usedBytes == usedBytes)&&(identical(other.dataLimitBytes, dataLimitBytes) || other.dataLimitBytes == dataLimitBytes)&&(identical(other.lastAttemptAt, lastAttemptAt) || other.lastAttemptAt == lastAttemptAt)&&(identical(other.lastError, lastError) || other.lastError == lastError)&&(identical(other.failureNotifiedAt, failureNotifiedAt) || other.failureNotifiedAt == failureNotifiedAt)&&const DeepCollectionEquality().equals(other._notifiedAlerts, _notifiedAlerts)&&const DeepCollectionEquality().equals(other._favoriteServerIds, _favoriteServerIds));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,url,name,lastUpdatedAt,announce,expiresAt,updateIntervalHours,usedBytes,dataLimitBytes,lastAttemptAt,lastError,failureNotifiedAt,const DeepCollectionEquality().hash(_favoriteServerIds));
+int get hashCode => Object.hash(runtimeType,id,url,name,lastUpdatedAt,announce,expiresAt,updateIntervalHours,usedBytes,dataLimitBytes,lastAttemptAt,lastError,failureNotifiedAt,const DeepCollectionEquality().hash(_notifiedAlerts),const DeepCollectionEquality().hash(_favoriteServerIds));
 
 @override
 String toString() {
-  return 'Subscription(id: $id, url: $url, name: $name, lastUpdatedAt: $lastUpdatedAt, announce: $announce, expiresAt: $expiresAt, updateIntervalHours: $updateIntervalHours, usedBytes: $usedBytes, dataLimitBytes: $dataLimitBytes, lastAttemptAt: $lastAttemptAt, lastError: $lastError, failureNotifiedAt: $failureNotifiedAt, favoriteServerIds: $favoriteServerIds)';
+  return 'Subscription(id: $id, url: $url, name: $name, lastUpdatedAt: $lastUpdatedAt, announce: $announce, expiresAt: $expiresAt, updateIntervalHours: $updateIntervalHours, usedBytes: $usedBytes, dataLimitBytes: $dataLimitBytes, lastAttemptAt: $lastAttemptAt, lastError: $lastError, failureNotifiedAt: $failureNotifiedAt, notifiedAlerts: $notifiedAlerts, favoriteServerIds: $favoriteServerIds)';
 }
 
 
@@ -298,7 +321,7 @@ abstract mixin class _$SubscriptionCopyWith<$Res> implements $SubscriptionCopyWi
   factory _$SubscriptionCopyWith(_Subscription value, $Res Function(_Subscription) _then) = __$SubscriptionCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String? url, String name, DateTime lastUpdatedAt, String? announce, DateTime? expiresAt, int? updateIntervalHours, int? usedBytes, int? dataLimitBytes, DateTime? lastAttemptAt, String? lastError, DateTime? failureNotifiedAt, List<String> favoriteServerIds
+ String id, String? url, String name, DateTime lastUpdatedAt, String? announce, DateTime? expiresAt, int? updateIntervalHours, int? usedBytes, int? dataLimitBytes, DateTime? lastAttemptAt, String? lastError, DateTime? failureNotifiedAt, List<String> notifiedAlerts, List<String> favoriteServerIds
 });
 
 
@@ -315,7 +338,7 @@ class __$SubscriptionCopyWithImpl<$Res>
 
 /// Create a copy of Subscription
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? url = freezed,Object? name = null,Object? lastUpdatedAt = null,Object? announce = freezed,Object? expiresAt = freezed,Object? updateIntervalHours = freezed,Object? usedBytes = freezed,Object? dataLimitBytes = freezed,Object? lastAttemptAt = freezed,Object? lastError = freezed,Object? failureNotifiedAt = freezed,Object? favoriteServerIds = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? url = freezed,Object? name = null,Object? lastUpdatedAt = null,Object? announce = freezed,Object? expiresAt = freezed,Object? updateIntervalHours = freezed,Object? usedBytes = freezed,Object? dataLimitBytes = freezed,Object? lastAttemptAt = freezed,Object? lastError = freezed,Object? failureNotifiedAt = freezed,Object? notifiedAlerts = null,Object? favoriteServerIds = null,}) {
   return _then(_Subscription(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,url: freezed == url ? _self.url : url // ignore: cast_nullable_to_non_nullable
@@ -329,7 +352,8 @@ as int?,dataLimitBytes: freezed == dataLimitBytes ? _self.dataLimitBytes : dataL
 as int?,lastAttemptAt: freezed == lastAttemptAt ? _self.lastAttemptAt : lastAttemptAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,lastError: freezed == lastError ? _self.lastError : lastError // ignore: cast_nullable_to_non_nullable
 as String?,failureNotifiedAt: freezed == failureNotifiedAt ? _self.failureNotifiedAt : failureNotifiedAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,favoriteServerIds: null == favoriteServerIds ? _self._favoriteServerIds : favoriteServerIds // ignore: cast_nullable_to_non_nullable
+as DateTime?,notifiedAlerts: null == notifiedAlerts ? _self._notifiedAlerts : notifiedAlerts // ignore: cast_nullable_to_non_nullable
+as List<String>,favoriteServerIds: null == favoriteServerIds ? _self._favoriteServerIds : favoriteServerIds // ignore: cast_nullable_to_non_nullable
 as List<String>,
   ));
 }

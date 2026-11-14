@@ -16,6 +16,7 @@ import 'package:slipstream/features/subscriptions/data/subscription_order.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_order_store.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_exceptions.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_parser_service.dart';
+import 'package:slipstream/features/subscriptions/data/subscription_limit_alerter.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_refresher.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_storage/subscription_storage.dart';
 
@@ -31,6 +32,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
     required SubscriptionOrderStore orderStore,
     required SubscriptionFactory factory,
     required SubscriptionRefresher refresher,
+    required SubscriptionLimitAlerter limitAlerter,
     required VpnServiceCubit vpnServiceCubit,
     required Talker talker,
   }) : _parser = parser,
@@ -39,6 +41,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
        _orderStore = orderStore,
        _factory = factory,
        _refresher = refresher,
+       _limitAlerter = limitAlerter,
        _vpnServiceCubit = vpnServiceCubit,
        _talker = talker,
        super(const SubscriptionsState()) {
@@ -51,6 +54,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
   final SubscriptionOrderStore _orderStore;
   final SubscriptionFactory _factory;
   final SubscriptionRefresher _refresher;
+  final SubscriptionLimitAlerter _limitAlerter;
   final VpnServiceCubit _vpnServiceCubit;
   final Talker _talker;
 
@@ -131,7 +135,9 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
   }
 
   Future<void> removeSubscription(String subscriptionId) async {
+    final removed = _findSubscription(subscriptionId);
     await _storage.delete(subscriptionId);
+    if (removed != null) await _limitAlerter.forget(removed.subscription);
     final remaining = state.subscriptions
         .where((s) => s.subscription.id != subscriptionId)
         .toList();
@@ -246,7 +252,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
       state.copyWith(refreshingIds: {...state.refreshingIds, subscriptionId}),
     );
     final refreshed = await _refresher.refreshDetailed(stored);
-    final updated = refreshed.stored;
+    var updated = refreshed.stored;
 
     // Looked up again by id: the list may have changed during the fetch,
     // and a subscription deleted meanwhile must not come back.
@@ -260,6 +266,12 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
       return const RefreshIgnored();
     }
 
+    // The time and the traffic are looked at with the new figures (with the old
+    // ones after a failure: the days run down all the same), and the marks of
+    // what was said are saved with the subscription.
+    updated = updated.copyWith(
+      subscription: await _limitAlerter.apply(updated.subscription),
+    );
     await _storage.save(updated);
     final error = updated.subscription.lastError;
     if (error == null) {

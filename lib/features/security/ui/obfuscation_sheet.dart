@@ -340,7 +340,11 @@ class _RangeField extends StatelessWidget {
         labelText: label,
         hintText: hint,
         errorText: error,
-        errorStyle: TextStyle(fontSize: 11.5, height: 1.4, color: colors.danger),
+        errorStyle: TextStyle(
+          fontSize: 11.5,
+          height: 1.4,
+          color: colors.danger,
+        ),
         enabledBorder: error != null ? errorBorder : null,
         focusedBorder: error != null ? errorBorder : null,
       ),

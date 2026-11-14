@@ -13,11 +13,12 @@ class NotificationPrefs {
     this.startFailed = true,
     this.revoked = true,
     this.subscriptionFailed = true,
+    this.subscriptionLimits = true,
   });
 
   /// How many alerts there are. The Notifications row counts "N of this many
   /// on"; a new alert raises it.
-  static const total = 4;
+  static const total = 5;
 
   /// The kill switch holds the traffic: the tunnel is gone and nothing gets
   /// out until the user reconnects.
@@ -33,11 +34,16 @@ class NotificationPrefs {
   /// The background refresh of a subscription failed.
   final bool subscriptionFailed;
 
+  /// A subscription is about to expire or has expired, or its traffic is
+  /// running out or used up. Decided in Dart, like [subscriptionFailed].
+  final bool subscriptionLimits;
+
   int get enabledCount => [
     trafficBlocked,
     startFailed,
     revoked,
     subscriptionFailed,
+    subscriptionLimits,
   ].where((on) => on).length;
 
   NotificationPrefs copyWith({
@@ -45,11 +51,13 @@ class NotificationPrefs {
     bool? startFailed,
     bool? revoked,
     bool? subscriptionFailed,
+    bool? subscriptionLimits,
   }) => NotificationPrefs(
     trafficBlocked: trafficBlocked ?? this.trafficBlocked,
     startFailed: startFailed ?? this.startFailed,
     revoked: revoked ?? this.revoked,
     subscriptionFailed: subscriptionFailed ?? this.subscriptionFailed,
+    subscriptionLimits: subscriptionLimits ?? this.subscriptionLimits,
   );
 
   @override
@@ -58,15 +66,22 @@ class NotificationPrefs {
       other.trafficBlocked == trafficBlocked &&
       other.startFailed == startFailed &&
       other.revoked == revoked &&
-      other.subscriptionFailed == subscriptionFailed;
+      other.subscriptionFailed == subscriptionFailed &&
+      other.subscriptionLimits == subscriptionLimits;
 
   @override
-  int get hashCode =>
-      Object.hash(trafficBlocked, startFailed, revoked, subscriptionFailed);
+  int get hashCode => Object.hash(
+    trafficBlocked,
+    startFailed,
+    revoked,
+    subscriptionFailed,
+    subscriptionLimits,
+  );
 
   @override
   String toString() =>
       'NotificationPrefs(trafficBlocked: $trafficBlocked, '
       'startFailed: $startFailed, revoked: $revoked, '
-      'subscriptionFailed: $subscriptionFailed)';
+      'subscriptionFailed: $subscriptionFailed, '
+      'subscriptionLimits: $subscriptionLimits)';
 }
