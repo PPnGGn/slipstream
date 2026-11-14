@@ -74,7 +74,10 @@ class _SecurityPageState extends State<SecurityPage> {
                           iconPath: AppAssets.ipv6,
                           hue: TileHue.blue,
                           title: 'IPv6',
-                          subtitle: ipv6Subtitle(context.l10n, enabled: enabled),
+                          subtitle: ipv6Subtitle(
+                            context.l10n,
+                            enabled: enabled,
+                          ),
                           subtitleMaxLines: 2,
                           switchValue: enabled,
                           onSwitch: (value) {

@@ -66,6 +66,45 @@ void main() {
     expect(result.subscription.lastError, 'HTTP error: 502');
   });
 
+  group('the alert of a run of failures (failureNotifiedAt)', () {
+    StoredSubscription alerted() {
+      final s = stored();
+      return s.copyWith(
+        subscription: s.subscription.copyWith(failureNotifiedAt: before),
+      );
+    }
+
+    test('a success ends the run: the mark is cleared', () async {
+      final parser = FakeParser(
+        (_) async => Success(ParsedSubscription(servers: [server('n:1:u:#0')])),
+      );
+
+      final result = await refresherWith(parser).refresh(alerted());
+
+      expect(result.subscription.failureNotifiedAt, isNull);
+    });
+
+    test('a failure keeps it: the run goes on', () async {
+      final parser = FakeParser((_) async => const Failure('Timeout'));
+
+      final result = await refresherWith(parser).refresh(alerted());
+
+      expect(result.subscription.failureNotifiedAt, before);
+    });
+
+    test('a subscription saved before the field existed reads it as null', () {
+      final json = alerted().subscription.toJson()..remove('failureNotifiedAt');
+
+      expect(Subscription.fromJson(json).failureNotifiedAt, isNull);
+    });
+
+    test('it survives a round trip through JSON', () {
+      final json = alerted().subscription.toJson();
+
+      expect(Subscription.fromJson(json).failureNotifiedAt, before);
+    });
+  });
+
   group('refreshDetailed', () {
     test('hands over the reason of a failure, for the UI to explain', () async {
       const reason = HttpStatusException(502);

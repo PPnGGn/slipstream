@@ -694,6 +694,8 @@
   "notifyStartFailedSubtitle": "A start from the tile or by the system failed",
   "notifyRevokedTitle": "Another app took the VPN",
   "notifyRevokedSubtitle": "Another VPN app started and disconnected Slipstream",
+  "notifySubscriptionFailedTitle": "Subscription did not update",
+  "notifySubscriptionFailedSubtitle": "A background refresh of a subscription failed",
   "notifyDisabledTitle": "Notifications are off for Slipstream",
   "notifyDisabledBody": "Android will not show these alerts. Turn them on in the system settings.",
   "notifyOpenSettings": "Open settings",
@@ -706,6 +708,9 @@
   "helpNotifStartTip": "A start you make in the app shows its error on the main screen instead.",
   "helpNotifRevokedWhat": "Shows a notification when another VPN app starts and Android disconnects Slipstream. It only tells you; it has no Reconnect button.",
   "helpNotifRevokedWhy": "Android allows one VPN at a time. When another app takes it, your traffic goes out unprotected and nothing on the screen says so. Reconnecting would take the VPN back from that app and ask you to confirm, so do it in the app when you want to.",
+  "helpNotifSubFailedWhat": "Shows a notification when the automatic refresh of a subscription fails while the app is closed. It comes once for a run of failures, not at every retry, and goes away when the subscription updates again.",
+  "helpNotifSubFailedWhy": "A subscription that stops updating slowly goes stale: new servers do not appear and dead ones stay. Without an alert you find out only when a server stops working.",
+  "helpNotifSubFailedTip": "It only works while auto-update is on (Settings → Subscriptions). A refresh you start in the app shows its error on the screen instead.",
   "helpNotifNoteSystemTitle": "System permission",
   "helpNotifNoteSystemBody": "On Android 13 and newer the app needs your permission to show notifications. If you refused, turn it on in the system settings (the Open settings button on this page)."
 }

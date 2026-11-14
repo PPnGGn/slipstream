@@ -479,6 +479,16 @@ extension GetItInjectableX on _i174.GetIt {
         talker: gh<_i207.Talker>(),
       ),
     );
+    gh.lazySingleton<_i474.SubscriptionSyncJob>(
+      () => _i474.SubscriptionSyncJob(
+        gh<_i505.SubscriptionStorage>(),
+        gh<_i944.SubscriptionRefresher>(),
+        gh<_i331.SubscriptionUpdateSettingsStore>(),
+        gh<_i1013.NotificationsStore>(),
+        gh<_i504.AppAlerts>(),
+        gh<_i207.Talker>(),
+      ),
+    );
     gh.lazySingleton<_i918.PingAutoRunner>(
       () => _i918.PingAutoRunner(
         gh<_i629.PingCubit>(),
@@ -520,14 +530,6 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i83.SubscriptionsCubit>(),
         gh<_i202.VpnServiceCubit>(),
         gh<_i1056.VpnRepository>(),
-        gh<_i207.Talker>(),
-      ),
-    );
-    gh.lazySingleton<_i474.SubscriptionSyncJob>(
-      () => _i474.SubscriptionSyncJob(
-        gh<_i505.SubscriptionStorage>(),
-        gh<_i944.SubscriptionRefresher>(),
-        gh<_i331.SubscriptionUpdateSettingsStore>(),
         gh<_i207.Talker>(),
       ),
     );

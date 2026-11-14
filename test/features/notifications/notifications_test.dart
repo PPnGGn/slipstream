@@ -83,6 +83,17 @@ void main() {
       expect(raw.getBool('notify_revoked'), isFalse);
     });
 
+    test('the subscription alert has its own key and starts on', () async {
+      final store = await storeWith({});
+      expect(store.load().subscriptionFailed, isTrue);
+
+      await store.save(const NotificationPrefs(subscriptionFailed: false));
+
+      final raw = await SharedPreferences.getInstance();
+      expect(raw.getBool('notify_subscription_failed'), isFalse);
+      expect(store.load().subscriptionFailed, isFalse);
+    });
+
     test('an install from before the alert existed reads it as on', () async {
       final prefs = (await storeWith({
         'notify_traffic_blocked': false,
@@ -116,10 +127,12 @@ void main() {
         const NotificationPrefs(trafficBlocked: false, startFailed: false),
       );
       await cubit.setRevoked(enabled: false);
+      await cubit.setSubscriptionFailed(enabled: false);
       const allOff = NotificationPrefs(
         trafficBlocked: false,
         startFailed: false,
         revoked: false,
+        subscriptionFailed: false,
       );
       expect(cubit.state, allOff);
       expect(store.load(), allOff);
@@ -180,14 +193,18 @@ void main() {
     test('some on counts them against all the alerts there are', () {
       expect(
         summary(const NotificationPrefs(trafficBlocked: false)),
-        '2 of 3 on',
+        '3 of 4 on',
       );
-      expect(summary(const NotificationPrefs(revoked: false)), '2 of 3 on');
+      expect(summary(const NotificationPrefs(revoked: false)), '3 of 4 on');
+      expect(
+        summary(const NotificationPrefs(subscriptionFailed: false)),
+        '3 of 4 on',
+      );
       expect(
         summary(
           const NotificationPrefs(trafficBlocked: false, startFailed: false),
         ),
-        '1 of 3 on',
+        '2 of 4 on',
       );
     });
 
@@ -198,6 +215,7 @@ void main() {
             trafficBlocked: false,
             startFailed: false,
             revoked: false,
+            subscriptionFailed: false,
           ),
         ),
         'Off',

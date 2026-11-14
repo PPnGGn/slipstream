@@ -145,7 +145,8 @@ class _SplitTunnelingPageState extends State<SplitTunnelingPage> {
                 title: context.l10n.splitSystemTitle,
                 subtitle: context.l10n.splitSystemSubtitle,
                 switchValue: settings.includeSystem,
-                onSwitch: (include) => _split.setIncludeSystem(include: include),
+                onSwitch: (include) =>
+                    _split.setIncludeSystem(include: include),
               ),
             ],
           ),

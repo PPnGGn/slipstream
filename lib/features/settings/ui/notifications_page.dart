@@ -104,6 +104,16 @@ class _NotificationsPageState extends State<NotificationsPage>
                           onSwitch: (value) =>
                               _prefs.setRevoked(enabled: value),
                         ),
+                        SettingsRow(
+                          iconPath: AppAssets.refresh,
+                          hue: TileHue.teal,
+                          title: l10n.notifySubscriptionFailedTitle,
+                          subtitle: l10n.notifySubscriptionFailedSubtitle,
+                          subtitleMaxLines: 2,
+                          switchValue: prefs.subscriptionFailed,
+                          onSwitch: (value) =>
+                              _prefs.setSubscriptionFailed(enabled: value),
+                        ),
                       ],
                     ),
                   ),

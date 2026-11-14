@@ -16,7 +16,7 @@
     <string name="alert_start_failed_title">VPN شروع نشد</string>
     <string name="alert_start_failed_text">برای دیدن علت، Slipstream را باز کنید.</string>
     <string name="alert_sub_failed_title">اشتراک به‌روز نشد</string>
-    <string name="alert_sub_failed_text">«%1$s» به‌روز نشد. برای دیدن علت، Slipstream را باز کنید.</string>
+    <string name="alert_sub_failed_text">«%1$s» به‌روز نشد.</string>
     <string name="alert_sub_expiring_title">اشتراک به‌زودی تمام می‌شود</string>
     <plurals name="alert_sub_expiring_text">
         <item quantity="one">«%1$s» تا %2$d روز دیگر تمام می‌شود.</item>

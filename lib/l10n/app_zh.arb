@@ -487,6 +487,8 @@
   "notifyStartFailedSubtitle": "从磁贴或由系统发起的启动失败",
   "notifyRevokedTitle": "VPN 被其他应用接管",
   "notifyRevokedSubtitle": "另一个 VPN 应用已启动并断开了 Slipstream",
+  "notifySubscriptionFailedTitle": "订阅更新失败",
+  "notifySubscriptionFailedSubtitle": "订阅的后台更新失败了",
   "notifyDisabledTitle": "已关闭 Slipstream 的通知",
   "notifyDisabledBody": "Android 不会显示这些提醒。请在系统设置中开启。",
   "notifyOpenSettings": "打开设置",
@@ -499,6 +501,9 @@
   "helpNotifStartTip": "在应用里发起的启动会直接在主屏幕上显示错误。",
   "helpNotifRevokedWhat": "当另一个 VPN 应用启动、Android 断开 Slipstream 时显示通知。它只负责告知，没有“重新连接”按钮。",
   "helpNotifRevokedWhy": "Android 同一时间只允许一个 VPN。被其他应用接管后，你的流量会在无保护的情况下发出，而屏幕上没有任何提示。重新连接会从那个应用手中夺回 VPN 并要求你确认，所以请在想连接时到应用里操作。",
+  "helpNotifSubFailedWhat": "应用关闭时，订阅的自动更新失败会显示一条通知。一连串失败只通知一次，而不是每次重试都通知；订阅再次更新成功后通知会消失。",
+  "helpNotifSubFailedWhy": "停止更新的订阅会慢慢过时：新服务器不会出现，失效的服务器仍然留着。没有提醒的话，你只有在服务器不能用时才会发现。",
+  "helpNotifSubFailedTip": "仅在开启自动更新时有效（设置 → 订阅）。你在应用里手动发起的更新会直接在屏幕上显示错误。",
   "helpNotifNoteSystemTitle": "系统权限",
   "helpNotifNoteSystemBody": "Android 13 及更高版本需要你授权应用显示通知。如果你拒绝了，请在系统设置中开启（本页的“打开设置”按钮）。"
 }

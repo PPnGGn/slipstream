@@ -23,7 +23,10 @@ import com.slipstream.alerts.AppAlertKind
 import com.slipstream.alerts.AppAlertMessage
 import com.slipstream.alerts.AppAlerts
 import com.slipstream.android.Android
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.slipstream.nativeprefs.NativePrefsStore
+import com.slipstream.sync.SubscriptionSyncWorker
 
 class V2RayVpnService : VpnService() {
 
@@ -66,6 +69,7 @@ class V2RayVpnService : VpnService() {
         private const val ACTION_SET_GC = "com.slipstream.SET_GC"
         private const val ACTION_MEM_LOG = "com.slipstream.MEM_LOG"
         private const val ACTION_SHOW_ALERT = "com.slipstream.SHOW_ALERT"
+        private const val ACTION_SYNC_NOW = "com.slipstream.SYNC_NOW"
         private const val TRAFFIC_POLL_INTERVAL_MS = 1000L
 
         // For configs that route DNS their own way. The other choice is the DNS
@@ -85,6 +89,9 @@ class V2RayVpnService : VpnService() {
     //   adb shell am broadcast -a com.slipstream.SHOW_ALERT -p com.slipstream --ei kind 1 --es name "My sub" --ei number 3
     // posts a subscription alert as AppAlertsApi does (kind: 0 failed, 1 expiring, 2 expired, 3 traffic low,
     // 4 traffic exhausted); only while the service runs.
+    //   adb shell am broadcast -a com.slipstream.SYNC_NOW -p com.slipstream
+    // runs the background subscription job once, now (close the app first: with the UI engine up
+    // the job leaves the refresh to the app's own timer).
     private val debugReceiver =
             object : BroadcastReceiver() {
                 override fun onReceive(context: Context, intent: Intent) {
@@ -107,6 +114,15 @@ class V2RayVpnService : VpnService() {
                                 val on = intent.getBooleanExtra("on", true)
                                 Android.setMemoryLog(on)
                                 Log.i("VPN_SERVICE", "Memory log ${if (on) "on" else "off"}")
+                            }
+                            ACTION_SYNC_NOW -> {
+                                // The background job's worker, once, now, with no constraints.
+                                WorkManager.getInstance(applicationContext)
+                                        .enqueue(
+                                                OneTimeWorkRequestBuilder<SubscriptionSyncWorker>()
+                                                        .build(),
+                                        )
+                                Log.i("VPN_SERVICE", "Background sync enqueued")
                             }
                             ACTION_SHOW_ALERT -> {
                                 // The same call Dart makes (AppAlertsApi.show), without Dart.
@@ -136,6 +152,7 @@ class V2RayVpnService : VpnService() {
                         addAction(ACTION_SET_GC)
                         addAction(ACTION_MEM_LOG)
                         addAction(ACTION_SHOW_ALERT)
+                        addAction(ACTION_SYNC_NOW)
                     },
                     ContextCompat.RECEIVER_EXPORTED,
             )

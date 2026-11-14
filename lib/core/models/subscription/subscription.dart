@@ -22,6 +22,12 @@ abstract class Subscription with _$Subscription {
     /// Why the last refresh attempt failed; null after a successful one.
     String? lastError,
 
+    /// When the "subscription did not update" alert was raised for the run of
+    /// failures it is in, or null when none was. Set by the background job so
+    /// that a subscription that keeps failing alerts once, not at every retry;
+    /// cleared by the next successful refresh (SubscriptionFactory.refresh).
+    DateTime? failureNotifiedAt,
+
     /// Ids of the servers the user pinned. Kept here, not on the servers: a
     /// refresh replaces them all, and the subscription stays (the factory
     /// carries the ids over, see `remapFavoriteIds`).

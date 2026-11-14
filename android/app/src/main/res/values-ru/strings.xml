@@ -16,7 +16,7 @@
     <string name="alert_start_failed_title">VPN не удалось запустить</string>
     <string name="alert_start_failed_text">Откройте Slipstream, чтобы увидеть причину.</string>
     <string name="alert_sub_failed_title">Подписка не обновилась</string>
-    <string name="alert_sub_failed_text">Не удалось обновить «%1$s». Откройте Slipstream, чтобы узнать причину.</string>
+    <string name="alert_sub_failed_text">Не удалось обновить «%1$s».</string>
     <string name="alert_sub_expiring_title">Подписка скоро закончится</string>
     <plurals name="alert_sub_expiring_text">
         <item quantity="one">«%1$s» закончится через %2$d день.</item>

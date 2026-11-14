@@ -216,7 +216,10 @@ class _SettingsPageState extends State<SettingsPage> {
                                   hue: TileHue.split,
                                   title: context.l10n.splitTitle,
                                   subtitle: context.l10n.settingsSplitSubtitle,
-                                  value: splitTunnelSummary(context.l10n, split),
+                                  value: splitTunnelSummary(
+                                    context.l10n,
+                                    split,
+                                  ),
                                   showChevron: true,
                                   onTap: () => context.push('/settings/split'),
                                 ),

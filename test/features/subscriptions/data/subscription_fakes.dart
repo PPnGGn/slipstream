@@ -5,6 +5,7 @@ import 'package:slipstream/core/models/result.dart';
 import 'package:slipstream/core/models/stored_subscription/stored_subscription.dart';
 import 'package:slipstream/core/models/vpn_server/vpn_server.dart';
 import 'package:slipstream/core/service/vpn_service/vpn_service_cubit.dart';
+import 'package:slipstream/features/notifications/data/app_alerts.dart';
 import 'package:slipstream/features/subscriptions/data/auto_update/background_sync_scheduler.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_parser/subscription_parser_service.dart';
 import 'package:slipstream/features/subscriptions/data/subscription_storage/subscription_storage.dart';
@@ -36,6 +37,23 @@ class FakeBackgroundSync implements BackgroundSyncScheduler {
 
   @override
   Future<void> setEnabled(bool enabled) async => calls.add(enabled);
+}
+
+/// Records the alerts that would have been shown or taken back.
+class RecordingAppAlerts implements AppAlerts {
+  final shown = <({AppAlertKind kind, String name, int? number})>[];
+  final cancelled = <(AppAlertKind, String)>[];
+
+  @override
+  Future<void> show(
+    AppAlertKind kind, {
+    required String subscriptionName,
+    int? number,
+  }) async => shown.add((kind: kind, name: subscriptionName, number: number));
+
+  @override
+  Future<void> cancel(AppAlertKind kind, String subscriptionName) async =>
+      cancelled.add((kind, subscriptionName));
 }
 
 /// A parser that answers with [_answer] and records every input.

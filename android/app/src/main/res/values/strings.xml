@@ -25,7 +25,7 @@
     <string name="alert_start_failed_title">VPN could not start</string>
     <string name="alert_start_failed_text">Open Slipstream to see what went wrong.</string>
     <string name="alert_sub_failed_title">Subscription did not update</string>
-    <string name="alert_sub_failed_text">%1$s could not be updated. Open Slipstream to see why.</string>
+    <string name="alert_sub_failed_text">%1$s could not be updated.</string>
     <string name="alert_sub_expiring_title">Subscription expires soon</string>
     <plurals name="alert_sub_expiring_text">
         <item quantity="one">%1$s expires in %2$d day.</item>

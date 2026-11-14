@@ -53,6 +53,8 @@ class SubscriptionFactory {
         lastUpdatedAt: now,
         lastAttemptAt: now,
         lastError: null,
+        // A refresh that worked ends the run of failures the alert was about.
+        failureNotifiedAt: null,
         announce: parsed.announce,
         expiresAt: parsed.expiresAt,
         updateIntervalHours: parsed.updateIntervalHours,
