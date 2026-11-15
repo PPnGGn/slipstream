@@ -318,6 +318,7 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i207.Talker>(),
         gh<_i942.UpdateInstaller>(),
         gh<_i497.Directory>(instanceName: 'updatesDir'),
+        proxy: gh<_i864.LocalProxyProvider>(),
       ),
       dispose: (i) => i.dispose(),
     );

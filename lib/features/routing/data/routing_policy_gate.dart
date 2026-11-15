@@ -249,7 +249,8 @@ class RoutingPolicyGate {
   }
 
   /// Makes a provider config answer the system's DNS from its own `dns` block:
-  /// prepends the port-53 hijack and makes sure a `dns` outbound exists.
+  /// prepends the port-53 hijack, strips any `localhost` / `+local` entries
+  /// alongside routed resolvers, and makes sure a `dns` outbound exists.
   /// Nothing else in its routing changes.
   ///
   /// Only when the config has a resolver that goes through xray's routing.
@@ -260,6 +261,7 @@ class RoutingPolicyGate {
   /// the hijack was installed.
   bool _hijackProviderDns(Map<String, dynamic> config) {
     if (!_hasRoutedResolver(config)) return false;
+    _stripLocalResolvers(config);
     final rules = (config['routing'] as Map)['rules'] as List;
     rules.insert(0, _dnsHijackRule(_ensureDnsOutboundTag(config)));
     return true;
@@ -294,16 +296,33 @@ class RoutingPolicyGate {
       _ => const <dynamic>[],
     };
     return servers.any((server) {
-      final address = switch (server) {
-        final String a => a,
-        {'address': final String a} => a,
-        _ => null,
-      };
+      final address = _resolverAddress(server);
       if (address == null) return false;
       final a = address.toLowerCase();
-      return a != 'localhost' && a != 'fakedns' && !a.contains('+local');
+      return a != 'fakedns' && !_isLocalResolverAddress(a);
     });
   }
+
+  static void _stripLocalResolvers(Map<String, dynamic> config) {
+    final servers = switch (config['dns']) {
+      {'servers': final List<dynamic> l} => l,
+      _ => null,
+    };
+    if (servers == null) return;
+    servers.removeWhere((server) {
+      final address = _resolverAddress(server);
+      return address != null && _isLocalResolverAddress(address.toLowerCase());
+    });
+  }
+
+  static String? _resolverAddress(dynamic server) => switch (server) {
+    final String a => a,
+    {'address': final String a} => a,
+    _ => null,
+  };
+
+  static bool _isLocalResolverAddress(String lowerAddress) =>
+      lowerAddress == 'localhost' || lowerAddress.contains('+local');
 
   /// Tag of the config's own `dns` outbound if it has one, otherwise adds a
   /// plain one. Plain = xray's default: A/AAAA answered from the `dns` block,

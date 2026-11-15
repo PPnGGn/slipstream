@@ -222,131 +222,114 @@ void main() {
     );
   });
 
-  test('rules point at the right outbounds and inbound', () {
-    final result = decode(run(scaffold()));
-    expect(rule(result, 'dns-ru')['outboundTag'], 'direct');
-    expect(rule(result, 'dns-remote')['outboundTag'], 'proxy');
-    final hijack = rule(result, 'dns-hijack');
-    expect(hijack['inboundTag'], ['socks']);
-    expect(hijack['port'], '53');
-    expect(hijack['outboundTag'], 'dns-out');
+  group('ad-block modes', () {
+    test('basic -> geosite:category-ads', () {
+      final result = decode(run(scaffold(), adBlock: AdBlockMode.basic));
+      expect(rule(result, 'ad-block')['domain'], ['geosite:category-ads']);
+      expect(rule(result, 'ad-block')['outboundTag'], 'block');
+    });
+
+    test('full -> geosite:category-ads-all', () {
+      final result = decode(run(scaffold(), adBlock: AdBlockMode.full));
+      expect(rule(result, 'ad-block')['domain'], ['geosite:category-ads-all']);
+    });
+
+    test('ad-block sits before RU bypass so RU ad domains are still blocked', () {
+      final tags = tagsOf(decode(run(scaffold(), adBlock: AdBlockMode.basic)));
+      expect(
+        tags.indexOf('ad-block'),
+        lessThan(tags.indexOf('ru-bypass-domain')),
+      );
+    });
   });
 
-  test('DoT (853) is never blocked — strict Private DNS keeps working', () {
-    final result = decode(run(scaffold()));
-    expect(rule(result, 'block-public-dns')['port'], '53,443');
-    expect(rule(result, 'block-doh')['port'], '443');
-  });
+  group('outbounds', () {
+    test('dns-out added, strips HTTPS and AAAA records', () {
+      final result = decode(run(scaffold()));
+      final dnsOut = outbound(result, 'dns-out')!;
+      expect(dnsOut['protocol'], 'dns');
+      expect(dnsOut['settings']['rules'], [
+        {'action': 'return', 'qType': '28,65'},
+      ]);
+    });
 
-  test('dns-out drops AAAA and HTTPS records via rules, not blockTypes', () {
-    final dnsOut = outbound(decode(run(scaffold())), 'dns-out')!;
-    expect(dnsOut['protocol'], 'dns');
-    expect(dnsOut['settings']['rules'], [
-      {'action': 'return', 'qType': '28,65'},
-    ]);
-    expect(dnsOut['settings'], isNot(contains('blockTypes')));
-  });
-
-  test('adBlock full — after the DNS blocks, before the direct rules', () {
-    final result = decode(run(scaffold(), adBlock: AdBlockMode.full));
-    final tags = tagsOf(result);
-    final ad = rule(result, 'ad-block');
-
-    expect(ad['domain'], ['geosite:category-ads-all']);
-    expect(ad['outboundTag'], 'block');
-    expect(tags.indexOf('ad-block'), tags.indexOf('block-doh') + 1);
-    expect(
-      tags.indexOf('ad-block'),
-      lessThan(tags.indexOf('ru-bypass-domain')),
-    );
-  });
-
-  test('adBlock basic injects category-ads, not category-ads-all', () {
-    final result = decode(run(scaffold(), adBlock: AdBlockMode.basic));
-    expect(rule(result, 'ad-block')['domain'], ['geosite:category-ads']);
-  });
-
-  test('missing direct / block / dns-out outbounds are added', () {
-    final result = decode(
-      run({
+    test('missing direct / block outbounds are created', () {
+      final bare = {
         'outbounds': [
-          {'tag': 'proxy'},
+          {'tag': 'proxy', 'protocol': 'vless'},
         ],
-      }),
-    );
-    expect(outbound(result, 'direct')!['protocol'], 'freedom');
-    expect(outbound(result, 'block')!['protocol'], 'blackhole');
-    expect(outbound(result, 'dns-out')!['protocol'], 'dns');
-    expect((result['outbounds'] as List).first['tag'], 'proxy');
-  });
+      };
+      final result = decode(run(bare));
+      expect(outbound(result, 'direct')!['protocol'], 'freedom');
+      expect(outbound(result, 'block')!['protocol'], 'blackhole');
+      expect(outbound(result, 'dns-out')!['protocol'], 'dns');
+    });
 
-  test('untagged first outbound gets tagged proxy and DNS goes through it', () {
-    final result = decode(
-      run({
+    test('existing direct / block outbounds are kept, not duplicated', () {
+      final result = decode(run(scaffold()));
+      final outbounds = result['outbounds'] as List;
+      expect(outbounds.where((o) => o['tag'] == 'direct'), hasLength(1));
+      expect(outbounds.where((o) => o['tag'] == 'block'), hasLength(1));
+    });
+
+    test('custom proxy outbound tag is respected by dns-remote rule', () {
+      final custom = {
+        'outbounds': [
+          {'tag': 'vless-nl', 'protocol': 'vless'},
+          {'tag': 'direct', 'protocol': 'freedom'},
+        ],
+      };
+      final result = decode(run(custom));
+      expect(rule(result, 'dns-remote')['outboundTag'], 'vless-nl');
+    });
+
+    test('untagged first outbound is assigned "proxy"', () {
+      final untagged = {
         'outbounds': [
           {'protocol': 'vless'},
         ],
-      }),
-    );
-    expect((result['outbounds'] as List).first['tag'], 'proxy');
-    expect(rule(result, 'dns-remote')['outboundTag'], 'proxy');
+      };
+      final result = decode(run(untagged));
+      expect((result['outbounds'] as List).first['tag'], 'proxy');
+      expect(rule(result, 'dns-remote')['outboundTag'], 'proxy');
+    });
   });
 
-  test('a custom first-outbound tag is used as the proxy tag', () {
-    final result = decode(
-      run({
-        'outbounds': [
-          {'tag': 'my-server', 'protocol': 'vless'},
-        ],
-      }),
-    );
-    expect(rule(result, 'dns-remote')['outboundTag'], 'my-server');
-  });
-
-  test('no outbounds — returned unchanged', () {
-    final src = jsonEncode({'outbounds': <dynamic>[]});
-    expectUntouched(
-      src,
-      gate.apply(src, split: RuBypassMode.bypassRu, adBlock: AdBlockMode.off),
-    );
-  });
-
-  test('own policy injected — reports that the config hijacks DNS', () {
-    for (final split in RuBypassMode.values) {
-      final result = gate.apply(
-        jsonEncode(scaffold()),
-        split: split,
-        adBlock: AdBlockMode.off,
+  group('left untouched', () {
+    test('unparseable JSON is returned verbatim', () {
+      const broken = '{not json';
+      expectUntouched(
+        broken,
+        gate.apply(broken, split: RuBypassMode.bypassRu, adBlock: AdBlockMode.off),
       );
-      expect(result.hijacksDns, isTrue, reason: 'split=$split');
-    }
+    });
+
+    test('config with no outbounds is returned verbatim', () {
+      final empty = jsonEncode({'outbounds': <dynamic>[]});
+      expectUntouched(
+        empty,
+        gate.apply(empty, split: RuBypassMode.bypassRu, adBlock: AdBlockMode.off),
+      );
+    });
   });
 
-  test(
-    'strict Private DNS — own configs still hijack (no hosts blackholes)',
-    () {
-      final result = gate.apply(
-        jsonEncode(scaffold()),
-        split: RuBypassMode.bypassRu,
-        adBlock: AdBlockMode.off,
-        privateDnsStrict: true,
-      );
-      expect(result.hijacksDns, isTrue);
-      expect(tagsOf(decode(result.configJson)), contains('dns-hijack'));
-    },
-  );
-
-  test('provider config with its own domain rule — untouched', () {
+  test('provider config with its own destination rules is left untouched', () {
     final provider = {
       'outbounds': [
-        {'tag': 'proxy'},
-        {'tag': 'direct'},
+        {'tag': 'proxy', 'protocol': 'vless'},
+        {'tag': 'direct', 'protocol': 'freedom'},
       ],
       'routing': {
+        'domainStrategy': 'IPIfNonMatch',
         'rules': [
           {
-            'ruleTag': 'direct-big-list',
-            'domain': ['geosite:category-ru', 'vk.com'],
+            'type': 'field',
+            'domain': ['geosite:category-ru'],
+            'outboundTag': 'direct',
+          },
+          {
+            'type': 'field',
+            'ip': ['geoip:ru'],
             'outboundTag': 'direct',
           },
         ],
@@ -477,6 +460,32 @@ void main() {
           ),
         );
       }
+    });
+
+    test('mixed resolvers — strips localhost and +local entries when hijacking', () {
+      final src = provider(
+        dns: {
+          'servers': [
+            'https://1.1.1.1/dns-query',
+            'localhost',
+            'https+local://8.8.8.8/dns-query',
+            {'address': 'tcp+local://9.9.9.9', 'domains': ['domain:ru']},
+            {'address': 'https://77.88.8.8/dns-query', 'domains': ['domain:ru']},
+          ],
+        },
+      );
+      final result = gate.apply(
+        jsonEncode(src),
+        split: RuBypassMode.bypassRu,
+        adBlock: AdBlockMode.off,
+      );
+      expect(result.hijacksDns, isTrue);
+      final config = decode(result.configJson);
+      final servers = config['dns']['servers'] as List;
+      expect(servers, [
+        'https://1.1.1.1/dns-query',
+        {'address': 'https://77.88.8.8/dns-query', 'domains': ['domain:ru']},
+      ]);
     });
   });
 

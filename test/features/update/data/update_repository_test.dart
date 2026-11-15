@@ -1,10 +1,15 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:slipstream/core/models/app_release/app_release.dart';
 import 'package:slipstream/core/models/result.dart';
+import 'package:slipstream/features/routing/data/local_proxy_client.dart';
+import 'package:slipstream/features/update/data/github_release_api.dart';
 import 'package:slipstream/features/update/data/update_repository.dart';
 import 'package:slipstream/features/update/data/updater_api.g.dart';
 import 'package:talker_flutter/talker_flutter.dart';
+
+import '../../../helpers/fake_unix_proxy.dart';
 
 /// The Android side of the updater, with answers set by each test.
 class _FakeInstaller extends Fake implements UpdateInstaller {
@@ -96,6 +101,69 @@ void main() {
       final result = await repository.install('update.apk');
 
       expect(result, isA<Failure<InstallOutcome>>());
+    });
+  });
+
+  group('local proxy routing', () {
+    late FakeUnixProxy fake;
+
+    setUp(() async {
+      fake = await FakeUnixProxy.start(
+        answer: 'HTTP/1.1 502 Bad Gateway\r\nContent-Length: 0\r\n\r\n',
+      );
+    });
+    tearDown(() => fake.close());
+
+    test('GithubReleaseApi routes release check through the local proxy', () async {
+      var reported = 'p1';
+      final provider = LocalProxyProvider(
+        FakeVpnConnection(() async {
+          final message = fake.message(reported);
+          reported = 'p2';
+          fake.pass = 'p2';
+          return message;
+        }),
+        Talker(settings: TalkerSettings(useConsoleLogs: false)),
+      );
+
+      await expectLater(
+        GithubReleaseApi(proxy: provider).fetchLatest(),
+        throwsA(anything),
+      );
+
+      expect(fake.authorized, [false, true]);
+    });
+
+    test('downloadApk routes APK download through the local proxy', () async {
+      final dir = await Directory.systemTemp.createTemp('slip_upd');
+      addTearDown(() => dir.delete(recursive: true));
+
+      final provider = LocalProxyProvider(
+        FakeVpnConnection(() async => fake.message()),
+        Talker(settings: TalkerSettings(useConsoleLogs: false)),
+      );
+      final repo = UpdateRepository(
+        Talker(settings: TalkerSettings(useConsoleLogs: false)),
+        installer,
+        dir,
+        proxy: provider,
+      );
+      addTearDown(repo.dispose);
+
+      const release = AppRelease(
+        version: '2.1.8',
+        buildNumber: 46,
+        tagName: 'v2.1.8+46',
+        downloadUrl: 'https://github.com/PPnGGn/slipstream/releases/download/v2.1.8/slipstream-android.apk',
+        sizeBytes: 100,
+      );
+
+      await expectLater(
+        repo.downloadApk(release, toPath: '${dir.path}/app.apk').drain<void>(),
+        throwsA(anything),
+      );
+
+      expect(fake.authorized, [true]);
     });
   });
 }

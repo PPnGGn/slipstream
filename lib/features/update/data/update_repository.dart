@@ -5,11 +5,13 @@ import 'package:injectable/injectable.dart';
 import 'package:talker_flutter/talker_flutter.dart';
 import 'package:slipstream/core/models/app_release/app_release.dart';
 import 'package:slipstream/core/models/result.dart';
+import 'package:slipstream/features/routing/data/local_proxy_client.dart';
 import 'package:slipstream/features/update/data/app_version.dart';
 import 'package:slipstream/features/update/data/github_release_api.dart';
 import 'package:slipstream/features/update/data/update_cache.dart';
 import 'package:slipstream/features/update/data/update_check.dart';
 import 'package:slipstream/features/update/data/updater_api.g.dart';
+import 'package:slipstream/features/vpn/data/vpn_api.g.dart';
 
 enum InstallOutcome { launched, permissionRequired, signatureConflict }
 
@@ -19,14 +21,21 @@ class UpdateRepository {
   final GithubReleaseApi _releaseApi;
   final UpdateInstaller _installer;
   final Directory _updatesDir;
-  final http.Client _client = http.Client();
+  final LocalProxyProvider? _proxy;
+  final http.Client Function(LocalProxyMessage?) _clientFactory;
 
   UpdateRepository(
     Talker talker,
     this._installer,
-    @Named('updatesDir') this._updatesDir,
-  ) : _talker = talker,
-      _releaseApi = GithubReleaseApi();
+    @Named('updatesDir') this._updatesDir, {
+    LocalProxyProvider? proxy,
+    @ignoreParam http.Client Function(LocalProxyMessage?)? clientFactory,
+  }) : _talker = talker,
+       _proxy = proxy,
+       _clientFactory =
+           clientFactory ??
+           (proxy != null ? refreshingProxyClientFactory(proxy) : buildProxiedClient),
+       _releaseApi = GithubReleaseApi(proxy: proxy);
 
   Future<Result<UpdateCheck>> checkAndResolveCache() async {
     try {
@@ -82,17 +91,19 @@ class UpdateRepository {
   }) {
     StreamSubscription<List<int>>? subscription;
     IOSink? sink;
+    http.Client? client;
     final controller = StreamController<int>();
     var received = existingBytes;
 
     controller.onListen = () async {
       try {
         await File(toPath).parent.create(recursive: true);
+        client = _clientFactory(await _proxy?.current());
         final request = http.Request('GET', Uri.parse(release.downloadUrl));
         if (existingBytes > 0) {
           request.headers[HttpHeaders.rangeHeader] = 'bytes=$existingBytes-';
         }
-        final response = await _client.send(request);
+        final response = await client!.send(request);
         final status = response.statusCode;
         if (status != 200 && status != 206) {
           throw Exception('HTTP error: $status');
@@ -112,6 +123,7 @@ class UpdateRepository {
           },
           onDone: () async {
             await sink!.close();
+            client?.close();
             final length = await File(toPath).length();
             if (length != release.sizeBytes) {
               controller.addError(
@@ -124,12 +136,14 @@ class UpdateRepository {
           },
           onError: (Object e, StackTrace st) async {
             await sink?.close();
+            client?.close();
             controller.addError(e, st);
             await controller.close();
           },
           cancelOnError: true,
         );
       } catch (e, st) {
+        client?.close();
         controller.addError(e, st);
         await controller.close();
       }
@@ -137,6 +151,7 @@ class UpdateRepository {
     controller.onCancel = () async {
       await subscription?.cancel();
       await sink?.close();
+      client?.close();
     };
 
     return controller.stream;
@@ -184,5 +199,5 @@ class UpdateRepository {
   Future<void> uninstallForReinstall() => _installer.uninstallSelf();
 
   @disposeMethod
-  void dispose() => _client.close();
+  void dispose() {}
 }

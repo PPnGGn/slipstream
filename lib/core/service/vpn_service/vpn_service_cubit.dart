@@ -43,6 +43,7 @@ class VpnServiceCubit extends Cubit<VpnState> {
   DateTime? _connectedAt;
   Timer? _connectTimer;
   VpnServer? _pendingServer;
+  String? _blockedReasonBeforeConnect;
 
   final _firstSync = Completer<void>();
 
@@ -101,6 +102,9 @@ class VpnServiceCubit extends Cubit<VpnState> {
 
   Future<void> _startConnection(VpnServer server) async {
     _talker.debug('Cubit: connecting to ${server.title}');
+    if (state case _Blocked(:final message)) {
+      _blockedReasonBeforeConnect = message;
+    }
     _currentServer = server;
     unawaited(_sessionStore.save(server));
     emit(const VpnState.connecting());
@@ -115,13 +119,20 @@ class VpnServiceCubit extends Cubit<VpnState> {
         _talker.error('Cubit: connect failed -> $message');
         _connectTimer?.cancel();
         _pendingServer = null;
-        _clearSession();
-        emit(VpnState.error(message));
+        final blockedReason = _blockedReasonBeforeConnect;
+        _blockedReasonBeforeConnect = null;
+        if (blockedReason != null) {
+          emit(VpnState.blocked(blockedReason));
+        } else {
+          _clearSession();
+          emit(VpnState.error(message));
+        }
     }
   }
 
   Future<void> disconnect() async {
     _pendingServer = null;
+    _blockedReasonBeforeConnect = null;
     await _requestStop();
   }
 
@@ -175,6 +186,7 @@ class VpnServiceCubit extends Cubit<VpnState> {
         _startConnectTimeout();
       case VpnStatus.connected:
         _connectTimer?.cancel();
+        _blockedReasonBeforeConnect = null;
         final server = _currentServer ?? _sessionStore.load();
         if (server == null) {
           _talker.warning('Cubit: connected from native with no known server');
@@ -192,6 +204,7 @@ class VpnServiceCubit extends Cubit<VpnState> {
         emit(const VpnState.disconnecting());
       case VpnStatus.disconnected:
         _connectTimer?.cancel();
+        _blockedReasonBeforeConnect = null;
         _clearSession();
         emit(const VpnState.disconnected());
         final pending = _pendingServer;
@@ -201,6 +214,7 @@ class VpnServiceCubit extends Cubit<VpnState> {
         }
       case VpnStatus.error:
         _connectTimer?.cancel();
+        _blockedReasonBeforeConnect = null;
         _pendingServer = null;
         _clearSession();
         emit(VpnState.error(message.error ?? 'VPN error'));
@@ -208,6 +222,7 @@ class VpnServiceCubit extends Cubit<VpnState> {
         // The server stays known: Reconnect and a switch start it again, and
         // starting from here must not stop first (that would open the traffic).
         _connectTimer?.cancel();
+        _blockedReasonBeforeConnect = null;
         _pendingServer = null;
         _connectedAt = null;
         emit(VpnState.blocked(message.error ?? 'Connection lost'));
@@ -232,6 +247,14 @@ class VpnServiceCubit extends Cubit<VpnState> {
       if (state is! _Connecting) return;
       _talker.error('Cubit: timed out waiting for tunnel confirmation');
       _pendingServer = null;
+      final blockedReason = _blockedReasonBeforeConnect;
+      _blockedReasonBeforeConnect = null;
+      // When the connect attempt started from the kill switch's hold, calling
+      // stop() would tear down the blocking interface and open the traffic.
+      if (blockedReason != null) {
+        emit(VpnState.blocked(blockedReason));
+        return;
+      }
       _clearSession();
       unawaited(_repository.stop());
       emit(const VpnState.error('Tunnel did not come up in time'));

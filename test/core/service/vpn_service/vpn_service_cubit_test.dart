@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slipstream/core/models/result.dart';
@@ -237,6 +238,63 @@ void main() {
           isTrue,
         ),
       );
+    });
+
+    test('connect timeout after blocked keeps the blocking hold instead of stopping', () async {
+      final prefs = await SharedPreferences.getInstance();
+      fakeAsync((async) {
+        final c = VpnServiceCubit(
+          repository: repository,
+          sessionStore: VpnSessionStore(prefs),
+          talker: Talker(settings: TalkerSettings(useConsoleLogs: false)),
+        );
+        async.flushMicrotasks();
+
+        repository.statusController.add(
+          VpnStatusMessage(status: VpnStatus.blocked, error: 'Connection lost'),
+        );
+        async.flushMicrotasks();
+        expect(c.state, const VpnState.blocked('Connection lost'));
+
+        unawaited(c.connect(amsterdam));
+        async.flushMicrotasks();
+        expect(c.state, const VpnState.connecting());
+
+        // Elapsed past _connectTimeout (15s): must NOT call repository.stop()
+        // because stopping would tear down the kill switch's blocking interface.
+        async.elapse(const Duration(seconds: 16));
+
+        expect(repository.stopCalls, 0);
+        expect(c.state, const VpnState.blocked('Connection lost'));
+        unawaited(c.close());
+        async.flushMicrotasks();
+      });
+    });
+
+    test('connect timeout from cold still stops and emits error', () async {
+      final prefs = await SharedPreferences.getInstance();
+      fakeAsync((async) {
+        final c = VpnServiceCubit(
+          repository: repository,
+          sessionStore: VpnSessionStore(prefs),
+          talker: Talker(settings: TalkerSettings(useConsoleLogs: false)),
+        );
+        async.flushMicrotasks();
+
+        unawaited(c.connect(amsterdam));
+        async.flushMicrotasks();
+        expect(c.state, const VpnState.connecting());
+
+        async.elapse(const Duration(seconds: 16));
+
+        expect(repository.stopCalls, 1);
+        expect(
+          c.state,
+          const VpnState.error('Tunnel did not come up in time'),
+        );
+        unawaited(c.close());
+        async.flushMicrotasks();
+      });
     });
   });
 
