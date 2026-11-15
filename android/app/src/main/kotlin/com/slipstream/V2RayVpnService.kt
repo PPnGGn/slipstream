@@ -67,6 +67,7 @@ class V2RayVpnService : VpnService(), StatusHandler {
         // VpnLaunchStore. The caller must use startForegroundService.
         internal const val ACTION_START_LAST = "com.slipstream.START_LAST"
         private const val ACTION_DUMP_HEAP = "com.slipstream.DUMP_HEAP"
+        private const val ACTION_CPU_PROFILE = "com.slipstream.CPU_PROFILE"
         private const val ACTION_SET_GC = "com.slipstream.SET_GC"
         private const val ACTION_MEM_LOG = "com.slipstream.MEM_LOG"
         private const val ACTION_SHOW_ALERT = "com.slipstream.SHOW_ALERT"
@@ -84,6 +85,9 @@ class V2RayVpnService : VpnService(), StatusHandler {
     //   adb shell am broadcast -a com.slipstream.DUMP_HEAP -p com.slipstream [--es name before]
     // writes the core's goroutine stacks to files/goroutines[-name].txt and its
     // heap profile to files/heap[-name].pprof (the core checks the name);
+    //   adb shell am broadcast -a com.slipstream.CPU_PROFILE -p com.slipstream --ei seconds 30 [--es name ads]
+    // samples the core's CPU for that long (1 to 120, 30 by default) into files/cpu[-name].pprof; run
+    // the traffic to measure meanwhile. The line "CPU profile written" in logcat (tag VPN_SERVICE) says it is done.
     //   adb shell am broadcast -a com.slipstream.SET_GC -p com.slipstream --ei percent 50 [--ei limit_mb 80]
     // changes the core's GC settings on the live session (limit_mb 0 or absent = no limit);
     //   adb shell am broadcast -a com.slipstream.MEM_LOG -p com.slipstream --ez on true|false
@@ -108,6 +112,23 @@ class V2RayVpnService : VpnService(), StatusHandler {
                                 val goroutines = Android.writeGoroutineDump(dir, name)
                                 val heap = Android.writeHeapProfile(dir, name)
                                 Log.i("VPN_SERVICE", "Dumps written: $goroutines, $heap")
+                            }
+                            ACTION_CPU_PROFILE -> {
+                                val name = intent.getStringExtra("name") ?: ""
+                                val seconds = intent.getIntExtra("seconds", 30)
+                                val dir = filesDir.absolutePath
+                                // The call waits out the whole sampling, and a receiver
+                                // that holds the main thread for ~10 s gets an ANR.
+                                Thread {
+                                            try {
+                                                val path = Android.writeCPUProfile(dir, name, seconds.toLong())
+                                                Log.i("VPN_SERVICE", "CPU profile written: $path")
+                                            } catch (e: Exception) {
+                                                Log.w("VPN_SERVICE", "CPU profile failed: ${e.message}")
+                                            }
+                                        }
+                                        .start()
+                                Log.i("VPN_SERVICE", "CPU profile started: $seconds s")
                             }
                             ACTION_SET_GC -> {
                                 val percent = intent.getIntExtra("percent", 100)
@@ -160,6 +181,7 @@ class V2RayVpnService : VpnService(), StatusHandler {
                     debugReceiver,
                     IntentFilter().apply {
                         addAction(ACTION_DUMP_HEAP)
+                        addAction(ACTION_CPU_PROFILE)
                         addAction(ACTION_SET_GC)
                         addAction(ACTION_MEM_LOG)
                         addAction(ACTION_SHOW_ALERT)
