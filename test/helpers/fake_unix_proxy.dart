@@ -49,9 +49,13 @@ class FakeUnixProxy {
     String answer =
         'HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Length: 2\r\n\r\nok',
   }) async {
-    // /tmp, not the system temp dir: a socket path is limited to about 100
-    // bytes, and that of macOS is longer.
-    final dir = await Directory('/tmp').createTemp('slip');
+    // On macOS/Linux use /tmp because a Unix socket path is limited to ~100
+    // bytes and macOS's systemTemp path is longer; on Windows /tmp does not
+    // exist, so fall back to systemTemp.
+    final baseDir = Directory('/tmp').existsSync()
+        ? Directory('/tmp')
+        : Directory.systemTemp;
+    final dir = await baseDir.createTemp('slip');
     final server = await ServerSocket.bind(
       InternetAddress('${dir.path}/h.sock', type: InternetAddressType.unix),
       0,

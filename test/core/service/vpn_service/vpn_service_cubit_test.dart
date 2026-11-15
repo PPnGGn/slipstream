@@ -239,4 +239,54 @@ void main() {
       );
     });
   });
+
+  group('log hygiene', () {
+    // Server IDs for Trojan, Hysteria2, and VLESS embed the password/auth/UUID
+    // (`host:port:secret:#index`). Logging `server.id` exposes credentials in
+    // the in-app log history and console output.
+    test('never writes server.id into talker logs', () async {
+      final talker = Talker(settings: TalkerSettings(useConsoleLogs: false));
+      final c = VpnServiceCubit(
+        repository: repository,
+        sessionStore: VpnSessionStore(await SharedPreferences.getInstance()),
+        talker: talker,
+      );
+      addTearDown(c.close);
+      await c.firstSync;
+
+      const first = VpnServer(
+        id: 'nl.example.com:443:super-secret-password-1:#0',
+        subscriptionId: 'sub',
+        countryCode: 'NL',
+        title: 'Netherlands #1',
+        configJson: '{}',
+      );
+      const second = VpnServer(
+        id: 'de.example.com:443:super-secret-password-2:#1',
+        subscriptionId: 'sub',
+        countryCode: 'DE',
+        title: 'Germany #2',
+        configJson: '{}',
+      );
+
+      await c.connect(first);
+      await native(VpnStatus.connected);
+      // Same server again (ignored)
+      await c.connect(first);
+      // Switch to second server
+      await c.connect(second);
+      // Queue another switch while disconnecting
+      await c.connect(first);
+
+      final broken = realityServerWithoutKey().copyWith(
+        id: 'broken.example.com:443:secret-uuid-broken:#2',
+      );
+      await c.connect(broken);
+
+      final allLogs = talker.history.map((e) => e.generateTextMessage()).join('\n');
+      expect(allLogs, isNot(contains('super-secret-password-1')));
+      expect(allLogs, isNot(contains('super-secret-password-2')));
+      expect(allLogs, isNot(contains('secret-uuid-broken')));
+    });
+  });
 }

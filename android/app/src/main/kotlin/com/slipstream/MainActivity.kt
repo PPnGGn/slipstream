@@ -244,14 +244,10 @@ class MainActivity : FlutterActivity(), VpnConnection, UpdateInstaller {
         return try {
             val installed = signerDigests(packageManager.getPackageInfo(packageName, signingInfoFlag()))
             val incoming = signerDigests(packageManager.getPackageArchiveInfo(filePath, signingInfoFlag()))
-            if (installed.isEmpty() || incoming.isEmpty()) {
-                true
-            } else {
-                installed.intersect(incoming).isNotEmpty()
-            }
+            signaturesMatch(installed, incoming)
         } catch (e: Exception) {
             Log.e("UPDATER_BRIDGE", "Failed to compare signatures", e)
-            true
+            false
         }
     }
 

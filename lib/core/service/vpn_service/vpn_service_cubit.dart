@@ -68,22 +68,24 @@ class VpnServiceCubit extends Cubit<VpnState> {
     // The core would refuse this config. Saying no here, before anything is
     // stopped, leaves a working tunnel (or the kill switch's hold) as it is.
     if (serverProblem(server) != null) {
-      _talker.warning('Cubit: ${server.id} cannot connect, not starting it');
+      _talker.warning('Cubit: ${server.title} cannot connect, not starting it');
       return;
     }
     switch (state) {
       case _Connected() || _Connecting():
         final activeId = _currentServer?.id;
         if (activeId == server.id) {
-          _talker.debug('Cubit: connect ignored, already on ${server.id}');
+          _talker.debug('Cubit: connect ignored, already on ${server.title}');
           return;
         }
-        _talker.debug('Cubit: switching server $activeId -> ${server.id}');
+        _talker.debug(
+          'Cubit: switching server ${_currentServer?.title} -> ${server.title}',
+        );
         _pendingServer = server;
         await _requestStop();
       case _Disconnecting():
         _talker.debug(
-          'Cubit: queued switch to ${server.id} while disconnecting',
+          'Cubit: queued switch to ${server.title} while disconnecting',
         );
         _pendingServer = server;
       default:
@@ -151,7 +153,7 @@ class VpnServiceCubit extends Cubit<VpnState> {
           status.status == VpnStatus.disconnected &&
           server != null) {
         _talker.warning(
-          'Cubit: resumed mid-connect but native is disconnected, retrying ${server.id}',
+          'Cubit: resumed mid-connect but native is disconnected, retrying ${server.title}',
         );
         unawaited(_startConnection(server));
         return;
