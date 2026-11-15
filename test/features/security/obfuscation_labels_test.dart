@@ -26,7 +26,7 @@ void main() {
         ),
       );
 
-      expect(text, equals('1-3 · pieces of 50-90 bytes · pause 5-9 ms'));
+      expect(text, equals('1-3 · 50-90 bytes · 5-9 ms'));
     });
 
     test('follows the language', () {
@@ -57,7 +57,7 @@ void main() {
         ),
       );
 
-      expect(text, equals('33-33 bytes of junk · pause 1-2 ms'));
+      expect(text, equals('33-33 bytes of junk · 1-2 ms'));
     });
   });
 

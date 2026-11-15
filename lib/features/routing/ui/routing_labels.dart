@@ -14,10 +14,7 @@ String geoStatusText(AppLocalizations l10n, GeoState state) => switch (state) {
   GeoDownloading(:final fraction) => l10n.geoDownloading(
     (fraction * 100).round(),
   ),
-  GeoReady(:final tag, :final updatedAt) => l10n.geoUpToDate(
-    tag,
-    _date(updatedAt),
-  ),
+  GeoReady(:final updatedAt) => l10n.geoUpToDate(_date(updatedAt)),
   GeoUpdateAvailable(:final latestTag) => l10n.geoUpdateAvailable(latestTag),
   GeoFailed(:final message) => message,
   _ => '',

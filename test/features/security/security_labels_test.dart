@@ -26,7 +26,7 @@ void main() {
     test('off: says a lost tunnel just closes the VPN', () {
       expect(
         killSwitchSubtitle(l10nEn, enabled: false),
-        'Off · a lost tunnel just closes the VPN',
+        'Off · a lost tunnel closes the VPN',
       );
     });
   });

@@ -49,7 +49,7 @@ void main() {
       );
       expect(
         directDnsSubtitle(l10nEn, DirectDns.system),
-        'The phone\'s own DNS, usually the operator\'s',
+        'Phone\'s own DNS, usually operator\'s',
       );
     });
 
@@ -66,7 +66,7 @@ void main() {
 
   group('Fake DNS row', () {
     test('subtitle follows the switch', () {
-      expect(fakeDnsSubtitle(l10nEn, enabled: true), contains('made-up'));
+      expect(fakeDnsSubtitle(l10nEn, enabled: true), contains('Made-up'));
       expect(fakeDnsSubtitle(l10nEn, enabled: false), startsWith('Off'));
     });
   });

@@ -60,7 +60,6 @@ class _SecurityPageState extends State<SecurityPage> {
                             context.l10n,
                             enabled: enabled,
                           ),
-                          subtitleMaxLines: 2,
                           switchValue: enabled,
                           onSwitch: (value) {
                             _killSwitch.setEnabled(enabled: value);
@@ -78,7 +77,6 @@ class _SecurityPageState extends State<SecurityPage> {
                             context.l10n,
                             enabled: enabled,
                           ),
-                          subtitleMaxLines: 2,
                           switchValue: enabled,
                           onSwitch: (value) {
                             _ipv6.setEnabled(enabled: value);
@@ -98,7 +96,6 @@ class _SecurityPageState extends State<SecurityPage> {
                           hue: TileHue.violet,
                           title: 'Fragment',
                           subtitle: fragmentSubtitle(context.l10n, settings),
-                          subtitleMaxLines: 2,
                           switchValue: settings.fragmentEnabled,
                           onTap: () => showFragmentSheet(context),
                           onSwitch: (value) {
@@ -114,7 +111,6 @@ class _SecurityPageState extends State<SecurityPage> {
                           hue: TileHue.amber,
                           title: 'Noise',
                           subtitle: noiseSubtitle(context.l10n, settings),
-                          subtitleMaxLines: 2,
                           switchValue: settings.noiseEnabled,
                           onTap: () => showNoiseSheet(context),
                           onSwitch: (value) {

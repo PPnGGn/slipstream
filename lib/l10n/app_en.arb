@@ -295,7 +295,7 @@
   "sectionDiagnostics": "Diagnostics",
   "sectionAbout": "About",
   "autoConnectTitle": "Auto-connect on launch",
-  "autoConnectOn": "Connects to the selected server when the app opens",
+  "autoConnectOn": "Connects when the app opens",
   "autoConnectOff": "Off · tap the ring to connect",
   "pingTitle": "Ping",
   "pingSummaryOnLaunch": "on launch",
@@ -305,9 +305,9 @@
   "pingSummaryDots": "dots",
   "pingSummaryNumbers": "numbers",
   "subscriptionsTitle": "Subscriptions",
-  "settingsSubscriptionsSubtitle": "Auto-update of subscription links",
+  "settingsSubscriptionsSubtitle": "Auto-update of links",
   "splitTitle": "Split tunneling",
-  "settingsSplitSubtitle": "Choose which apps use the tunnel",
+  "settingsSplitSubtitle": "Per-app proxy",
   "securityTitle": "Security & tunnel",
   "settingsSecuritySubtitle": "Kill switch, IPv6, obfuscation",
   "dnsTitle": "DNS",
@@ -317,7 +317,7 @@
   "notificationsTitle": "Notifications",
   "settingsNotificationsSubtitle": "Alerts about the VPN connection",
   "memoryMonitorTitle": "Memory monitor",
-  "settingsMemoryIosSubtitle": "Tunnel footprint on the home screen · 50 MB limit",
+  "settingsMemoryIosSubtitle": "Tunnel memory · 50 MB limit",
   "settingsMemorySubtitle": "Xray-core memory on the home screen",
   "settingsLogsSubtitle": "Live tunnel output",
   "versionTitle": "Version",
@@ -328,7 +328,7 @@
       "xray": {"type": "String"}
     }
   },
-  "versionSubtitleTap": "Xray {xray} · Tap to check for updates",
+  "versionSubtitleTap": "Xray {xray} · Tap to check updates",
   "@versionSubtitleTap": {
     "placeholders": {
       "xray": {"type": "String"}
@@ -337,16 +337,16 @@
   "versionChecking": "CHECKING",
 
   "killSwitchOn": "Blocks traffic if the tunnel is lost",
-  "killSwitchOff": "Off · a lost tunnel just closes the VPN",
+  "killSwitchOff": "Off · a lost tunnel closes the VPN",
   "ipv6On": "IPv6 goes through the tunnel",
   "ipv6Off": "Off · apps use IPv4 only",
 
   "dnsXrayTitle": "Xray built-in",
   "dnsXraySubtitle": "UDP 1.1.1.1:53 VIA TUNNEL",
   "dnsSystemTitle": "System resolver",
-  "dnsSystemSubtitle": "The phone's own DNS, usually the operator's",
+  "dnsSystemSubtitle": "Phone's own DNS, usually operator's",
   "dnsDirectHint": "Used only while the RU bypass is on (Routing).",
-  "fakeDnsOn": "Apps get made-up addresses at once, faster first connect",
+  "fakeDnsOn": "Made-up addresses, faster start",
   "fakeDnsOff": "Off · apps wait for a real answer",
   "dnsRemoteHeader": "Remote DNS — queries via tunnel",
   "dnsDirectHeader": "Direct DNS — for bypassed traffic",
@@ -376,10 +376,9 @@
       "percent": {"type": "int"}
     }
   },
-  "geoUpToDate": "Up to date · {tag} · {date}",
+  "geoUpToDate": "Up to date · {date}",
   "@geoUpToDate": {
     "placeholders": {
-      "tag": {"type": "String"},
       "date": {"type": "String"}
     }
   },
@@ -403,7 +402,7 @@
   "lanBypassTitle": "LAN bypass",
   "routingCustomRulesHeader": "Custom rules",
   "ruleAddTitle": "Add rule",
-  "ruleAddSubtitle": "Domain or IP → proxy, direct or block",
+  "ruleAddSubtitle": "Domain or IP → proxy, direct, block",
   "ruleEditTitle": "Edit rule",
   "ruleDelete": "Delete rule",
   "ruleProxy": "Proxy",
@@ -451,20 +450,19 @@
 
   "autoUpdateHeader": "Auto-update",
   "autoUpdateOffHint": "Only from the ⋯ menu of a subscription",
-  "autoUpdateEveryHour": "Every hour",
-  "autoUpdateEveryHours": "{hours, plural, one{Every {hours} hour} other{Every {hours} hours}}",
-  "@autoUpdateEveryHours": {
+  "autoUpdateHours": "{hours, plural, one{{hours} hour} other{{hours} hours}}",
+  "@autoUpdateHours": {
     "placeholders": {
       "hours": {"type": "int"}
     }
   },
 
   "pingOnLaunchTitle": "Ping on launch",
-  "pingOnLaunchSubtitle": "Measure all servers on start and on return",
+  "pingOnLaunchSubtitle": "Measure all servers on start",
   "pingSortTitle": "Sort servers by latency",
-  "pingSortSubtitle": "Reorders the list after measuring finishes",
+  "pingSortSubtitle": "Reorders the list after measuring",
   "pingDisplayTitle": "Latency display",
-  "pingDisplaySubtitle": "Colored dot or value in the server list",
+  "pingDisplaySubtitle": "Colored dot or value in the list",
   "pingDisplayNumbers": "Numbers",
   "pingDisplayDots": "Dots",
 
@@ -473,7 +471,7 @@
   "splitHintProxy": "Only selected apps go through the tunnel; everything else connects directly.",
   "splitHintBypass": "Selected apps connect directly; everything else goes through the tunnel.",
   "splitSystemTitle": "Include system apps",
-  "splitSystemSubtitle": "WebView, Play Services and other services",
+  "splitSystemSubtitle": "WebView, Play Services and others",
   "splitSearchHint": "Search apps",
   "splitLoadFailed": "Could not load the app list",
   "splitNoApps": "No apps found",
@@ -614,7 +612,7 @@
     "description": "Section title on Security & tunnel above the Fragment and Noise rows"
   },
   "fragmentOff": "Off · cuts TCP packets into pieces",
-  "fragmentOn": "{packets} · pieces of {length} bytes · pause {delay} ms",
+  "fragmentOn": "{packets} · {length} bytes · {delay} ms",
   "@fragmentOn": {
     "description": "Subtitle of the Fragment row when it is on: the values that go to xray. packets is tlshello or a range of packet numbers; length and delay are ranges such as 100-200",
     "placeholders": {
@@ -624,7 +622,7 @@
     }
   },
   "noiseOff": "Off · adds junk before UDP packets",
-  "noiseOn": "{size} bytes of junk · pause {delay} ms",
+  "noiseOn": "{size} bytes of junk · {delay} ms",
   "@noiseOn": {
     "description": "Subtitle of the Noise row when it is on: size and delay are ranges such as 10-20",
     "placeholders": {
@@ -689,17 +687,17 @@
   },
   "notificationsSummaryBlocked": "Blocked in system settings",
   "notifyTrafficBlockedTitle": "Traffic blocked",
-  "notifyTrafficBlockedSubtitle": "The kill switch is holding your traffic",
+  "notifyTrafficBlockedSubtitle": "Kill switch is holding your traffic",
   "notifyStartFailedTitle": "VPN could not start",
-  "notifyStartFailedSubtitle": "A start from the tile or by the system failed",
+  "notifyStartFailedSubtitle": "Tile or system start failed",
   "notifyRevokedTitle": "Another app took the VPN",
-  "notifyRevokedSubtitle": "Another VPN app started and disconnected Slipstream",
+  "notifyRevokedSubtitle": "Another VPN disconnected Slipstream",
   "notifySubscriptionFailedTitle": "Subscription did not update",
-  "notifySubscriptionFailedSubtitle": "A background refresh of a subscription failed",
+  "notifySubscriptionFailedSubtitle": "Background refresh failed",
   "notifySubscriptionLimitsTitle": "Subscription expiry and traffic",
-  "notifySubscriptionLimitsSubtitle": "A subscription is about to expire or its traffic is running out",
+  "notifySubscriptionLimitsSubtitle": "Subscription ending or traffic low",
   "notifyTunnelLostTitle": "VPN connection lost",
-  "notifyTunnelLostSubtitle": "The tunnel stopped working and the VPN was closed",
+  "notifyTunnelLostSubtitle": "The tunnel stopped, the VPN closed",
   "notifyDisabledTitle": "Notifications are off for Slipstream",
   "notifyDisabledBody": "Android will not show these alerts. Turn them on in the system settings.",
   "notifyOpenSettings": "Open settings",

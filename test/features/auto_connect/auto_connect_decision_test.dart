@@ -90,7 +90,7 @@ void main() {
     test('on: says what happens at launch', () {
       expect(
         autoConnectSubtitle(l10nEn, enabled: true),
-        'Connects to the selected server when the app opens',
+        'Connects when the app opens',
       );
     });
 

@@ -44,7 +44,7 @@ void main() {
     });
 
     test('ready shows the tag and the date', () {
-      expect(geoStatusText(l10nEn, _ready), 'Up to date · v1.2 · 08.11.2026');
+      expect(geoStatusText(l10nEn, _ready), 'Up to date · 08.11.2026');
     });
 
     test('update available names the new tag', () {

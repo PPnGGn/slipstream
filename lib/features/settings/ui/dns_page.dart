@@ -143,8 +143,6 @@ class DnsPage extends StatelessWidget {
                               l10n,
                               enabled: settings.fakeDns,
                             ),
-                            // The Russian "on" text takes three lines.
-                            subtitleMaxLines: 3,
                             switchValue: settings.fakeDns,
                             onSwitch: (value) async {
                               await dns.setFakeDns(enabled: value);

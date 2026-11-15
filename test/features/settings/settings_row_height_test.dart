@@ -7,10 +7,12 @@ import 'package:slipstream/core/theme/cubit/theme_cubit.dart';
 import 'package:slipstream/core/theme/data/theme_store.dart';
 import 'package:slipstream/features/settings/ui/widgets/settings_row.dart';
 
-/// A row whose subtitle changes with its setting (Kill switch, Fragment and
-/// Noise show one text while off and another while on) must not change its
-/// height with the text: the page would jump under the finger at every switch.
-/// That has to hold at the phone's font size too, not only at the default one.
+/// Every settings row is 56 logical pixels tall, whatever its subtitle says:
+/// no empty space under a short text, and no jump of the page when a subtitle
+/// changes with its setting (Kill switch, Fragment and Noise show one text
+/// while off and another while on). A longer text is cut to one line.
+/// A larger system font makes every row taller by the same amount, and the text
+/// never overflows.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -48,80 +50,68 @@ void main() {
       tester.getSize(find.byType(SettingsRow).at(index)).height;
 
   const short = 'Off';
-  const twoLines =
-      'Off · a lost tunnel just closes the VPN and nothing else happens';
   const long =
       'Off · a subtitle that goes on and on and on, so that it needs far '
-      'more than two lines of a narrow row, in any language';
+      'more than one line of a narrow row, in any language';
 
   List<Widget> rows() => const [
+    SettingsRow(title: 'No subtitle'),
+    SettingsRow(title: 'Short', subtitle: short, switchValue: false),
+    SettingsRow(title: 'Long', subtitle: long, switchValue: true),
+    SettingsRow(title: 'Chevron', subtitle: short, showChevron: true),
     SettingsRow(
-      title: 'A',
-      subtitle: short,
-      switchValue: false,
-      subtitleMaxLines: 2,
-    ),
-    SettingsRow(
-      title: 'B',
-      subtitle: twoLines,
-      switchValue: true,
-      subtitleMaxLines: 2,
-    ),
-    SettingsRow(
-      title: 'C',
+      title: 'Value',
       subtitle: long,
-      switchValue: false,
-      subtitleMaxLines: 2,
+      value: 'Dark',
+      showChevron: true,
     ),
   ];
 
-  testWidgets('rows that limit the subtitle keep one height for any text', (
+  testWidgets('every row is 56, with a short, a long or no subtitle', (
     tester,
   ) async {
     await pump(tester, rows());
 
-    expect(heightOf(tester, 1), closeTo(heightOf(tester, 0), 0.01));
-    expect(heightOf(tester, 2), closeTo(heightOf(tester, 0), 0.01));
+    for (var i = 0; i < rows().length; i++) {
+      expect(heightOf(tester, i), equals(56), reason: 'row $i');
+    }
   });
 
-  testWidgets('and keep it at a larger system font', (tester) async {
-    await pump(tester, rows(), textScale: 1.5);
-
-    expect(heightOf(tester, 1), closeTo(heightOf(tester, 0), 0.01));
-    expect(heightOf(tester, 2), closeTo(heightOf(tester, 0), 0.01));
-  });
-
-  testWidgets('a larger font makes the row taller, not the text overflow', (
-    tester,
-  ) async {
-    await pump(tester, rows());
-    final normal = heightOf(tester, 0);
-    await pump(tester, rows(), textScale: 1.5);
-
-    expect(heightOf(tester, 0), greaterThan(normal));
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('a subtitle over the limit is cut, not allowed to grow the row', (
+  testWidgets('a subtitle over one line is cut, not allowed to grow the row', (
     tester,
   ) async {
     await pump(tester, rows());
 
-    final subtitle = tester.widget<Text>(find.text(long));
+    final subtitle = tester.widget<Text>(find.text(long).first);
 
-    expect(subtitle.maxLines, equals(2));
+    expect(subtitle.maxLines, equals(1));
     expect(subtitle.overflow, equals(TextOverflow.ellipsis));
   });
 
-  testWidgets('a row with no limit is as it was: 60, and as tall as its text', (
+  testWidgets('a larger system font keeps the rows equal, and nothing overflows', (
+    tester,
+  ) async {
+    await pump(tester, rows(), textScale: 1.5);
+
+    for (var i = 1; i < rows().length; i++) {
+      expect(heightOf(tester, i), closeTo(heightOf(tester, 1), 0.01));
+    }
+    expect(heightOf(tester, 0), greaterThanOrEqualTo(56));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a footer comes under the 56, it does not stretch the row', (
     tester,
   ) async {
     await pump(tester, const [
-      SettingsRow(title: 'A'),
-      SettingsRow(title: 'B', subtitle: long),
+      SettingsRow(
+        title: 'With footer',
+        subtitle: short,
+        footer: SizedBox(height: 30),
+      ),
     ]);
 
-    expect(heightOf(tester, 0), equals(60));
-    expect(heightOf(tester, 1), greaterThan(80));
+    // 56 for the row, the footer's 30 and its 12 below.
+    expect(heightOf(tester, 0), equals(56 + 30 + 12));
   });
 }

@@ -25,7 +25,6 @@ class SettingsRow extends StatelessWidget {
     this.onSwitch,
     this.enabled = true,
     this.footer,
-    this.subtitleMaxLines,
   });
 
   final String title;
@@ -52,44 +51,19 @@ class SettingsRow extends StatelessWidget {
   /// Extra content under the row (a segmented control, a progress bar).
   final Widget? footer;
 
-  /// Gives the subtitle exactly this many lines: longer text is cut with an
-  /// ellipsis, shorter text leaves the space empty. For a row whose subtitle
-  /// changes with its setting, so the row is the same height in every state and
-  /// language, at any system font size. Null lets the subtitle take as many
-  /// lines as it needs.
-  final int? subtitleMaxLines;
-
-  Widget _subtitle(BuildContext context, AppColors colors) {
-    final style = TextStyle(
+  // One line, cut with an ellipsis: every row is the same 56 tall in every
+  // state and language, so the page does not jump when a subtitle changes with
+  // its setting and a short text leaves no empty space under it.
+  Widget _subtitle(AppColors colors) => Text(
+    subtitle!,
+    maxLines: 1,
+    overflow: TextOverflow.ellipsis,
+    style: TextStyle(
       fontSize: 11.5,
       height: 1.35,
       color: colors.textMuted,
-    ).merge(subtitleStyle);
-    final maxLines = subtitleMaxLines;
-    if (maxLines == null) return Text(subtitle!, style: style);
-
-    // The room for the lines, measured the way the phone draws them: the text
-    // engine rounds a line up and the system font scale makes it taller, so
-    // a sum of line heights worked out by hand would come out a bit short.
-    final probe = TextPainter(
-      text: TextSpan(text: List.filled(maxLines, 'A').join('\n'), style: style),
-      textDirection: Directionality.of(context),
-      textScaler: MediaQuery.textScalerOf(context),
-      maxLines: maxLines,
-    )..layout();
-    final room = probe.height;
-    probe.dispose();
-
-    return SizedBox(
-      height: room,
-      child: Text(
-        subtitle!,
-        maxLines: maxLines,
-        overflow: TextOverflow.ellipsis,
-        style: style,
-      ),
-    );
-  }
+    ).merge(subtitleStyle),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -105,9 +79,9 @@ class SettingsRow extends StatelessWidget {
                   : null);
 
     final row = ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 60),
+      constraints: const BoxConstraints(minHeight: 56),
       child: Padding(
-        padding: const .symmetric(horizontal: 14, vertical: 11),
+        padding: const .symmetric(horizontal: 14, vertical: 8),
         child: Row(
           spacing: 13,
           children: [
@@ -132,7 +106,7 @@ class SettingsRow extends StatelessWidget {
                   ),
                   if (subtitle != null) ...[
                     const SizedBox(height: 3),
-                    _subtitle(context, colors),
+                    _subtitle(colors),
                   ],
                 ],
               ),

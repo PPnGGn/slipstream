@@ -61,15 +61,17 @@ void main() {
   group('auto-update intervals', () {
     test('off, one hour and several hours', () {
       expect(AutoUpdateInterval.off.label(l10nEn), 'Off');
-      expect(AutoUpdateInterval.h1.label(l10nEn), 'Every hour');
-      expect(AutoUpdateInterval.h6.label(l10nEn), 'Every 6 hours');
+      expect(AutoUpdateInterval.h1.label(l10nEn), '1 hour');
+      expect(AutoUpdateInterval.h6.label(l10nEn), '6 hours');
+      expect(AutoUpdateInterval.h12.label(l10nEn), '12 hours');
     });
 
     test('Russian declines the hours', () {
-      expect(AutoUpdateInterval.h1.label(l10nRu), 'Каждый час');
-      expect(AutoUpdateInterval.h3.label(l10nRu), 'Каждые 3 часа');
-      expect(AutoUpdateInterval.h6.label(l10nRu), 'Каждые 6 часов');
-      expect(AutoUpdateInterval.h24.label(l10nRu), 'Каждые 24 часа');
+      expect(AutoUpdateInterval.h1.label(l10nRu), '1 час');
+      expect(AutoUpdateInterval.h3.label(l10nRu), '3 часа');
+      expect(AutoUpdateInterval.h6.label(l10nRu), '6 часов');
+      expect(AutoUpdateInterval.h12.label(l10nRu), '12 часов');
+      expect(AutoUpdateInterval.h24.label(l10nRu), '24 часа');
     });
   });
 }

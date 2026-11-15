@@ -98,8 +98,6 @@ class _NotificationsPageState extends State<NotificationsPage>
                           hue: TileHue.violet,
                           title: l10n.notifyRevokedTitle,
                           subtitle: l10n.notifyRevokedSubtitle,
-                          // The Russian subtitle takes two lines.
-                          subtitleMaxLines: 2,
                           switchValue: prefs.revoked,
                           onSwitch: (value) =>
                               _prefs.setRevoked(enabled: value),
@@ -109,7 +107,6 @@ class _NotificationsPageState extends State<NotificationsPage>
                           hue: TileHue.red,
                           title: l10n.notifyTunnelLostTitle,
                           subtitle: l10n.notifyTunnelLostSubtitle,
-                          subtitleMaxLines: 2,
                           switchValue: prefs.tunnelLost,
                           onSwitch: (value) =>
                               _prefs.setTunnelLost(enabled: value),
@@ -119,7 +116,6 @@ class _NotificationsPageState extends State<NotificationsPage>
                           hue: TileHue.teal,
                           title: l10n.notifySubscriptionFailedTitle,
                           subtitle: l10n.notifySubscriptionFailedSubtitle,
-                          subtitleMaxLines: 2,
                           switchValue: prefs.subscriptionFailed,
                           onSwitch: (value) =>
                               _prefs.setSubscriptionFailed(enabled: value),
@@ -129,7 +125,6 @@ class _NotificationsPageState extends State<NotificationsPage>
                           hue: TileHue.indigo,
                           title: l10n.notifySubscriptionLimitsTitle,
                           subtitle: l10n.notifySubscriptionLimitsSubtitle,
-                          subtitleMaxLines: 2,
                           switchValue: prefs.subscriptionLimits,
                           onSwitch: (value) =>
                               _prefs.setSubscriptionLimits(enabled: value),
