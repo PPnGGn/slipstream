@@ -520,6 +520,42 @@ void main() {
       expect(outboundTagsOf(configOf(json)), containsAll(['direct', 'block']));
     });
 
+    test('synthesized direct outbound resolves domains through sockopt', () {
+      final json = jsonEncode([
+        {
+          'remarks': 'Bare',
+          'outbounds': [
+            {
+              'tag': 'proxy',
+              'protocol': 'vless',
+              'settings': {
+                'vnext': [
+                  {
+                    'address': 'host.example.com',
+                    'port': 443,
+                    'users': [
+                      {'id': 'uuid'},
+                    ],
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      ]);
+
+      final direct = (configOf(json)['outbounds'] as List)
+          .cast<Map<String, dynamic>>()
+          .firstWhere((o) => o['tag'] == 'direct');
+
+      expect(direct['streamSettings']['sockopt']['domainStrategy'], 'UseIP');
+      // The deprecated freedom.domainStrategy makes xray warn at every start.
+      expect(
+        ((direct['settings'] as Map?) ?? const {}).containsKey('domainStrategy'),
+        isFalse,
+      );
+    });
+
     test('repoints rules referencing the original proxy tag to "proxy"', () {
       final json = jsonEncode([
         {

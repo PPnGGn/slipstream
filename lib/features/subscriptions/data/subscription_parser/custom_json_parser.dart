@@ -211,7 +211,9 @@ class CustomJsonParser {
     if (!tags.contains('direct')) {
       outbounds.add(<String, dynamic>{
         'protocol': 'freedom',
-        'settings': {'domainStrategy': 'UseIP'},
+        'streamSettings': {
+          'sockopt': {'domainStrategy': 'UseIP'},
+        },
         'tag': 'direct',
       });
     }

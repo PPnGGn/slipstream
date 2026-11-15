@@ -330,7 +330,9 @@ class XrayConfigBuilder {
         proxyOutbound,
         {
           "protocol": "freedom",
-          "settings": {"domainStrategy": "UseIP"},
+          "streamSettings": {
+            "sockopt": {"domainStrategy": "UseIP"},
+          },
           "tag": "direct",
         },
         {
