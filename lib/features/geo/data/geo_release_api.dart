@@ -4,16 +4,19 @@ import 'package:slipstream/features/routing/data/local_proxy_client.dart';
 import 'geo_release.dart';
 import 'geo_source.dart';
 
-/// Reads the latest `slipstream-rules` release straight from
-/// `releases/latest/download/…` — no GitHub API call.
+/// Reads the latest `slipstream-georules` release without a GitHub API call.
 ///
 /// `api.github.com` is rate-limited to 60 requests/hour **per IP**
 /// unauthenticated. The app fetches geo *through the active tunnel* (GitHub is
 /// often unreachable from Russia without a VPN), so every user behind one exit
 /// node shares that node's IP and quota — the API is unusable here.
-/// `releases/latest/download/<name>` 302-redirects to the asset with no API
-/// budget; `release.json` (written by the build workflow) carries the tag and
-/// asset sizes the API used to provide.
+/// `releases/latest/download/release.json` 302-redirects to the asset with no
+/// API budget; `release.json` (written by the build workflow) carries the tag
+/// and asset sizes the API used to provide.
+///
+/// Only that one file is looked up as "latest". The URLs of the assets are built
+/// from the tag it names ([GeoSource.assetUrl]), so the download stays on one
+/// release even if a new one is published while it is under way.
 class GeoReleaseApi {
   GeoReleaseApi({
     http.Client? client,
@@ -53,14 +56,14 @@ class GeoReleaseApi {
         ])
           name: GeoAsset(
             name: name,
-            url: _source.downloadUrl(name),
+            url: _source.assetUrl(tag, name),
             size: (sizes[name] as num?)?.toInt() ?? 0,
           ),
         // sha256sums.txt: fetched as text by the repository, tiny, no size
         // in release.json and not part of download progress.
         GeoSource.checksumsFile: GeoAsset(
           name: GeoSource.checksumsFile,
-          url: _source.downloadUrl(GeoSource.checksumsFile),
+          url: _source.assetUrl(tag, GeoSource.checksumsFile),
           size: 0,
         ),
       };
